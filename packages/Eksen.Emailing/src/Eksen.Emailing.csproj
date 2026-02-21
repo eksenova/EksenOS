@@ -1,0 +1,8 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+  <Import Project="..\..\..\common.props" />
+  <ItemGroup>
+    <ProjectReference Include="..\..\Eksen.Core\src\Eksen.Core.csproj" />
+    <ProjectReference Include="..\..\Eksen.Templating\src\Eksen.Templating.csproj" />
+    <ProjectReference Include="..\..\Eksen.ValueObjects\src\Eksen.ValueObjects.csproj" />
+  </ItemGroup>
+</Project>

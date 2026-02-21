@@ -1,0 +1,7 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+  <Import Project="..\..\..\common.props" />
+  <ItemGroup>
+    <ProjectReference Include="..\..\Eksen.Core\src\Eksen.Core.csproj" />
+    <ProjectReference Include="..\..\Eksen.SmartEnums\src\Eksen.SmartEnums.csproj" />
+  </ItemGroup>
+</Project>

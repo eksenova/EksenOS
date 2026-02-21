@@ -1,0 +1,9 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+  <Import Project="..\..\..\common.props" />
+  <ItemGroup>
+    <PackageReference Include="Ulid" Version="1.4.1" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\Eksen.ValueObjects\src\Eksen.ValueObjects.csproj" />
+  </ItemGroup>
+</Project>
