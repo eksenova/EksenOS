@@ -1,4 +1,4 @@
-<Project>
+﻿<Project>
 	<PropertyGroup>
 		<LangVersion>latest</LangVersion>
 		<TargetFramework>net10.0</TargetFramework>
@@ -16,11 +16,7 @@
 		<PackageReadmeFile>README.md</PackageReadmeFile>
 	</PropertyGroup>
 
-	<ConvertToAbsolutePath Paths="$(PackageReadmeFile)">
-		<Output TaskParameter="AbsolutePaths" PropertyName="PackageReadmeFileAbsolutePath" />
-	</ConvertToAbsolutePath>
-
 	<ItemGroup>
-		<None Include="$(PackageReadmeFileAbsolutePath)" Pack="true" PackagePath="\" />
+		<None Include="$(MSBuildThisFileDirectory)\$(PackageReadmeFile)" Pack="true" PackagePath="\" />
 	</ItemGroup>
 </Project>
