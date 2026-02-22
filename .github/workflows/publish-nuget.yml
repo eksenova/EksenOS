@@ -1,0 +1,44 @@
+name: Publish NuGet Packages
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version to publish (e.g., 1.0.0)'
+        required: true
+        type: string
+        default: '0.1.0'
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+
+      - name: Restore dependencies
+        run: |
+          find packages -name "*.csproj" -print0 | while IFS= read -r -d '' project; do
+            echo "Restoring $project..."
+            dotnet restore "$project"
+          done
+
+      - name: Pack projects
+        run: |
+          mkdir -p nupkgs
+          find packages -name "*.csproj" -print0 | while IFS= read -r -d '' project; do
+            echo "Packing $project..."
+            dotnet pack "$project" --configuration Release -p:Version=${{ inputs.version }} --output ./nupkgs --no-restore
+          done
+
+      - name: Push packages to NuGet
+        run: |
+          dotnet nuget push "./nupkgs/*.nupkg" \
+            --api-key ${{ secrets.NUGET_API_KEY }} \
+            --source https://api.nuget.org/v3/index.json \
+            --skip-duplicate
