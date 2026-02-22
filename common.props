@@ -16,7 +16,11 @@
 		<PackageReadmeFile>README.md</PackageReadmeFile>
 	</PropertyGroup>
 
+	<ConvertToAbsolutePath Paths="$(PackageReadmeFile)">
+		<Output TaskParameter="AbsolutePaths" PropertyName="PackageReadmeFileAbsolutePath" />
+	</ConvertToAbsolutePath>
+
 	<ItemGroup>
-		<None Include="README.md" Pack="true" PackagePath="\" />
+		<None Include="$(PackageReadmeFileAbsolutePath)" Pack="true" PackagePath="\" />
 	</ItemGroup>
 </Project>
