@@ -1,4 +1,11 @@
 <Solution>
+  <Folder Name="/Solution Items/">
+    <File Path=".gitattributes" />
+    <File Path=".gitignore" />
+    <File Path="common.props" />
+    <File Path="LICENSE" />
+    <File Path="README.md" />
+  </Folder>
   <Project Path="packages/Eksen.Core/src/Eksen.Core.csproj" />
   <Project Path="packages/Eksen.Emailing/src/Eksen.Emailing.csproj" />
   <Project Path="packages/Eksen.Entities.AspNetCore/src/Eksen.Entities.AspNetCore.csproj" />
