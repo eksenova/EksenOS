@@ -12,8 +12,9 @@
 		<PackageTags>eksenova eksen library .net dotnet framework</PackageTags>
 		<PackageProjectUrl>https://eksenova.com</PackageProjectUrl>
 		<PackageLicenseExpression>MIT</PackageLicenseExpression>
-		<Copyright>© EKSENOVA TEKNOLOJİ ANONİM ŞİRKETİ</Copyright>
+		<Copyright>Copyright © EKSENOVA TEKNOLOJİ ANONİM ŞİRKETİ</Copyright>
 		<PackageReadmeFile>README.md</PackageReadmeFile>
+		<Description>EksenOS - Eksenova Open-Source Code Libraries</Description>
 	</PropertyGroup>
 
 	<ItemGroup>
