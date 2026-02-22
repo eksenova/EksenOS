@@ -4,8 +4,19 @@
 		<TargetFramework>net10.0</TargetFramework>
 		<ImplicitUsings>enable</ImplicitUsings>
 		<Nullable>enable</Nullable>
-		<Version>0.1.0</Version>
+		<Version>0.0.0</Version>
 		<WarningsAsErrors>nullable</WarningsAsErrors>
 		<GenerateEmbeddedFilesManifest>true</GenerateEmbeddedFilesManifest>
+		<RepositoryUrl>https://github.com/eksenova/EksenOS</RepositoryUrl>
+		<RepositoryType>git</RepositoryType>
+		<PackageTags>eksenova eksen library .net dotnet framework</PackageTags>
+		<PackageProjectUrl>https://eksenova.com</PackageProjectUrl>
+		<PackageLicenseExpression>MIT</PackageLicenseExpression>
+		<Copyright>© EKSENOVA TEKNOLOJİ ANONİM ŞİRKETİ</Copyright>
+		<PackageReadmeFile>README.md</PackageReadmeFile>
 	</PropertyGroup>
+
+	<ItemGroup>
+		<None Include="README.md" Pack="true" PackagePath="\" />
+	</ItemGroup>
 </Project>
