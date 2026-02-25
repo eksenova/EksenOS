@@ -9,12 +9,11 @@ public class CompositeUnitOfWorkScope : IUnitOfWorkScope
 
     public CompositeUnitOfWorkScope(
         UnitOfWorkManager unitOfWorkManager,
-        IServiceProvider serviceProvider,
-        ICollection<IUnitOfWorkProviderScope> scopes)
+        IServiceProvider serviceProvider)
     {
         _unitOfWorkManager = unitOfWorkManager;
         _serviceProvider = serviceProvider;
-        _scopes = scopes;
+        _scopes = new List<IUnitOfWorkProviderScope>();
 
         foreach (var type in Enum.GetValues<CallbackType>())
         {
@@ -28,6 +27,11 @@ public class CompositeUnitOfWorkScope : IUnitOfWorkScope
         {
             return _scopes.ToList().AsReadOnly();
         }
+    }
+
+    public void AddProviderScope(IUnitOfWorkProviderScope scope)
+    {
+        _scopes.Add(scope);
     }
 
     public async Task CommitAsync(CancellationToken cancellationToken = default)

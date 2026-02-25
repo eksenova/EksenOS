@@ -4,7 +4,9 @@ using Eksen.ValueObjects.Entities;
 namespace Eksen.Entities.Roles;
 
 public interface IEksenRole<out TTenant> : IEntity<EksenRoleId, System.Ulid>, IMayHaveTenant<TTenant>
-    where TTenant : IEksenTenant
+    where TTenant : class, IEksenTenant
 {
     RoleName Name { get; }
+
+    void SetName(RoleName roleName);
 }

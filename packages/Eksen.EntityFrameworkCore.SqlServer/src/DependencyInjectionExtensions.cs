@@ -10,32 +10,35 @@ namespace Microsoft.Extensions.DependencyInjection;
 
 public static class DependencyInjectionExtensions
 {
-    public static void AddEksenSqlServerDbContext<TDbContext>(
-        this IServiceCollection services,
+    public static IEksenEntityFrameworkCoreBuilder UseSqlServerDbContext<TDbContext>(
+        this IEksenEntityFrameworkCoreBuilder builder,
         string connectionName = "Default",
         Action<DbContextOptionsBuilder<TDbContext>>? dbContextOptionsAction = null,
         Action<SqlServerDbContextOptionsBuilder>? sqlServerOptionsAction = null)
         where TDbContext : DbContext
     {
-        services.AddEksenEntityFrameworkCoreIntegration();
+        var services = builder.Services;
 
         services.AddScoped<DbContextOptions<TDbContext>>(serviceProvider =>
         {
-            var builder = new DbContextOptionsBuilder<TDbContext>();
-            builder.UseSqlServer(connectionName, sqlServerOptionsAction);
-            dbContextOptionsAction?.Invoke(builder);
+            var dbContextOptionsBuilder = new DbContextOptionsBuilder<TDbContext>();
+            dbContextOptionsBuilder.UseSqlServer(connectionName, sqlServerOptionsAction);
+            dbContextOptionsAction?.Invoke(dbContextOptionsBuilder);
 
             var dbContextTracker = serviceProvider.GetRequiredService<IDbContextTracker>();
             var unitOfWorkManager = serviceProvider.GetRequiredService<IUnitOfWorkManager>();
 
-            builder.AddInterceptors(
+            dbContextOptionsBuilder.AddInterceptors(
                 new AutoPropertiesSaveChangesInterceptor(),
                 new DbContextTrackerCommandInterceptor(unitOfWorkManager, dbContextTracker),
                 new DbContextTrackerSaveChangesInterceptor(unitOfWorkManager, dbContextTracker));
 
-            return builder
+            return dbContextOptionsBuilder
                 .Options;
         });
+
         services.AddScoped<TDbContext>();
+
+        return builder;
     }
 }

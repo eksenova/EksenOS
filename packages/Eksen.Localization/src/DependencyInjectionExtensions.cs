@@ -7,10 +7,12 @@ namespace Microsoft.Extensions.DependencyInjection;
 
 public static class DependencyInjectionExtensions
 {
-    public static IServiceCollection AddEksenLocalization(this IServiceCollection serviceCollection)
+    public static IEksenBuilder AddLocalization(this IEksenBuilder eksenBuilder)
     {
-        serviceCollection.AddSingleton<IMessageFormatter, SmartFormatMessageFormatter>();
+        var services = eksenBuilder.Services;
 
-        return serviceCollection;
+        services.AddSingleton<IMessageFormatter, SmartFormatMessageFormatter>();
+
+        return eksenBuilder;
     }
 }

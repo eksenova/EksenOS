@@ -4,8 +4,8 @@ using Eksen.Entities.Users;
 namespace Eksen.Entities;
 
 public interface IHasCreator<out TCreator, TTenant>
-    where TCreator : IEksenUser<TTenant>
-    where TTenant : IEksenTenant
+    where TCreator : class, IEksenUser<TTenant>
+    where TTenant : class, IEksenTenant
 {
     public TCreator? Creator { get; }
 }

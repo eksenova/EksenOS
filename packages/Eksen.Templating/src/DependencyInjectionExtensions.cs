@@ -9,33 +9,37 @@ namespace Microsoft.Extensions.DependencyInjection;
 
 public static class DependencyInjectionExtensions
 {
-    extension(IServiceCollection serviceCollection)
+    extension(IEksenBuilder builder)
     {
-        public IServiceCollection AddRazorHtmlRenderer(Action<RazorLightEngineBuilder> configureRazorLight)
+        public IEksenBuilder AddRazorHtmlRenderer(Action<RazorLightEngineBuilder> configureAction)
         {
-            serviceCollection.AddSingleton<IRazorLightEngine>(_ =>
+            var services = builder.Services;
+
+            services.AddSingleton<IRazorLightEngine>(_ =>
             {
-                var builder = new RazorLightEngineBuilder()
+                var engineBuilder = new RazorLightEngineBuilder()
                     .UseMemoryCachingProvider();
 
-                configureRazorLight(builder);
+                configureAction(engineBuilder);
 
-                return builder.Build();
+                return engineBuilder.Build();
             });
 
-            serviceCollection.AddSingleton<ITemplateHtmlRenderer, RazorTemplateHtmlRenderer>();
+            services.AddSingleton<ITemplateHtmlRenderer, RazorTemplateHtmlRenderer>();
 
-            return serviceCollection;
+            return builder;
         }
 
-        public IServiceCollection AddGotenbergPdfRenderer(string baseUrl)
+        public IEksenBuilder AddGotenbergPdfRenderer(string baseUrl)
         {
-            serviceCollection.AddHttpClient<IHtmlPdfRenderer, GotenbergHtmlPdfRenderer>(httpClient =>
+            var services = builder.Services;
+
+            services.AddHttpClient<IHtmlPdfRenderer, GotenbergHtmlPdfRenderer>(httpClient =>
             {
                 httpClient.BaseAddress = new Uri(baseUrl);
             });
 
-            return serviceCollection;
+            return builder;
         }
     }
 }

@@ -28,7 +28,7 @@ public sealed class UnitOfWorkMiddleware(RequestDelegate next)
 
         try
         {
-            scope = await unitOfWorkManager.BeginScopeAsync(attribute.IsolationLevel);
+            scope = unitOfWorkManager.BeginScope(isolationLevel: attribute.IsolationLevel);
 
             try
             {

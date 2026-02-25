@@ -9,8 +9,9 @@ public interface IEksenUserRepository<TTenant> : IIdRepository<
     IEksenUser<TTenant>,
     EksenUserId,
     System.Ulid,
+    EksenUserFilterParameters<TTenant>,
     EksenUserIncludeOptions<TTenant>>
-    where TTenant : IEksenTenant
+    where TTenant : class, IEksenTenant
 {
     Task<IEksenUser<TTenant>?> FindByEmailAddressAsync(
         EmailAddress emailAddress,
@@ -30,7 +31,12 @@ public interface IEksenUserRepository<TTenant> : IIdRepository<
 }
 
 public record EksenUserIncludeOptions<TTenant> : BaseIncludeOptions<IEksenUser<TTenant>>
-    where TTenant : IEksenTenant
+    where TTenant : class, IEksenTenant
 {
     public bool IncludeTenant { get; set; }
+
+    public bool IncludeRole { get; set; }
 }
+
+public record EksenUserFilterParameters<TTenant> : DefaultFilterParameters<IEksenUser<TTenant>>
+    where TTenant : class, IEksenTenant;

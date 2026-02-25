@@ -7,10 +7,12 @@ namespace Microsoft.Extensions.DependencyInjection;
 
 public static class DependencyInjectionExtensions
 {
-    public static void AddUnitOfWork(
-        this IServiceCollection services
+    public static IEksenBuilder AddUnitOfWork(
+        this IEksenBuilder builder
     )
     {
+        var services = builder.Services;
         services.AddScoped<IUnitOfWorkManager, UnitOfWorkManager>();
+        return builder;
     }
 }

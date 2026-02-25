@@ -5,7 +5,7 @@ using Eksen.ValueObjects.Emailing;
 using Eksen.ValueObjects.Identification;
 using Microsoft.AspNetCore.Identity;
 
-namespace Eksen.Identity;
+namespace Eksen.Identity.Authentication;
 
 internal sealed record AuthContextUser(
     EksenUserId UserId,

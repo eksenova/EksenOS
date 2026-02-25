@@ -23,7 +23,8 @@ public sealed class PermissionChecker<TTenant>(
     IEksenUserRepository<TTenant> userRepository,
     IOptions<PermissionOptions> permissionOptions,
     IAuthContext authContext
-) : IPermissionChecker where TTenant : IEksenTenant
+) : IPermissionChecker
+    where TTenant : class, IEksenTenant
 {
     public async Task<bool> HasPermissionsAsync(PermissionName[] permissions)
     {

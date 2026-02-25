@@ -10,15 +10,16 @@ namespace Eksen.EntityFrameworkCore;
 
 public class EfCoreReadOnlyIdRepository<TDbContext, TEntity, TId, TIdValue>(
     TDbContext dbContext
-) : EfCoreReadOnlyRepository<
+) : EfCoreReadOnlyIdRepository<
     TDbContext,
     TEntity,
+    TId,
+    TIdValue,
     DefaultFilterParameters<TEntity>,
-    DefaultIdFindParameters<TId, TIdValue>,
     DefaultIncludeOptions<TEntity>,
     DefaultQueryOptions,
     DefaultPaginationParameters,
-    DefaultSortingParameters
+    DefaultSortingParameters<TEntity>
 >(dbContext), IReadOnlyIdRepository<TEntity, TId, TIdValue>
     where TDbContext : DbContext
     where TEntity : class, IEntity<TId, TIdValue>
@@ -33,87 +34,80 @@ public class EfCoreReadOnlyIdRepository<TDbContext, TEntity, TId, TIdValue>(
 {
     protected override async Task<TEntity> GetEntityAsync(
         IQueryable<TEntity> queryable,
-        DefaultIdFindParameters<TId, TIdValue> findParameters,
-        CancellationToken cancellationToken = default)
+        TId id,
+        CancellationToken cancellationToken = default
+    )
     {
-        var id = findParameters.Id;
-
         return await queryable.FirstOrDefaultAsync(x => (object)x.Id == (object)id, cancellationToken)
                ?? throw CoreErrors.ObjectNotFound.Raise(typeof(TEntity), id);
     }
 }
 
-public abstract class EfCoreReadOnlyRepository<TDbContext, TEntity, TFindParameters>(
+public abstract class EfCoreReadOnlyRepository<TDbContext, TEntity>(
     TDbContext dbContext
-) : EfCoreReadOnlyRepository<TDbContext, TEntity, DefaultFilterParameters<TEntity>, TFindParameters, DefaultIncludeOptions<TEntity>,
+) : EfCoreReadOnlyRepository<TDbContext, TEntity, DefaultFilterParameters<TEntity>, DefaultIncludeOptions<TEntity>,
     DefaultQueryOptions, DefaultPaginationParameters,
-    DefaultSortingParameters>(dbContext)
+    DefaultSortingParameters<TEntity>>(dbContext)
+    where TEntity : class, IEntity
+    where TDbContext : DbContext;
+
+public abstract class EfCoreReadOnlyRepository<TDbContext, TEntity, TFilterParameters>(
+    TDbContext dbContext
+) : EfCoreReadOnlyRepository<TDbContext, TEntity, TFilterParameters, DefaultIncludeOptions<TEntity>, DefaultQueryOptions,
+    DefaultPaginationParameters,
+    DefaultSortingParameters<TEntity>>(dbContext)
     where TEntity : class, IEntity
     where TDbContext : DbContext
-    where TFindParameters : DefaultFilterParameters<TEntity>, new();
+    where TFilterParameters : BaseFilterParameters<TEntity>, new();
 
-public abstract class EfCoreReadOnlyRepository<TDbContext, TEntity, TFilterParameters, TFindParameters>(
+public abstract class EfCoreReadOnlyRepository<TDbContext, TEntity, TFilterParameters, TIncludeOptions>(
     TDbContext dbContext
-) : EfCoreReadOnlyRepository<TDbContext, TEntity, TFilterParameters, TFindParameters, DefaultIncludeOptions<TEntity>, DefaultQueryOptions,
+) : EfCoreReadOnlyRepository<TDbContext, TEntity, TFilterParameters, TIncludeOptions, DefaultQueryOptions,
     DefaultPaginationParameters,
-    DefaultSortingParameters>(dbContext)
-    where TEntity : class, IEntity
-    where TDbContext : DbContext
-    where TFilterParameters : BaseFilterParameters<TEntity>, new()
-    where TFindParameters : TFilterParameters;
-
-public abstract class EfCoreReadOnlyRepository<TDbContext, TEntity, TFilterParameters, TFindParameters, TIncludeOptions>(
-    TDbContext dbContext
-) : EfCoreReadOnlyRepository<TDbContext, TEntity, TFilterParameters, TFindParameters, TIncludeOptions, DefaultQueryOptions,
-    DefaultPaginationParameters,
-    DefaultSortingParameters>(dbContext)
+    DefaultSortingParameters<TEntity>>(dbContext)
     where TEntity : class, IEntity
     where TDbContext : DbContext
     where TIncludeOptions : BaseIncludeOptions<TEntity>, new()
-    where TFilterParameters : BaseFilterParameters<TEntity>, new()
-    where TFindParameters : TFilterParameters;
+    where TFilterParameters : BaseFilterParameters<TEntity>, new();
 
-public abstract class EfCoreReadOnlyRepository<TDbContext, TEntity, TFilterParameters, TFindParameters, TIncludeOptions, TQueryOptions>(
+public abstract class EfCoreReadOnlyRepository<TDbContext, TEntity, TFilterParameters, TIncludeOptions, TQueryOptions>(
     TDbContext dbContext
-) : EfCoreReadOnlyRepository<TDbContext, TEntity, TFilterParameters, TFindParameters, TIncludeOptions, TQueryOptions,
+) : EfCoreReadOnlyRepository<TDbContext, TEntity, TFilterParameters, TIncludeOptions, TQueryOptions,
     DefaultPaginationParameters,
-    DefaultSortingParameters>(dbContext)
+    DefaultSortingParameters<TEntity>>(dbContext)
     where TEntity : class, IEntity
     where TDbContext : DbContext
     where TQueryOptions : BaseQueryOptions, new()
     where TIncludeOptions : BaseIncludeOptions<TEntity>, new()
-    where TFilterParameters : BaseFilterParameters<TEntity>, new()
-    where TFindParameters : TFilterParameters;
+    where TFilterParameters : BaseFilterParameters<TEntity>, new();
 
-public abstract class EfCoreReadOnlyRepository<TDbContext, TEntity, TFilterParameters, TFindParameters, TIncludeOptions, TQueryOptions,
+public abstract class EfCoreReadOnlyRepository<TDbContext, TEntity, TFilterParameters, TIncludeOptions, TQueryOptions,
     TPaginationParameters>(
     TDbContext dbContext
-) : EfCoreReadOnlyRepository<TDbContext, TEntity, TFilterParameters, TFindParameters, TIncludeOptions, TQueryOptions, TPaginationParameters,
-    DefaultSortingParameters>(dbContext)
+) : EfCoreReadOnlyRepository<TDbContext, TEntity, TFilterParameters, TIncludeOptions, TQueryOptions, TPaginationParameters,
+    DefaultSortingParameters<TEntity>>(dbContext)
     where TEntity : class, IEntity
     where TDbContext : DbContext
     where TQueryOptions : BaseQueryOptions, new()
     where TIncludeOptions : BaseIncludeOptions<TEntity>, new()
     where TFilterParameters : BaseFilterParameters<TEntity>, new()
-    where TFindParameters : TFilterParameters
     where TPaginationParameters : BasePaginationParameters, new();
 
-public abstract class EfCoreReadOnlyRepository<TDbContext, TEntity, TFilterParameters, TFindParameters, TIncludeOptions, TQueryOptions,
+public abstract class EfCoreReadOnlyRepository<TDbContext, TEntity, TFilterParameters, TIncludeOptions, TQueryOptions,
     TPaginationParameters, TSortingParameters>(
     TDbContext dbContext
-) : IReadOnlyRepository<TEntity, TFilterParameters, TFindParameters, TIncludeOptions, TQueryOptions, TPaginationParameters,
+) : IReadOnlyRepository<TEntity, TFilterParameters, TIncludeOptions, TQueryOptions, TPaginationParameters,
     TSortingParameters>
     where TEntity : class, IEntity
     where TDbContext : DbContext
     where TQueryOptions : BaseQueryOptions, new()
     where TIncludeOptions : BaseIncludeOptions<TEntity>, new()
     where TFilterParameters : BaseFilterParameters<TEntity>, new()
-    where TFindParameters : class
     where TPaginationParameters : BasePaginationParameters, new()
-    where TSortingParameters : BaseSortingParameters, new()
+    where TSortingParameters : BaseSortingParameters<TEntity>, new()
 {
     public virtual async Task<TEntity> GetAsync(
-        TFindParameters findParameters,
+        TFilterParameters filterParameters,
         TIncludeOptions? includeOptions = null,
         TQueryOptions? queryOptions = null,
         CancellationToken cancellationToken = default)
@@ -127,17 +121,9 @@ public abstract class EfCoreReadOnlyRepository<TDbContext, TEntity, TFilterParam
             includeOptions
         );
 
-        if (findParameters is TFilterParameters filterParameters)
-        {
-            queryable = ApplyQueryFilters(
-                queryable,
-                filterParameters
-            );
-        }
-
-        var entity = await GetEntityAsync(
+        var entity = await GetSingleAsync(
             queryable,
-            findParameters,
+            filterParameters,
             cancellationToken
         );
 
@@ -145,7 +131,7 @@ public abstract class EfCoreReadOnlyRepository<TDbContext, TEntity, TFilterParam
     }
 
     public virtual async Task<TEntity?> FindAsync(
-        TFindParameters findParameters,
+        TFilterParameters filterParameters,
         TIncludeOptions? includeOptions = null,
         TQueryOptions? queryOptions = null,
         CancellationToken cancellationToken = default)
@@ -155,7 +141,7 @@ public abstract class EfCoreReadOnlyRepository<TDbContext, TEntity, TFilterParam
         try
         {
             entity = await GetAsync(
-                findParameters,
+                filterParameters,
                 includeOptions,
                 queryOptions,
                 cancellationToken
@@ -246,22 +232,31 @@ public abstract class EfCoreReadOnlyRepository<TDbContext, TEntity, TFilterParam
         IQueryable<TEntity> queryable,
         TIncludeOptions? includeOptions = null)
     {
-        if (includeOptions is DefaultIncludeOptions<TEntity> defaultIncludeOptions)
+        switch (includeOptions)
         {
-            var includes = defaultIncludeOptions.Includes;
+            case null:
+                return ApplyDefaultIncludes(queryable);
 
-            if (includes is { Count: > 0 })
+            case DefaultIncludeOptions<TEntity> defaultIncludeOptions:
             {
-                queryable = includes
-                    .Aggregate(queryable,
-                        (current, include)
-                            => current.Include(include));
+                var includes = defaultIncludeOptions.Includes;
+
+                if (includes is { Count: > 0 })
+                {
+                    queryable = includes
+                        .Aggregate(queryable,
+                            (current, include)
+                                => current.Include(include));
+                }
+
+                break;
             }
         }
 
-        if (includeOptions == null)
+        if (includeOptions.IgnoreAutoIncludes)
         {
-            return ApplyDefaultIncludes(queryable);
+            queryable = queryable
+                .IgnoreAutoIncludes();
         }
 
         return queryable;
@@ -284,12 +279,6 @@ public abstract class EfCoreReadOnlyRepository<TDbContext, TEntity, TFilterParam
                     .IgnoreQueryFilters();
             }
 
-            if (queryOptions.IgnoreAutoIncludes)
-            {
-                queryable = queryable
-                    .IgnoreAutoIncludes();
-            }
-
             if (queryOptions.AsNoTracking)
             {
                 queryable = queryable
@@ -309,7 +298,7 @@ public abstract class EfCoreReadOnlyRepository<TDbContext, TEntity, TFilterParam
             return ApplyDefaultSorting(queryable);
         }
 
-        if (sortingParameters is DefaultSortingParameters defaultSortingParameters)
+        if (sortingParameters is DefaultSortingParameters<TEntity> defaultSortingParameters)
         {
             var sorting = defaultSortingParameters.Sorting;
 
@@ -365,11 +354,26 @@ public abstract class EfCoreReadOnlyRepository<TDbContext, TEntity, TFilterParam
         return queryable;
     }
 
-    protected abstract Task<TEntity> GetEntityAsync(
+    protected async Task<TEntity> GetSingleAsync(
         IQueryable<TEntity> queryable,
-        TFindParameters findParameters,
+        TFilterParameters filterParameters,
         CancellationToken cancellationToken = default
-    );
+    )
+    {
+        queryable = ApplyQueryFilters(
+            queryable,
+            filterParameters
+        );
+
+        var entity = await queryable.SingleOrDefaultAsync(cancellationToken);
+
+        if (entity == null)
+        {
+            throw CoreErrors.ObjectNotFound.Raise(typeof(TEntity), filterParameters);
+        }
+
+        return entity;
+    }
 
     protected virtual IQueryable<TEntity> GetQueryable(TQueryOptions? queryOptions = null)
     {
@@ -385,4 +389,110 @@ public abstract class EfCoreReadOnlyRepository<TDbContext, TEntity, TFilterParam
     {
         return GetDbContext().Set<TEntity>();
     }
+}
+
+public abstract class EfCoreReadOnlyIdRepository<TDbContext, TEntity, TId, TIdValue, TFilterParameters, TIncludeOptions, TQueryOptions,
+    TPaginationParameters, TSortingParameters>(
+    TDbContext dbContext
+) : EfCoreReadOnlyRepository<
+        TDbContext,
+        TEntity,
+        TFilterParameters,
+        TIncludeOptions,
+        TQueryOptions,
+        TPaginationParameters,
+        TSortingParameters
+    >(dbContext),
+    IReadOnlyIdRepository<
+        TEntity,
+        TId,
+        TIdValue,
+        TFilterParameters,
+        TIncludeOptions,
+        TQueryOptions,
+        TPaginationParameters,
+        TSortingParameters
+    >
+    where TEntity : class, IEntity<TId, TIdValue>
+    where TDbContext : DbContext
+    where TQueryOptions : BaseQueryOptions, new()
+    where TIncludeOptions : BaseIncludeOptions<TEntity>, new()
+    where TFilterParameters : BaseFilterParameters<TEntity>, new()
+    where TPaginationParameters : BasePaginationParameters, new()
+    where TSortingParameters : BaseSortingParameters<TEntity>, new()
+    where TId : IEntityId<TId, TIdValue>
+    where TIdValue :
+    IComparable,
+    IComparable<TIdValue>,
+    IEquatable<TIdValue>,
+    ISpanFormattable,
+    ISpanParsable<TIdValue>,
+    IUtf8SpanFormattable
+{
+    public virtual async Task<TEntity> GetAsync(
+        TId id,
+        TFilterParameters? filterParameters = null,
+        TIncludeOptions? includeOptions = null,
+        TQueryOptions? queryOptions = null,
+        CancellationToken cancellationToken = default)
+    {
+        var queryable = GetQueryable(
+            queryOptions
+        );
+
+        queryable = ApplyQueryFilters(
+            queryable,
+            filterParameters
+        );
+
+        queryable = ApplyIncludes(
+            queryable,
+            includeOptions
+        );
+
+        var entity = await GetEntityAsync(
+            queryable,
+            id,
+            cancellationToken
+        );
+
+        return entity;
+    }
+
+    public virtual async Task<TEntity?> FindAsync(
+        TId id,
+        TFilterParameters? filterParameters = null,
+        TIncludeOptions? includeOptions = null,
+        TQueryOptions? queryOptions = null,
+        CancellationToken cancellationToken = default)
+    {
+        TEntity? entity;
+
+        try
+        {
+            entity = await GetAsync(
+                id,
+                filterParameters,
+                includeOptions,
+                queryOptions,
+                cancellationToken
+            );
+        }
+        catch (EksenException exception)
+        {
+            if (exception.ErrorDescriptor.ErrorType != ErrorType.NotFound)
+            {
+                throw;
+            }
+
+            entity = null;
+        }
+
+        return entity;
+    }
+
+    protected abstract Task<TEntity> GetEntityAsync(
+        IQueryable<TEntity> queryable,
+        TId id,
+        CancellationToken cancellationToken = default);
 }

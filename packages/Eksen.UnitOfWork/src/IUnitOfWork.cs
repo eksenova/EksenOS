@@ -5,7 +5,8 @@ namespace Eksen.UnitOfWork;
 
 public interface IUnitOfWorkManager
 {
-    Task<IUnitOfWorkScope> BeginScopeAsync(
+    IUnitOfWorkScope BeginScope(
+        bool isTransactional = true,
         IsolationLevel? isolationLevel = null,
         CancellationToken cancellationToken = default);
 
@@ -40,6 +41,8 @@ public interface IUnitOfWorkScope : IAsyncDisposable
     void AddCompletedCallback(Func<IServiceProvider, CancellationToken, Task> callback);
 
     IReadOnlyCollection<IUnitOfWorkProviderScope> ProviderScopes { get; }
+
+    void AddProviderScope(IUnitOfWorkProviderScope scope);
 }
 
 public class UnitOfWorkManager(IServiceProvider serviceProvider) : IUnitOfWorkManager
@@ -50,22 +53,25 @@ public class UnitOfWorkManager(IServiceProvider serviceProvider) : IUnitOfWorkMa
         .GetRequiredService<IEnumerable<IUnitOfWorkProvider>>()
         .ToList();
 
-    public virtual async Task<IUnitOfWorkScope> BeginScopeAsync(
+    public virtual IUnitOfWorkScope BeginScope(
+        bool isTransactional = true,
         IsolationLevel? isolationLevel = null,
         CancellationToken cancellationToken = default)
     {
-        var scopes = new List<IUnitOfWorkProviderScope>();
-
-
         var rootScope = new CompositeUnitOfWorkScope(
             this,
-            serviceProvider,
-            scopes);
+            serviceProvider);
 
         foreach (var provider in _providers)
         {
-            var scope = await provider.BeginScopeAsync(rootScope, isolationLevel, cancellationToken);
-            scopes.Add(scope);
+            var providerScope = provider.BeginScope(
+                rootScope,
+                isTransactional,
+                isolationLevel,
+                cancellationToken
+            );
+
+            rootScope.AddProviderScope(providerScope);
         }
 
         _scopeStack.Push(rootScope);
@@ -90,10 +96,5 @@ public class UnitOfWorkManager(IServiceProvider serviceProvider) : IUnitOfWorkMa
         }
 
         _scopeStack.Pop();
-
-        foreach (var providerScope in scope.ProviderScopes)
-        {
-            providerScope.Provider.PopScope(providerScope);
-        }
     }
 }

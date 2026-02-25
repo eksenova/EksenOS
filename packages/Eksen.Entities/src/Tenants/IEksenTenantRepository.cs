@@ -2,8 +2,10 @@
 
 namespace Eksen.Entities.Tenants;
 
-public interface IEksenTenantRepository : IRepository<
+public interface IEksenTenantRepository : IIdRepository<
     IEksenTenant,
+    EksenTenantId,
+    System.Ulid,
     EksenTenantFilterParameters,
     EksenTenantIncludeOptions>;
 

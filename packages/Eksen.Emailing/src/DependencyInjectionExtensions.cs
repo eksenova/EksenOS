@@ -7,27 +7,30 @@ namespace Microsoft.Extensions.DependencyInjection;
 
 public static class DependencyInjectionExtensions
 {
-    public static IServiceCollection AddEmailTemplates(
-        this IServiceCollection services,
-        string configSectionPath = SmtpConfiguration.DefaultConfigSectionPath)
+    extension(IEksenBuilder builder)
     {
-        services.AddSingleton<ITemplateEmailSender, TemplateEmailSender>();
+        public IEksenBuilder AddEmailTemplates(string configSectionPath = SmtpConfiguration.DefaultConfigSectionPath)
+        {
+            var services = builder.Services;
 
-        return services;
-    }
+            services.AddSingleton<ITemplateEmailSender, TemplateEmailSender>();
 
-    public static IServiceCollection AddSmtpEmailing(
-        this IServiceCollection services,
-        string configSectionPath = SmtpConfiguration.DefaultConfigSectionPath)
-    {
-        services
-            .AddOptions<SmtpConfiguration>()
-            .BindConfiguration(configSectionPath)
-            .ValidateDataAnnotations()
-            .ValidateOnStart();
+            return builder;
+        }
 
-        services.AddSingleton<IEmailSender, SmtpEmailSender>();
+        public IEksenBuilder AddSmtpEmailing(string configSectionPath = SmtpConfiguration.DefaultConfigSectionPath)
+        {
+            var services = builder.Services;
 
-        return services;
+            services
+                .AddOptions<SmtpConfiguration>()
+                .BindConfiguration(configSectionPath)
+                .ValidateDataAnnotations()
+                .ValidateOnStart();
+
+            services.AddSingleton<IEmailSender, SmtpEmailSender>();
+
+            return builder;
+        }
     }
 }

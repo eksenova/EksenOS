@@ -7,17 +7,12 @@ public class EfCoreUnitOfWorkProvider(
     IDbContextTracker dbContextTracker
 ) : IUnitOfWorkProvider
 {
-    public Task<IUnitOfWorkProviderScope> BeginScopeAsync(
+    public IUnitOfWorkProviderScope BeginScope(
         IUnitOfWorkScope parent,
+        bool isTransctional,
         IsolationLevel? isolationLevel = null,
         CancellationToken cancellationToken = default)
     {
-        return Task.FromResult<IUnitOfWorkProviderScope>(
-            new EfCoreUnitOfWorkScope(this, parent, dbContextTracker, isolationLevel));
-    }
-
-    public void PopScope(IUnitOfWorkProviderScope scope)
-    {
-        dbContextTracker.ClearScope(scope.ParentScope);
+        return new EfCoreUnitOfWorkScope(this, parent, isTransctional, dbContextTracker, isolationLevel);
     }
 }

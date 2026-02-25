@@ -1,9 +1,10 @@
 ﻿using Eksen.Identity.Abstractions;
+using Eksen.Identity.Claims;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Options;
 
-namespace Eksen.Identity;
+namespace Eksen.Identity.Authentication;
 
 internal sealed class AuthContext(
     IHttpContextAccessor httpContextAccessor,

@@ -8,7 +8,6 @@ public abstract class EfCoreRepository<
     TDbContext,
     TEntity,
     TFilterParameters,
-    TFindParameters,
     TIncludeOptions,
     TQueryOptions,
     TPaginationParameters,
@@ -18,14 +17,12 @@ public abstract class EfCoreRepository<
             TDbContext,
             TEntity,
             TFilterParameters,
-            TFindParameters,
             TIncludeOptions,
             TQueryOptions,
             TPaginationParameters,
             TSortingParameters>(dbContext),
         IRepository<TEntity,
             TFilterParameters,
-            TFindParameters,
             TIncludeOptions,
             TQueryOptions,
             TPaginationParameters,
@@ -35,9 +32,8 @@ public abstract class EfCoreRepository<
     where TQueryOptions : BaseQueryOptions, new()
     where TIncludeOptions : BaseIncludeOptions<TEntity>, new()
     where TFilterParameters : BaseFilterParameters<TEntity>, new()
-    where TFindParameters : TFilterParameters, new()
     where TPaginationParameters : BasePaginationParameters, new()
-    where TSortingParameters : BaseSortingParameters, new()
+    where TSortingParameters : BaseSortingParameters<TEntity>, new()
 {
     private readonly TDbContext _dbContext = dbContext;
 
@@ -109,12 +105,17 @@ public abstract class EfCoreRepository<
     {
         var queryOptions = new TQueryOptions
         {
-            AsNoTracking = false,
+            AsNoTracking = false
+        };
+
+        var includeOptions = new TIncludeOptions
+        {
             IgnoreAutoIncludes = true
         };
 
         var entities = await GetListAsync(
             filterParameters,
+            includeOptions,
             queryOptions: queryOptions,
             cancellationToken: cancellationToken);
 

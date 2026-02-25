@@ -8,21 +8,21 @@ namespace Eksen.EntityFrameworkCore;
 public class EfCoreUnitOfWorkScope(
     EfCoreUnitOfWorkProvider provider,
     IUnitOfWorkScope parentScope,
+    bool isTransactional,
     IDbContextTracker dbContextTracker,
-    IsolationLevel? isolationLevel
-) : IUnitOfWorkProviderScope
+    IsolationLevel? isolationLevel) : IUnitOfWorkProviderScope
 {
     private readonly Dictionary<DbContext, IDbContextTransaction> _transactions = new();
     private bool _isCommited;
 
     public async ValueTask DisposeAsync()
     {
-        foreach (var transaction in _transactions)
+        if (!_isCommited)
         {
-            await transaction.Value.DisposeAsync();
+            await CommitAsync();
         }
 
-        _transactions.Clear();
+        dbContextTracker.ClearScope(ParentScope);
     }
 
     public async Task CommitAsync(CancellationToken cancellationToken = default)
@@ -32,16 +32,21 @@ public class EfCoreUnitOfWorkScope(
             throw new InvalidOperationException(message: "This unit of work scope has already been committed.");
         }
 
-        if (!_transactions.Any())
+        if (!isTransactional || !_transactions.Any())
         {
             await SaveChangesInternalAsync(createTransactionIfNotExists: false, cancellationToken);
         }
         else
         {
+            await SaveChangesInternalAsync(createTransactionIfNotExists: false, cancellationToken);
+
             var commitTasks = _transactions.Values
                 .Select(t => t.CommitAsync(cancellationToken));
 
-            await Task.WhenAll(commitTasks);
+            foreach (var task in commitTasks)
+            {
+                await task;
+            }
 
             _transactions.Clear();
         }
@@ -56,7 +61,7 @@ public class EfCoreUnitOfWorkScope(
             throw new InvalidOperationException(message: "Cannot rollback a committed unit of work.");
         }
 
-        if (!_transactions.Any())
+        if (!isTransactional || !_transactions.Any())
         {
             return Task.CompletedTask;
         }
@@ -71,10 +76,10 @@ public class EfCoreUnitOfWorkScope(
 
     public Task SaveChangesAsync(CancellationToken cancellationToken = default)
     {
-        return SaveChangesInternalAsync(createTransactionIfNotExists: true, cancellationToken);
+        return SaveChangesInternalAsync(isTransactional, cancellationToken);
     }
 
-    protected async Task SaveChangesInternalAsync(bool createTransactionIfNotExists, CancellationToken cancellationToken = default)
+    protected virtual async Task SaveChangesInternalAsync(bool createTransactionIfNotExists, CancellationToken cancellationToken = default)
     {
         var dbContexts = dbContextTracker.GetScopeDbContexts(ParentScope);
         var saveChangesTasks = dbContexts.Select(async dbContext =>

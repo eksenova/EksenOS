@@ -1,4 +1,4 @@
-﻿namespace Eksen.Identity;
+﻿namespace Eksen.Identity.Claims;
 
 public static class EksenClaims
 {

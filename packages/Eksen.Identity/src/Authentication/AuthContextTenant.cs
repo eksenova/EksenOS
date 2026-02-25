@@ -1,8 +1,9 @@
 ﻿using System.Security.Claims;
 using Eksen.Entities.Tenants;
 using Eksen.Identity.Abstractions;
+using Eksen.Identity.Claims;
 
-namespace Eksen.Identity;
+namespace Eksen.Identity.Authentication;
 
 internal sealed record AuthContextTenant(EksenTenantId TenantId, TenantName TenantName) : IAuthContextTenant
 {

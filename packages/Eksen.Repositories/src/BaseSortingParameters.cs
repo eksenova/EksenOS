@@ -1,8 +1,12 @@
-﻿namespace Eksen.Repositories;
+﻿using Eksen.ValueObjects.Entities;
 
-public record BaseSortingParameters;
+namespace Eksen.Repositories;
 
-public record DefaultSortingParameters : BaseSortingParameters
+public record BaseSortingParameters<TEntity>
+    where TEntity : class, IEntity;
+
+public record DefaultSortingParameters<TEntity> : BaseSortingParameters<TEntity>
+    where TEntity : class, IEntity
 {
     public string? Sorting { get; set; }
 }

@@ -2,13 +2,16 @@
 
 namespace Eksen.Repositories;
 
-public interface IReadOnlyIdRepository<TEntity, TId, TIdValue>
-    : IReadOnlyRepository<TEntity,
+public interface IReadOnlyIdRepository<TEntity, in TId, in TIdValue>
+    : IReadOnlyIdRepository<
+        TEntity,
+        TId,
+        TIdValue,
         DefaultFilterParameters<TEntity>,
-        DefaultIdFindParameters<TId, TIdValue>,
         DefaultIncludeOptions<TEntity>,
         DefaultQueryOptions,
-        DefaultPaginationParameters
+        DefaultPaginationParameters,
+        DefaultSortingParameters<TEntity>
     >
     where TEntity : class, IEntity<TId, TIdValue>
     where TId : IEntityId<TId, TIdValue>
@@ -20,70 +23,105 @@ public interface IReadOnlyIdRepository<TEntity, TId, TIdValue>
     ISpanParsable<TIdValue>,
     IUtf8SpanFormattable;
 
-public interface IReadOnlyRepository<TEntity, in TFindParameters>
+public interface IReadOnlyIdRepository<TEntity, in TId, in TIdValue, in TFilterParameters>
+    : IReadOnlyIdRepository<
+        TEntity,
+        TId,
+        TIdValue,
+        TFilterParameters,
+        DefaultIncludeOptions<TEntity>,
+        DefaultQueryOptions,
+        DefaultPaginationParameters,
+        DefaultSortingParameters<TEntity>
+    >
+    where TEntity : class, IEntity<TId, TIdValue>
+    where TId : IEntityId<TId, TIdValue>
+    where TIdValue :
+    IComparable<TIdValue>,
+    IComparable,
+    IEquatable<TIdValue>,
+    ISpanFormattable,
+    ISpanParsable<TIdValue>,
+    IUtf8SpanFormattable
+    where TFilterParameters : BaseFilterParameters<TEntity>, new();
+
+public interface IReadOnlyIdRepository<TEntity, in TId, in TIdValue, in TFilterParameters, in TIncludeOptions>
+    : IReadOnlyIdRepository<
+        TEntity,
+        TId,
+        TIdValue,
+        TFilterParameters,
+        TIncludeOptions,
+        DefaultQueryOptions,
+        DefaultPaginationParameters,
+        DefaultSortingParameters<TEntity>
+    >
+    where TEntity : class, IEntity<TId, TIdValue>
+    where TId : IEntityId<TId, TIdValue>
+    where TIdValue :
+    IComparable<TIdValue>,
+    IComparable,
+    IEquatable<TIdValue>,
+    ISpanFormattable,
+    ISpanParsable<TIdValue>,
+    IUtf8SpanFormattable
+    where TFilterParameters : BaseFilterParameters<TEntity>, new()
+    where TIncludeOptions : DefaultIncludeOptions<TEntity>, new();
+
+public interface IReadOnlyRepository<TEntity>
     : IReadOnlyRepository<
         TEntity,
         DefaultFilterParameters<TEntity>,
-        TFindParameters,
         DefaultIncludeOptions<TEntity>,
         DefaultQueryOptions,
         DefaultPaginationParameters
     >
-    where TFindParameters : class
     where TEntity : class, IEntity;
 
-public interface IReadOnlyRepository<TEntity, in TFilterParameters, in TFindParameters>
+public interface IReadOnlyRepository<TEntity, in TFilterParameters>
     : IReadOnlyRepository<
         TEntity,
         TFilterParameters,
-        TFindParameters,
         DefaultIncludeOptions<TEntity>,
         DefaultQueryOptions,
         DefaultPaginationParameters
     >
     where TFilterParameters : BaseFilterParameters<TEntity>, new()
-    where TFindParameters : class
     where TEntity : class, IEntity;
 
-public interface IReadOnlyRepository<TEntity, in TFilterParameters, in TFindParameters, in TIncludeOptions>
+public interface IReadOnlyRepository<TEntity, in TFilterParameters, in TIncludeOptions>
     : IReadOnlyRepository<
         TEntity,
         TFilterParameters,
-        TFindParameters,
         TIncludeOptions,
         DefaultQueryOptions,
         DefaultPaginationParameters
     >
     where TIncludeOptions : BaseIncludeOptions<TEntity>, new()
     where TFilterParameters : BaseFilterParameters<TEntity>, new()
-    where TFindParameters : class
     where TEntity : class, IEntity;
 
 public interface IReadOnlyRepository<
     TEntity,
     in TFilterParameters,
-    in TFindParameters,
     in TIncludeOptions,
     in TQueryOptions
 >
     : IReadOnlyRepository<
         TEntity,
         TFilterParameters,
-        TFindParameters,
         TIncludeOptions,
         TQueryOptions,
         DefaultPaginationParameters
     >
     where TIncludeOptions : BaseIncludeOptions<TEntity>, new()
     where TFilterParameters : BaseFilterParameters<TEntity>, new()
-    where TFindParameters : class
     where TQueryOptions : BaseQueryOptions, new()
     where TEntity : class, IEntity;
 
 public interface IReadOnlyRepository<
     TEntity,
     in TFilterParameters,
-    in TFindParameters,
     in TIncludeOptions,
     in TQueryOptions,
     in TPaginationParameters
@@ -91,15 +129,13 @@ public interface IReadOnlyRepository<
     : IReadOnlyRepository<
         TEntity,
         TFilterParameters,
-        TFindParameters,
         TIncludeOptions,
         TQueryOptions,
         TPaginationParameters,
-        DefaultSortingParameters
+        DefaultSortingParameters<TEntity>
     >
     where TIncludeOptions : BaseIncludeOptions<TEntity>, new()
     where TFilterParameters : BaseFilterParameters<TEntity>, new()
-    where TFindParameters : class
     where TQueryOptions : BaseQueryOptions, new()
     where TPaginationParameters : BasePaginationParameters, new()
     where TEntity : class, IEntity;
@@ -107,7 +143,6 @@ public interface IReadOnlyRepository<
 public interface IReadOnlyRepository<
     TEntity,
     in TFilterParameters,
-    in TFindParameters,
     in TIncludeOptions,
     in TQueryOptions,
     in TPaginationParameters,
@@ -115,20 +150,19 @@ public interface IReadOnlyRepository<
 >
     where TIncludeOptions : BaseIncludeOptions<TEntity>, new()
     where TFilterParameters : BaseFilterParameters<TEntity>, new()
-    where TFindParameters : class
     where TQueryOptions : BaseQueryOptions, new()
     where TPaginationParameters : BasePaginationParameters, new()
-    where TSortingParameters : BaseSortingParameters, new()
+    where TSortingParameters : BaseSortingParameters<TEntity>, new()
     where TEntity : class, IEntity
 {
     Task<TEntity?> FindAsync(
-        TFindParameters filterParameters,
+        TFilterParameters filterParameters,
         TIncludeOptions? includeOptions = null,
         TQueryOptions? queryOptions = null,
         CancellationToken cancellationToken = default);
 
     Task<TEntity> GetAsync(
-        TFindParameters filterParameters,
+        TFilterParameters filterParameters,
         TIncludeOptions? includeOptions = null,
         TQueryOptions? queryOptions = null,
         CancellationToken cancellationToken = default);
@@ -143,6 +177,47 @@ public interface IReadOnlyRepository<
 
     Task<long> CountAsync(
         TFilterParameters? filterParameters = null,
+        TQueryOptions? queryOptions = null,
+        CancellationToken cancellationToken = default);
+}
+
+public interface IReadOnlyIdRepository<
+    TEntity,
+    in TId,
+    in TIdValue,
+    in TFilterParameters,
+    in TIncludeOptions,
+    in TQueryOptions,
+    in TPaginationParameters,
+    in TSortingParameters
+> : IReadOnlyRepository<TEntity, TFilterParameters, TIncludeOptions, TQueryOptions, TPaginationParameters, TSortingParameters>
+    where TIncludeOptions : BaseIncludeOptions<TEntity>, new()
+    where TFilterParameters : BaseFilterParameters<TEntity>, new()
+    where TQueryOptions : BaseQueryOptions, new()
+    where TPaginationParameters : BasePaginationParameters, new()
+    where TSortingParameters : BaseSortingParameters<TEntity>, new()
+    where TEntity : class, IEntity<TId, TIdValue>
+    where TId :
+    IEntityId<TId, TIdValue>
+    where TIdValue :
+    IComparable<TIdValue>,
+    IComparable,
+    IEquatable<TIdValue>,
+    ISpanFormattable,
+    ISpanParsable<TIdValue>,
+    IUtf8SpanFormattable
+{
+    Task<TEntity?> FindAsync(
+        TId id,
+        TFilterParameters? filterParameters = null,
+        TIncludeOptions? includeOptions = null,
+        TQueryOptions? queryOptions = null,
+        CancellationToken cancellationToken = default);
+
+    Task<TEntity> GetAsync(
+        TId id,
+        TFilterParameters? filterParameters = null,
+        TIncludeOptions? includeOptions = null,
         TQueryOptions? queryOptions = null,
         CancellationToken cancellationToken = default);
 }

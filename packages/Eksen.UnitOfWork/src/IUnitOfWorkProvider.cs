@@ -4,10 +4,9 @@ namespace Eksen.UnitOfWork;
 
 public interface IUnitOfWorkProvider
 {
-    Task<IUnitOfWorkProviderScope> BeginScopeAsync(
+    IUnitOfWorkProviderScope BeginScope(
         IUnitOfWorkScope parent,
+        bool isTransctional,
         IsolationLevel? isolationLevel = null,
         CancellationToken cancellationToken = default);
-
-    void PopScope(IUnitOfWorkProviderScope scope);
 }
