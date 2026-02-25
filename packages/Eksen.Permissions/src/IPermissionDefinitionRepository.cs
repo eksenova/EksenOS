@@ -3,7 +3,7 @@ using Eksen.Repositories;
 
 namespace Eksen.Permissions;
 
-public interface IPermissionDefinitionRepository : IRepository<PermissionDefinition>
+public interface IPermissionDefinitionRepository : IIdRepository<PermissionDefinition, PermissionDefinitionId, System.Ulid>
 {
     public Task<long> CountAsync(
         Expression<Func<PermissionDefinition, bool>>? predicate = null,

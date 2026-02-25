@@ -5,8 +5,7 @@ namespace Eksen.Entities.Tenants;
 public interface IEksenTenantRepository : IRepository<
     IEksenTenant,
     EksenTenantFilterParameters,
-    EksenTenantIncludeOptions,
-    EksenTenantQueryOptions>;
+    EksenTenantIncludeOptions>;
 
 public record EksenTenantFilterParameters : BaseFilterParameters<IEksenTenant>
 {
@@ -15,4 +14,3 @@ public record EksenTenantFilterParameters : BaseFilterParameters<IEksenTenant>
 
 public record EksenTenantIncludeOptions : BaseIncludeOptions<IEksenTenant>;
 
-public record EksenTenantQueryOptions : BaseQueryOptions;

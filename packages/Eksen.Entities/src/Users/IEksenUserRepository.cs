@@ -5,16 +5,17 @@ using Eksen.ValueObjects.Emailing;
 
 namespace Eksen.Entities.Users;
 
-public interface IEksenUserRepository<TTenant> : IRepository<IEksenUser<TTenant>,
-    EksenUserFilterParameters<TTenant>,
-    EksenUserIncludeOptions<TTenant>,
-    EksenUserQueryOptions>
+public interface IEksenUserRepository<TTenant> : IIdRepository<
+    IEksenUser<TTenant>,
+    EksenUserId,
+    System.Ulid,
+    EksenUserIncludeOptions<TTenant>>
     where TTenant : IEksenTenant
 {
     Task<IEksenUser<TTenant>?> FindByEmailAddressAsync(
         EmailAddress emailAddress,
         EksenUserIncludeOptions<TTenant>? includeOptions = null,
-        EksenUserQueryOptions? queryOptions = null,
+        DefaultQueryOptions? queryOptions = null,
         CancellationToken cancellationToken = default);
 
     Task<ICollection<EksenUserId>> GetUserIdsForRoleAsync(
@@ -24,14 +25,8 @@ public interface IEksenUserRepository<TTenant> : IRepository<IEksenUser<TTenant>
     Task<IEksenUser<TTenant>?> FindByIdAsync(
         EksenUserId? userId,
         EksenUserIncludeOptions<TTenant>? includeOptions = null,
-        EksenUserQueryOptions? queryOptions = null,
+        DefaultQueryOptions? queryOptions = null,
         CancellationToken cancellationToken = default);
-}
-
-public record EksenUserFilterParameters<TTenant> : BaseFilterParameters<IEksenUser<TTenant>>
-    where TTenant : IEksenTenant
-{
-    public string? SearchFilter { get; set; }
 }
 
 public record EksenUserIncludeOptions<TTenant> : BaseIncludeOptions<IEksenUser<TTenant>>
@@ -39,5 +34,3 @@ public record EksenUserIncludeOptions<TTenant> : BaseIncludeOptions<IEksenUser<T
 {
     public bool IncludeTenant { get; set; }
 }
-
-public record EksenUserQueryOptions : BaseQueryOptions;

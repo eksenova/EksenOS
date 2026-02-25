@@ -5,8 +5,7 @@ namespace Eksen.Entities.Roles;
 
 public interface IEksenRoleRepository<TTenant> : IRepository<IEksenRole<TTenant>,
     EksenRoleFilterParameters<TTenant>,
-    EksenRoleIncludeOptions<TTenant>,
-    EksenRoleQueryOptions>
+    EksenRoleIncludeOptions<TTenant>>
     where TTenant : IEksenTenant;
 
 public record EksenRoleFilterParameters<TTenant> : BaseFilterParameters<IEksenRole<TTenant>>
@@ -21,4 +20,3 @@ public record EksenRoleIncludeOptions<TTenant> : BaseIncludeOptions<IEksenRole<T
     public bool IncludeTenant { get; set; }
 }
 
-public record EksenRoleQueryOptions : BaseQueryOptions;
