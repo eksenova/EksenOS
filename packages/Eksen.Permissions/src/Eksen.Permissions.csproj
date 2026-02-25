@@ -1,12 +1,12 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
-  <Import Project="..\..\..\common.props" />
-  <ItemGroup>
-    <PackageReference Include="Microsoft.AspNetCore.Authorization" Version="10.0.3" />
-    <PackageReference Include="Microsoft.Extensions.Caching.Abstractions" Version="10.0.3" />
-  </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\..\Eksen.Identity.Abstractions\src\Eksen.Identity.Abstractions.csproj" />
-    <ProjectReference Include="..\..\Eksen.Repositories\src\Eksen.Repositories.csproj" />
-    <ProjectReference Include="..\..\Eksen.Ulid\src\Eksen.Ulid.csproj" />
-  </ItemGroup>
+	<Import Project="..\..\..\common.props" />
+	<ItemGroup>
+		<PackageReference Include="Microsoft.AspNetCore.Authorization" Version="10.0.3" />
+	</ItemGroup>
+	<ItemGroup>
+		<ProjectReference Include="..\..\Eksen.Core\src\Eksen.Core.csproj" />
+		<ProjectReference Include="..\..\Eksen.Identity.Abstractions\src\Eksen.Identity.Abstractions.csproj" />
+		<ProjectReference Include="..\..\Eksen.Repositories\src\Eksen.Repositories.csproj" />
+		<ProjectReference Include="..\..\Eksen.Ulid\src\Eksen.Ulid.csproj" />
+	</ItemGroup>
 </Project>

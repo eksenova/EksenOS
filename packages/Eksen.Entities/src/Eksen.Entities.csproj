@@ -1,6 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 	<Import Project="..\..\..\common.props" />
 	<ItemGroup>
+		<ProjectReference Include="..\..\Eksen.Core\src\Eksen.Core.csproj" />
 		<ProjectReference Include="..\..\Eksen.Repositories\src\Eksen.Repositories.csproj" />
 		<ProjectReference Include="..\..\Eksen.Ulid\src\Eksen.Ulid.csproj" />
 	</ItemGroup>

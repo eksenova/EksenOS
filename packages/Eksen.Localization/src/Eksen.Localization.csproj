@@ -1,7 +1,6 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 	<Import Project="..\..\..\common.props" />
 	<ItemGroup>
-		<PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="10.0.3" />
 		<PackageReference Include="SmartFormat.NET" Version="3.6.1" />
 		<ProjectReference Include="..\..\Eksen.Core\src\Eksen.Core.csproj" />
 	</ItemGroup>
