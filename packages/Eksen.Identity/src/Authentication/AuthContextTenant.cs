@@ -34,6 +34,6 @@ internal sealed record AuthContextTenant(EksenTenantId TenantId, TenantName Tena
 
         return new AuthContextTenant(
             new EksenTenantId(tenantUlid),
-            new TenantName(tenantName));
+            TenantName.Parse(tenantName));
     }
 }

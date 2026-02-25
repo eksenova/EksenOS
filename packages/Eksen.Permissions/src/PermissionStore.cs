@@ -8,7 +8,7 @@ public class PermissionStore<TUser, TRole, TTenant>(
     IEksenUserPermissionRepository<TUser, TTenant> userPermissionRepository,
     IEksenRolePermissionRepository<TRole, TTenant> rolePermissionRepository,
     IEksenUserRoleRepository<TUser, TRole, TTenant> userRoleRepository,
-    IPermissionDefinitionRepository permissionDefinitionRepository) : IPermissionStore
+    IEksenPermissionDefinitionRepository permissionDefinitionRepository) : IPermissionStore
     where TUser : class, IEksenUser<TTenant>
     where TRole : class, IEksenRole<TTenant>
     where TTenant : class, IEksenTenant
@@ -18,7 +18,10 @@ public class PermissionStore<TUser, TRole, TTenant>(
     )
     {
         var permissions = await permissionDefinitionRepository.GetListAsync(
-            x => !x.IsDisabled,
+            new PermissionFilterParameters
+            {
+                IsDisabled = false
+            },
             cancellationToken: cancellationToken
         );
 

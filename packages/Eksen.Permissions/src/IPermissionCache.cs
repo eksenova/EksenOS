@@ -34,7 +34,7 @@ public interface IPermissionCache
         EksenUserId userId,
         CancellationToken cancellationToken = default);
 
-    Task InvalidateForUserIdsAsync(
+    ValueTask InvalidateForUserIdsAsync(
         ICollection<EksenUserId> userIds,
         CancellationToken cancellationToken = default);
 }

@@ -5,17 +5,18 @@ using Eksen.ValueObjects.Emailing;
 
 namespace Eksen.Entities.Users;
 
-public interface IEksenUserRepository<TTenant> : IIdRepository<
-    IEksenUser<TTenant>,
+public interface IEksenUserRepository<TUser, TTenant> : IIdRepository<
+    TUser,
     EksenUserId,
     System.Ulid,
-    EksenUserFilterParameters<TTenant>,
-    EksenUserIncludeOptions<TTenant>>
+    EksenUserFilterParameters<TUser, TTenant>,
+    EksenUserIncludeOptions<TUser, TTenant>>
+    where TUser : class, IEksenUser<TTenant>
     where TTenant : class, IEksenTenant
 {
     Task<IEksenUser<TTenant>?> FindByEmailAddressAsync(
         EmailAddress emailAddress,
-        EksenUserIncludeOptions<TTenant>? includeOptions = null,
+        EksenUserIncludeOptions<TUser, TTenant>? includeOptions = null,
         DefaultQueryOptions? queryOptions = null,
         CancellationToken cancellationToken = default);
 
@@ -25,12 +26,13 @@ public interface IEksenUserRepository<TTenant> : IIdRepository<
 
     Task<IEksenUser<TTenant>?> FindByIdAsync(
         EksenUserId? userId,
-        EksenUserIncludeOptions<TTenant>? includeOptions = null,
+        EksenUserIncludeOptions<TUser, TTenant>? includeOptions = null,
         DefaultQueryOptions? queryOptions = null,
         CancellationToken cancellationToken = default);
 }
 
-public record EksenUserIncludeOptions<TTenant> : BaseIncludeOptions<IEksenUser<TTenant>>
+public record EksenUserIncludeOptions<TUser, TTenant> : BaseIncludeOptions<TUser>
+    where TUser : class, IEksenUser<TTenant>
     where TTenant : class, IEksenTenant
 {
     public bool IncludeTenant { get; set; }
@@ -38,5 +40,6 @@ public record EksenUserIncludeOptions<TTenant> : BaseIncludeOptions<IEksenUser<T
     public bool IncludeRole { get; set; }
 }
 
-public record EksenUserFilterParameters<TTenant> : DefaultFilterParameters<IEksenUser<TTenant>>
+public record EksenUserFilterParameters<TUser, TTenant> : DefaultFilterParameters<TUser>
+    where TUser : class, IEksenUser<TTenant>
     where TTenant : class, IEksenTenant;

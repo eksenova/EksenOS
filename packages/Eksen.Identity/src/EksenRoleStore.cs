@@ -7,7 +7,7 @@ namespace Eksen.Identity;
 
 public class EksenRoleStore<TRole, TTenant>(
     ILogger<EksenRoleStore<TRole, TTenant>> logger,
-    IEksenRoleRepository<TTenant> roleRepository,
+    IEksenRoleRepository<TRole, TTenant> roleRepository,
     IdentityErrorDescriber? errorDescriber = null)
     : IRoleStore<TRole>
     where TRole : class, IEksenRole<TTenant>

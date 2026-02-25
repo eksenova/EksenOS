@@ -7,14 +7,14 @@ using Eksen.ValueObjects.Entities;
 
 namespace Eksen.Permissions;
 
-public record UserRoleId(System.Ulid Value) : UlidEntityId<UserRoleId>(Value);
+public record EksenUserRoleId(System.Ulid Value) : UlidEntityId<EksenUserRoleId>(Value);
 
-public class UserRole<TUser, TRole, TTenant> : IEntity<UserRoleId, System.Ulid>, IHasTenant<TTenant>
+public class EksenUserRole<TUser, TRole, TTenant> : IEntity<EksenUserRoleId, System.Ulid>, IHasTenant<TTenant>
     where TUser : class, IEksenUser<TTenant>
     where TRole : class, IEksenRole<TTenant>
     where TTenant : class, IEksenTenant
 {
-    public UserRoleId Id { get; private set; }
+    public EksenUserRoleId Id { get; private set; }
 
     public TUser User { get; private set; }
 
@@ -22,20 +22,20 @@ public class UserRole<TUser, TRole, TTenant> : IEntity<UserRoleId, System.Ulid>,
 
     public TTenant Tenant { get; private set; }
 
-    private UserRole()
+    private EksenUserRole()
     {
-        Id = UserRoleId.Empty;
+        Id = EksenUserRoleId.Empty;
         User = null!;
         Role = null!;
         Tenant = null!;
     }
 
-    public UserRole(
+    public EksenUserRole(
         TUser user,
         TRole role,
         TTenant tenant) : this()
     {
-        Id = UserRoleId.NewId();
+        Id = EksenUserRoleId.NewId();
 
         User = user;
         Role = role;

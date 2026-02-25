@@ -7,22 +7,16 @@ using Microsoft.AspNetCore.Identity;
 namespace Eksen.Identity;
 
 public class EksenUserStore<TUser, TTenant>(
-    IEksenUserRepository<TTenant> userRepository
+    IEksenUserRepository<TUser, TTenant> userRepository
 ) : IUserPasswordStore<TUser>,
     IUserEmailStore<TUser>,
     IUserRoleStore<TUser>
     where TUser : class, IEksenUser<TTenant>
     where TTenant : class, IEksenTenant
 {
-    public async Task SetEmailAsync(TUser user, string? email, CancellationToken cancellationToken)
+    public Task SetEmailAsync(TUser user, string? email, CancellationToken cancellationToken)
     {
-        var emailAddress = !string.IsNullOrWhiteSpace(email)
-            ? EmailAddress.Parse(email)
-            : null;
-
-        user.SetEmailAddress(emailAddress);
-
-        await userRepository.UpdateAsync(user, autoSave: true, cancellationToken);
+        return Task.FromException<bool>(new NotImplementedException());
     }
 
     public Task<string?> GetEmailAsync(TUser user, CancellationToken cancellationToken)
@@ -143,9 +137,9 @@ public class EksenUserStore<TUser, TTenant>(
 
         if (EksenUserId.TryParse(userIdString, provider: null, out var userId))
         {
-            return (TUser?)await userRepository.FindAsync(
+            return await userRepository.FindAsync(
                 userId,
-                includeOptions: new EksenUserIncludeOptions<TTenant>
+                includeOptions: new EksenUserIncludeOptions<TUser, TTenant>
                 {
                     IncludeRole = true,
                     IncludeTenant = true,

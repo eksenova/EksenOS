@@ -65,7 +65,7 @@ public interface IIdRepository<
     where TIncludeOptions : BaseIncludeOptions<TEntity>, new()
     where TFilterParameters : BaseFilterParameters<TEntity>, new()
     where TEntity : class, IEntity<TId, TIdValue>
-    where TId : class, IEntityId<TId, TIdValue>
+    where TId : IEntityId<TId, TIdValue>
     where TIdValue :
     IComparable<TIdValue>,
     IComparable,
@@ -105,7 +105,7 @@ public interface IIdRepository<
     where TPaginationParameters : BasePaginationParameters, new()
     where TSortingParameters : BaseSortingParameters<TEntity>, new()
     where TEntity : class, IEntity<TId, TIdValue>
-    where TId : class, IEntityId<TId, TIdValue>
+    where TId : IEntityId<TId, TIdValue>
     where TIdValue :
     IComparable<TIdValue>,
     IComparable,

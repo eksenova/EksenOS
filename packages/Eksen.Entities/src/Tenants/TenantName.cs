@@ -1,25 +1,43 @@
-﻿namespace Eksen.Entities.Tenants;
+﻿using Eksen.ValueObjects;
 
-public sealed record TenantName
+namespace Eksen.Entities.Tenants;
+
+public sealed record TenantName : ValueObject<TenantName, string, TenantName>,
+    IConcreteValueObject<TenantName, string>
 {
     public const int MaxLength = 50;
 
-    public string Value { get; private set; }
+    private TenantName(string value) : base(value) { }
 
-    public TenantName(string name)
+    public override string ToParseableString(IFormatProvider? provider = null)
     {
-        if (string.IsNullOrWhiteSpace(name))
+        return Value;
+    }
+
+    protected override string Validate(string value)
+    {
+        if (string.IsNullOrWhiteSpace(value))
         {
             throw TenantErrors.EmptyTenantName.Raise();
         }
 
-        name = name.Trim();
+        value = value.Trim();
 
-        if (name.Length > MaxLength)
+        if (value.Length > MaxLength)
         {
-            throw TenantErrors.TenantNameOverflow.Raise(name, MaxLength);
+            throw TenantErrors.TenantNameOverflow.Raise(value, MaxLength);
         }
 
-        Value = name;
+        return value;
+    }
+
+    public static TenantName Create(string value)
+    {
+        return Parse(value);
+    }
+
+    public static TenantName Parse(string value, IFormatProvider? formatProvider = null)
+    {
+        return new TenantName(value);
     }
 }

@@ -16,7 +16,7 @@ public interface IEksenUser<out TTenant> : IEntity<EksenUserId, System.Ulid>, IM
 
     bool IsPasswordChangeRequired { get; }
 
-    void SetEmailAddress(EmailAddress? emailAddress);
-
     void SetPasswordHash(PasswordHash? passwordHash);
+
+    void SetActive(bool isActive);
 }

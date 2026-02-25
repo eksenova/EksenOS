@@ -5,7 +5,7 @@ using Eksen.Repositories;
 namespace Eksen.Permissions;
 
 public interface IEksenUserPermissionRepository<TUser, TTenant>
-    : IIdRepository<UserPermission<TUser, TTenant>, UserPermissionId, System.Ulid>
+    : IIdRepository<EksenUserPermission<TUser, TTenant>, EksenUserPermissionId, System.Ulid>
     where TUser : class, IEksenUser<TTenant>
     where TTenant : class, IEksenTenant
 {

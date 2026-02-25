@@ -12,11 +12,13 @@
   <Project Path="packages/Eksen.Entities.AspNetCore/src/Eksen.Entities.AspNetCore.csproj" />
   <Project Path="packages/Eksen.Entities/src/Eksen.Entities.csproj" />
   <Project Path="packages/Eksen.Identity.Abstractions/src/Eksen.Identity.Abstractions.csproj" />
+  <Project Path="packages/Eksen.Identity.EntityFrameworkCore/src/Eksen.Identity.EntityFrameworkCore.csproj" />
   <Project Path="packages/Eksen.Identity/src/Eksen.Identity.csproj" />
   <Project Path="packages/Eksen.Localization/src/Eksen.Localization.csproj" />
   <Project Path="packages/Eksen.ObjectMapping/src/Eksen.ObjectMapping.csproj" />
   <Project Path="packages/Eksen.OpenApi/src/Eksen.OpenApi.csproj" />
   <Project Path="packages/Eksen.Permissions.AspNetCore/src/Eksen.Permissions.AspNetCore.csproj" />
+  <Project Path="packages/Eksen.Permissions.EntityFrameworkCore/src/Eksen.Permissions.EntityFrameworkCore.csproj" />
   <Project Path="packages/Eksen.Permissions/src/Eksen.Permissions.csproj" />
   <Project Path="packages/Eksen.EntityFrameworkCore.SqlServer/src/Eksen.EntityFrameworkCore.SqlServer.csproj" />
   <Project Path="packages/Eksen.EntityFrameworkCore/src/Eksen.EntityFrameworkCore.csproj" />

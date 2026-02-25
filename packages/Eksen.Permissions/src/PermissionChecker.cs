@@ -18,12 +18,13 @@ public sealed class PermissionOptions
     }
 }
 
-public sealed class PermissionChecker<TTenant>(
+public sealed class PermissionChecker<TUser, TTenant>(
     IPermissionCache permissionCache,
-    IEksenUserRepository<TTenant> userRepository,
+    IEksenUserRepository<TUser, TTenant> userRepository,
     IOptions<PermissionOptions> permissionOptions,
     IAuthContext authContext
 ) : IPermissionChecker
+    where TUser : class, IEksenUser<TTenant>
     where TTenant : class, IEksenTenant
 {
     public async Task<bool> HasPermissionsAsync(PermissionName[] permissions)
@@ -65,7 +66,7 @@ public sealed class PermissionChecker<TTenant>(
         var userId = authContext.User?.UserId;
         var user = await userRepository.FindByIdAsync(
             userId,
-            new EksenUserIncludeOptions<TTenant>
+            new EksenUserIncludeOptions<TUser, TTenant>
             {
                 IncludeTenant = true
             },
