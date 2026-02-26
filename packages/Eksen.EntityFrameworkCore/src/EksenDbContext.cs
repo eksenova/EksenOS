@@ -2,4 +2,9 @@
 
 namespace Eksen.EntityFrameworkCore;
 
-public abstract class EksenDbContext : DbContext;
+public abstract class EksenDbContext : DbContext
+{
+    protected EksenDbContext() { }
+
+    protected EksenDbContext(DbContextOptions options) : base(options) { }
+}
