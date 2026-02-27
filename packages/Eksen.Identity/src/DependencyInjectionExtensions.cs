@@ -86,6 +86,7 @@ public class EksenIdentityBuilder<TUser, TRole, TTenant>(IEksenBuilder eksenBuil
     public IEksenBuilder EksenBuilder { get; } = eksenBuilder;
 }
 
+// ReSharper disable UnusedTypeParameter
 public interface IEksenIdentityBuilder<TUser, TRole, TTenant>
     where TUser : class, IEksenUser<TTenant>
     where TRole : class, IEksenRole<TTenant>
@@ -93,6 +94,8 @@ public interface IEksenIdentityBuilder<TUser, TRole, TTenant>
 {
     IEksenBuilder EksenBuilder { get; }
 }
+
+// ReSharper restore UnusedTypeParameter
 
 public static class EksenIdentityBuilderExtensions
 {

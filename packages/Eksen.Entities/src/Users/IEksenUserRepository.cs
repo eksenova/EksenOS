@@ -5,14 +5,25 @@ using Eksen.ValueObjects.Emailing;
 
 namespace Eksen.Entities.Users;
 
-public interface IEksenUserRepository<TUser, TTenant> : IIdRepository<
+public interface IEksenUserRepository<TUser, TTenant> : IEksenUserRepository<
+    TUser,
+    TTenant,
+    EksenUserFilterParameters<TUser, TTenant>,
+    EksenUserIncludeOptions<TUser, TTenant>
+>
+    where TUser : class, IEksenUser<TTenant>
+    where TTenant : class, IEksenTenant;
+
+public interface IEksenUserRepository<TUser, TTenant, in TFilterParameters, in TIncludeOptions> : IIdRepository<
     TUser,
     EksenUserId,
     System.Ulid,
-    EksenUserFilterParameters<TUser, TTenant>,
-    EksenUserIncludeOptions<TUser, TTenant>>
+    TFilterParameters,
+    TIncludeOptions>
     where TUser : class, IEksenUser<TTenant>
     where TTenant : class, IEksenTenant
+    where TFilterParameters : EksenUserFilterParameters<TUser, TTenant>, new()
+    where TIncludeOptions : EksenUserIncludeOptions<TUser, TTenant>, new()
 {
     Task<IEksenUser<TTenant>?> FindByEmailAddressAsync(
         EmailAddress emailAddress,

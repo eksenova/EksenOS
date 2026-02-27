@@ -3,14 +3,26 @@ using Eksen.Repositories;
 
 namespace Eksen.Entities.Roles;
 
-public interface IEksenRoleRepository<TRole, TTenant> : IIdRepository<
+public interface IEksenRoleRepository<TRole, TTenant> : IEksenRoleRepository<
+    TRole,
+    TTenant,
+    EksenRoleFilterParameters<TRole, TTenant>,
+    EksenRoleIncludeOptions<TRole, TTenant>
+>
+    where TRole : class, IEksenRole<TTenant>
+    where TTenant : class, IEksenTenant;
+
+public interface IEksenRoleRepository<TRole, TTenant, in TFilterParameters, in TIncludeOptions> : IIdRepository<
     TRole,
     EksenRoleId,
     System.Ulid,
-    EksenRoleFilterParameters<TRole, TTenant>,
-    EksenRoleIncludeOptions<TRole, TTenant>>
+    TFilterParameters,
+    TIncludeOptions
+>
     where TRole : class, IEksenRole<TTenant>
-    where TTenant : class, IEksenTenant;
+    where TTenant : class, IEksenTenant
+    where TFilterParameters : EksenRoleFilterParameters<TRole, TTenant>, new()
+    where TIncludeOptions : EksenRoleIncludeOptions<TRole, TTenant>, new();
 
 public record EksenRoleFilterParameters<TRole, TTenant> : BaseFilterParameters<TRole>
     where TRole : class, IEksenRole<TTenant>
