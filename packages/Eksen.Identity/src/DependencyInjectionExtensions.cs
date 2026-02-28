@@ -20,7 +20,7 @@ public static class DependencyInjectionExtensions
 {
     public static IEksenBuilder AddIdentity<TUser, TRole, TTenant>(
         this IEksenBuilder builder,
-        Action<IEksenIdentityBuilder<TUser, TRole, TTenant>>? configureAction = null
+        Action<IEksenIdentityBuilder>? configureAction = null
     )
         where TUser : class, IEksenUser<TTenant>
         where TRole : class, IEksenRole<TTenant>
@@ -30,32 +30,30 @@ public static class DependencyInjectionExtensions
 
         services.AddHttpContextAccessor();
 
-        services.TryAddScoped<EksenUserManager<TUser, TTenant>>();
         services.TryAddScoped<EksenRoleManager<TRole, TTenant>>();
-
-        services.TryAddScoped<EksenUserSignInManager<TUser, TTenant>>();
-
-        services.TryAddScoped(typeof(RoleManager<TUser>),
+        services.TryAddTransient(typeof(RoleManager<TRole>),
             provider => provider.GetService(typeof(EksenRoleManager<TRole, TTenant>))!);
 
-        services.TryAddScoped(typeof(UserManager<TUser>),
+        services.TryAddScoped<EksenUserManager<TUser, TTenant>>();
+        services.TryAddTransient(typeof(UserManager<TUser>),
             provider => provider.GetService(typeof(EksenUserManager<TUser, TTenant>))!);
 
-        services.TryAddScoped(typeof(SignInManager<TUser>),
+        services.TryAddScoped<EksenUserSignInManager<TUser, TTenant>>();
+        services.TryAddTransient(typeof(SignInManager<TUser>),
             provider => provider.GetService(typeof(EksenUserSignInManager<TUser, TTenant>))!);
 
         services.TryAddScoped<EksenUserStore<TUser, TTenant>>();
-        services.TryAddScoped(typeof(IUserStore<TUser>),
+        services.TryAddTransient(typeof(IUserStore<TUser>),
             provider => provider.GetService(typeof(EksenUserStore<TUser, TTenant>))!);
 
         services.TryAddScoped<EksenRoleStore<TRole, TTenant>>();
-        services.TryAddScoped(typeof(IRoleStore<TRole>),
+        services.TryAddTransient(typeof(IRoleStore<TRole>),
             provider => provider.GetService(typeof(EksenRoleStore<TRole, TTenant>))!);
 
         services.TryAddScoped<EksenUserClaimsPrincipalFactory<TUser, TRole, TTenant>>();
-        services.TryAddScoped(typeof(IUserClaimsPrincipalFactory<TUser>),
+        services.TryAddTransient(typeof(IUserClaimsPrincipalFactory<TUser>),
             provider => provider.GetService(typeof(EksenUserClaimsPrincipalFactory<TUser, TRole, TTenant>))!);
-        services.TryAddScoped(typeof(UserClaimsPrincipalFactory<TUser, TRole>),
+        services.TryAddTransient(typeof(UserClaimsPrincipalFactory<TUser, TRole>),
             provider => provider.GetService(typeof(EksenUserClaimsPrincipalFactory<TUser, TRole, TTenant>))!);
 
         services.TryAddScoped<IPasswordHasher<TUser>, EksenUserPasswordHasher<TUser, TTenant>>();
@@ -70,7 +68,7 @@ public static class DependencyInjectionExtensions
 
         if (configureAction != null)
         {
-            var identityBuilder = new EksenIdentityBuilder<TUser, TRole, TTenant>(builder);
+            var identityBuilder = new EksenIdentityBuilder(builder);
             configureAction(identityBuilder);
         }
 
@@ -78,19 +76,13 @@ public static class DependencyInjectionExtensions
     }
 }
 
-public class EksenIdentityBuilder<TUser, TRole, TTenant>(IEksenBuilder eksenBuilder) : IEksenIdentityBuilder<TUser, TRole, TTenant>
-    where TUser : class, IEksenUser<TTenant>
-    where TRole : class, IEksenRole<TTenant>
-    where TTenant : class, IEksenTenant
+public class EksenIdentityBuilder(IEksenBuilder eksenBuilder) : IEksenIdentityBuilder
 {
     public IEksenBuilder EksenBuilder { get; } = eksenBuilder;
 }
 
 // ReSharper disable UnusedTypeParameter
-public interface IEksenIdentityBuilder<TUser, TRole, TTenant>
-    where TUser : class, IEksenUser<TTenant>
-    where TRole : class, IEksenRole<TTenant>
-    where TTenant : class, IEksenTenant
+public interface IEksenIdentityBuilder
 {
     IEksenBuilder EksenBuilder { get; }
 }
@@ -99,34 +91,36 @@ public interface IEksenIdentityBuilder<TUser, TRole, TTenant>
 
 public static class EksenIdentityBuilderExtensions
 {
-    extension<TUser, TRole, TTenant>(IEksenIdentityBuilder<TUser, TRole, TTenant> builder)
-        where TUser : class, IEksenUser<TTenant>
-        where TRole : class, IEksenRole<TTenant>
-        where TTenant : class, IEksenTenant
+    extension(IEksenIdentityBuilder builder)
     {
         public IServiceCollection Services
         {
             get { return builder.EksenBuilder.Services; }
         }
 
-        public IEksenIdentityBuilder<TUser, TRole, TTenant> AddUserRepository<TUserRepository>()
+        public IEksenIdentityBuilder AddUserRepository<TUser, TTenant, TUserRepository>()
             where TUserRepository : class, IEksenUserRepository<TUser, TTenant>
+            where TUser : class, IEksenUser<TTenant>
+            where TTenant : class, IEksenTenant
         {
             var services = builder.Services;
             services.AddScoped<IEksenUserRepository<TUser, TTenant>, TUserRepository>();
             return builder;
         }
 
-        public IEksenIdentityBuilder<TUser, TRole, TTenant> AddRoleRepository<TRoleRepository>()
+        public IEksenIdentityBuilder AddRoleRepository<TRole, TTenant, TRoleRepository>()
             where TRoleRepository : class, IEksenRoleRepository<TRole, TTenant>
+            where TRole : class, IEksenRole<TTenant>
+            where TTenant : class, IEksenTenant
         {
             var services = builder.Services;
             services.AddScoped<IEksenRoleRepository<TRole, TTenant>, TRoleRepository>();
             return builder;
         }
 
-        public IEksenIdentityBuilder<TUser, TRole, TTenant> AddTenantRepository<TTenantRepository>()
+        public IEksenIdentityBuilder AddTenantRepository<TTenant, TTenantRepository>()
             where TTenantRepository : class, IEksenTenantRepository<TTenant>
+            where TTenant : class, IEksenTenant
         {
             var services = builder.Services;
             services.AddScoped<IEksenTenantRepository<TTenant>, TTenantRepository>();

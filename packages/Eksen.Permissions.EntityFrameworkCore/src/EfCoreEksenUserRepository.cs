@@ -7,7 +7,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Eksen.Permissions.EntityFrameworkCore;
 
-public abstract class EfCoreEksenUserRepository<TDbContext, TUser, TTenant, TFilterParameters, TIncludeOptions>(TDbContext dbContext)
+public class EfCoreEksenUserRepository<TDbContext, TUser, TTenant, TFilterParameters, TIncludeOptions>(TDbContext dbContext)
     : EfCoreIdRepository<TDbContext, TUser, EksenUserId, System.Ulid, TFilterParameters, TIncludeOptions>(dbContext),
         IEksenUserRepository<TUser, TTenant, TFilterParameters, TIncludeOptions>
     where TDbContext : EksenDbContext
