@@ -45,7 +45,7 @@ public class EksenUserStore<TUser, TTenant>(
         var emailAddress = EmailAddress.Parse(normalizedEmail);
 
         cancellationToken.ThrowIfCancellationRequested();
-        return (TUser?)await userRepository.FindByEmailAddressAsync(emailAddress, cancellationToken: cancellationToken);
+        return await userRepository.FindByEmailAddressAsync(emailAddress, cancellationToken: cancellationToken);
     }
 
     public Task<string?> GetNormalizedEmailAsync(TUser user, CancellationToken cancellationToken)

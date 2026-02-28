@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Eksen.Permissions.EntityFrameworkCore;
 
-public class EfCoreEksenUserRoleRepository<TDbContext, TUser, TRole, TTenant>(TDbContext dbContext)
+public abstract class EfCoreEksenUserRoleRepository<TDbContext, TUser, TRole, TTenant>(TDbContext dbContext)
     : EfCoreIdRepository<TDbContext, EksenUserRole<TUser, TRole, TTenant>, EksenUserRoleId, System.Ulid>(dbContext),
         IEksenUserRoleRepository<TUser, TRole, TTenant>
     where TDbContext : EksenDbContext

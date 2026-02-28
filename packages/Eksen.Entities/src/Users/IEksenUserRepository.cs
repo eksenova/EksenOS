@@ -1,5 +1,4 @@
-﻿using Eksen.Entities.Roles;
-using Eksen.Entities.Tenants;
+﻿using Eksen.Entities.Tenants;
 using Eksen.Repositories;
 using Eksen.ValueObjects.Emailing;
 
@@ -25,19 +24,15 @@ public interface IEksenUserRepository<TUser, TTenant, in TFilterParameters, in T
     where TFilterParameters : EksenUserFilterParameters<TUser, TTenant>, new()
     where TIncludeOptions : EksenUserIncludeOptions<TUser, TTenant>, new()
 {
-    Task<IEksenUser<TTenant>?> FindByEmailAddressAsync(
+    Task<TUser?> FindByEmailAddressAsync(
         EmailAddress emailAddress,
-        EksenUserIncludeOptions<TUser, TTenant>? includeOptions = null,
+        TIncludeOptions? includeOptions = null,
         DefaultQueryOptions? queryOptions = null,
         CancellationToken cancellationToken = default);
 
-    Task<ICollection<EksenUserId>> GetUserIdsForRoleAsync(
-        IEksenRole<TTenant> role,
-        CancellationToken cancellationToken = default);
-
-    Task<IEksenUser<TTenant>?> FindByIdAsync(
+    Task<TUser?> FindByIdAsync(
         EksenUserId? userId,
-        EksenUserIncludeOptions<TUser, TTenant>? includeOptions = null,
+        TIncludeOptions? includeOptions = null,
         DefaultQueryOptions? queryOptions = null,
         CancellationToken cancellationToken = default);
 }
