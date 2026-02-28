@@ -13,12 +13,14 @@ public interface IEksenUserRepository<TUser, TTenant> : IEksenUserRepository<
     where TUser : class, IEksenUser<TTenant>
     where TTenant : class, IEksenTenant;
 
-public interface IEksenUserRepository<TUser, TTenant, in TFilterParameters, in TIncludeOptions> : IIdRepository<
-    TUser,
-    EksenUserId,
-    System.Ulid,
-    TFilterParameters,
-    TIncludeOptions>
+public interface IEksenUserRepository<TUser, TTenant, in TFilterParameters, in TIncludeOptions>
+    : IIdRepository<
+        TUser,
+        EksenUserId,
+        System.Ulid,
+        TFilterParameters,
+        TIncludeOptions
+    >
     where TUser : class, IEksenUser<TTenant>
     where TTenant : class, IEksenTenant
     where TFilterParameters : EksenUserFilterParameters<TUser, TTenant>, new()
