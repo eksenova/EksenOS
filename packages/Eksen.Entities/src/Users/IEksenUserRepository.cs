@@ -42,10 +42,11 @@ public record EksenUserIncludeOptions<TUser, TTenant> : BaseIncludeOptions<TUser
     where TTenant : class, IEksenTenant
 {
     public bool IncludeTenant { get; set; }
-
-    public bool IncludeRole { get; set; }
 }
 
-public record EksenUserFilterParameters<TUser, TTenant> : DefaultFilterParameters<TUser>
+public record EksenUserFilterParameters<TUser, TTenant> : BaseFilterParameters<TUser>
     where TUser : class, IEksenUser<TTenant>
-    where TTenant : class, IEksenTenant;
+    where TTenant : class, IEksenTenant
+{
+    public string? SearchFilter { get; set; }
+}

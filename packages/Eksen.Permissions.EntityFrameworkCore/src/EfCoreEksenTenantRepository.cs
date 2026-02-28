@@ -9,4 +9,21 @@ public abstract class EfCoreEksenTenantRepository<TDbContext, TTenant, TFilterPa
     where TDbContext : EksenDbContext
     where TTenant : class, IEksenTenant
     where TFilterParameters : EksenTenantFilterParameters<TTenant>, new()
-    where TIncludeOptions : EksenTenantIncludeOptions<TTenant>, new();
+    where TIncludeOptions : EksenTenantIncludeOptions<TTenant>, new()
+{
+    protected override IQueryable<TTenant> ApplyQueryFilters(IQueryable<TTenant> queryable, TFilterParameters? filterParameters = default)
+    {
+        queryable = base.ApplyQueryFilters(queryable, filterParameters);
+
+        if (filterParameters == null)
+        {
+            return queryable;
+        }
+
+        queryable = !string.IsNullOrEmpty(filterParameters.SearchFilter)
+            ? queryable.Where(x => ((string)(object)x.Name).Contains(filterParameters.SearchFilter))
+            : queryable;
+
+        return queryable;
+    }
+}

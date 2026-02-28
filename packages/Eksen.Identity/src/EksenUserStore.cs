@@ -141,9 +141,7 @@ public class EksenUserStore<TUser, TTenant>(
                 userId,
                 includeOptions: new EksenUserIncludeOptions<TUser, TTenant>
                 {
-                    IncludeRole = true,
-                    IncludeTenant = true,
-                    IgnoreAutoIncludes = true
+                    IncludeTenant = true
                 },
                 cancellationToken: cancellationToken);
         }

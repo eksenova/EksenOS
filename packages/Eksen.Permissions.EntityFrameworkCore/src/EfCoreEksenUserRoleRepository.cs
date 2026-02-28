@@ -14,7 +14,9 @@ public abstract class EfCoreEksenUserRoleRepository<TDbContext, TUser, TRole, TT
     where TRole : class, IEksenRole<TTenant>
     where TTenant : class, IEksenTenant
 {
-    public async Task<ICollection<TRole>> GetRolesByUserIdAsync(EksenUserId userId, CancellationToken cancellationToken = default)
+    public async Task<ICollection<TRole>> GetRolesByUserIdAsync(
+        EksenUserId userId,
+        CancellationToken cancellationToken = default)
     {
         var queryable = GetQueryable()
             .Where(x => x.User.Id == userId)

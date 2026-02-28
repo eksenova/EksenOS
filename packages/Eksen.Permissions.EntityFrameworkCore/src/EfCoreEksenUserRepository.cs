@@ -24,10 +24,7 @@ public abstract class EfCoreEksenUserRepository<TDbContext, TUser, TTenant, TFil
     {
         var queryable = GetQueryable(queryOptions);
 
-        if (includeOptions != null)
-        {
-            queryable = ApplyIncludes(queryable, includeOptions);
-        }
+        queryable = ApplyIncludes(queryable, includeOptions);
 
         return queryable.FirstOrDefaultAsync(x => x.EmailAddress == emailAddress, cancellationToken);
     }
@@ -40,13 +37,47 @@ public abstract class EfCoreEksenUserRepository<TDbContext, TUser, TTenant, TFil
     {
         var queryable = GetQueryable(queryOptions);
 
-        if (includeOptions != null)
-        {
-            queryable = ApplyIncludes(queryable, includeOptions);
-        }
+        queryable = ApplyIncludes(queryable, includeOptions);
 
         return queryable.FirstOrDefaultAsync(
             x => x.Id == userId,
             cancellationToken);
+    }
+
+    protected override IQueryable<TUser> ApplyIncludes(
+        IQueryable<TUser> queryable,
+        TIncludeOptions? includeOptions = null)
+    {
+        queryable = base.ApplyIncludes(queryable, includeOptions);
+        if (includeOptions == null)
+        {
+            return queryable;
+        }
+
+        queryable = includeOptions.IncludeTenant
+            ? queryable.Include(x => x.Tenant)
+            : queryable;
+
+        return queryable;
+    }
+
+    protected override IQueryable<TUser> ApplyQueryFilters(
+        IQueryable<TUser> queryable,
+        TFilterParameters? filterParameters = null)
+    {
+        queryable = base.ApplyQueryFilters(queryable, filterParameters);
+
+        if (filterParameters == null)
+        {
+            return queryable;
+        }
+
+        queryable = !string.IsNullOrEmpty(filterParameters.SearchFilter)
+            ? queryable
+                .Where(x => ((string)(object)x.EmailAddress!)
+                    .Contains(filterParameters.SearchFilter))
+            : queryable;
+
+        return queryable;
     }
 }
