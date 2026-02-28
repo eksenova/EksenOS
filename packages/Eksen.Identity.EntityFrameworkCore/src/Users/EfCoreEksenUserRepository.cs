@@ -5,7 +5,7 @@ using Eksen.Repositories;
 using Eksen.ValueObjects.Emailing;
 using Microsoft.EntityFrameworkCore;
 
-namespace Eksen.Permissions.EntityFrameworkCore;
+namespace Eksen.Identity.EntityFrameworkCore.Users;
 
 public class EfCoreEksenUserRepository<TDbContext, TUser, TTenant, TFilterParameters, TIncludeOptions>(TDbContext dbContext)
     : EfCoreIdRepository<TDbContext, TUser, EksenUserId, System.Ulid, TFilterParameters, TIncludeOptions>(dbContext),

@@ -1,7 +1,7 @@
 ﻿using Eksen.Entities.Tenants;
 using Eksen.EntityFrameworkCore;
 
-namespace Eksen.Permissions.EntityFrameworkCore;
+namespace Eksen.Identity.EntityFrameworkCore.Tenants;
 
 public class EfCoreEksenTenantRepository<TDbContext, TTenant, TFilterParameters, TIncludeOptions>(TDbContext dbContext)
     : EfCoreIdRepository<TDbContext, TTenant, EksenTenantId, System.Ulid, TFilterParameters, TIncludeOptions>(dbContext),

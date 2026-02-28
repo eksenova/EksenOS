@@ -3,7 +3,7 @@ using Eksen.Entities.Tenants;
 using Eksen.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 
-namespace Eksen.Permissions.EntityFrameworkCore;
+namespace Eksen.Identity.EntityFrameworkCore.Roles;
 
 public class EfCoreEksenRoleRepository<TDbContext, TRole, TTenant, TFilterParameters, TIncludeOptions>(TDbContext dbContext)
     : EfCoreIdRepository<TDbContext, TRole, EksenRoleId, System.Ulid, TFilterParameters, TIncludeOptions>(dbContext),
