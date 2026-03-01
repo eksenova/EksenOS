@@ -15,5 +15,6 @@ public static class ModelBuilderExtensions
         builder.ApplyConfiguration(new EksenUserPermissionEntityTypeConfiguration<TUser, TTenant>());
         builder.ApplyConfiguration(new EksenRolePermissionEntityTypeConfiguration<TRole, TTenant>());
         builder.ApplyConfiguration(new EksenUserRoleEntityTypeConfiguration<TUser, TRole, TTenant>());
+        builder.ApplyConfiguration(new EksenPermissionDefinitionEntityTypeConfiguration());
     }
 }
