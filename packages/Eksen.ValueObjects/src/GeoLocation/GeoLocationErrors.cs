@@ -1,5 +1,5 @@
 ﻿using Eksen.Core;
-using Eksen.Core.ErrorHandling;
+using Eksen.ErrorHandling;
 using Eksen.ValueObjects.ErrorHandling;
 
 namespace Eksen.ValueObjects.GeoLocation;

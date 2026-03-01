@@ -1,6 +1,6 @@
 ﻿using System.Runtime.CompilerServices;
 
-namespace Eksen.Core.ErrorHandling;
+namespace Eksen.ErrorHandling;
 
 public record ErrorDescriptor<TRaiseDelegate> : BaseErrorDescriptor
     where TRaiseDelegate : Delegate

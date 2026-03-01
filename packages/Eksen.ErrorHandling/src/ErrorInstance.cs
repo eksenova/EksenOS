@@ -1,8 +1,15 @@
 ﻿using System.Runtime.CompilerServices;
 
-namespace Eksen.Core.ErrorHandling;
+namespace Eksen.ErrorHandling;
 
-public record ErrorInstance(IErrorDescriptor Descriptor)
+public interface IErrorData
+{
+    Dictionary<string, object?> Data { get; }
+
+    IErrorDescriptor Descriptor { get; }
+}
+
+public record ErrorInstance(IErrorDescriptor Descriptor) : IErrorData
 {
     public Dictionary<string, object?> Data { get; private init; } = new();
 

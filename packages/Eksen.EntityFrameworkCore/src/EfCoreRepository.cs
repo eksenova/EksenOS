@@ -1,5 +1,4 @@
-﻿using Eksen.Core;
-using Eksen.Core.ErrorHandling;
+﻿using Eksen.ErrorHandling;
 using Eksen.Repositories;
 using Eksen.ValueObjects.Entities;
 using Microsoft.EntityFrameworkCore;
@@ -124,7 +123,7 @@ public abstract class EfCoreIdRepository<TDbContext, TEntity, TId, TIdValue, TFi
         }
         catch (EksenException exception)
         {
-            if (exception.ErrorDescriptor.ErrorType != ErrorType.NotFound)
+            if (exception.Descriptor.ErrorType != ErrorType.NotFound)
             {
                 throw;
             }
@@ -141,7 +140,7 @@ public abstract class EfCoreIdRepository<TDbContext, TEntity, TId, TIdValue, TFi
         CancellationToken cancellationToken = default)
     {
         return await queryable.FirstOrDefaultAsync(x => (object)x.Id == (object)id, cancellationToken)
-               ?? throw CoreErrors.ObjectNotFound.Raise(typeof(TEntity), id);
+               ?? throw CommonErrors.ObjectNotFound.Raise(typeof(TEntity), id);
     }
 }
 

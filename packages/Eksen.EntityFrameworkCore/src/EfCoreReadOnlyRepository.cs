@@ -1,7 +1,6 @@
 ﻿using System.Linq.Dynamic.Core;
-using Eksen.Core;
-using Eksen.Core.ErrorHandling;
 using Eksen.Entities;
+using Eksen.ErrorHandling;
 using Eksen.Repositories;
 using Eksen.ValueObjects.Entities;
 using Microsoft.EntityFrameworkCore;
@@ -138,7 +137,7 @@ public abstract class EfCoreReadOnlyRepository<TDbContext, TEntity, TFilterParam
         }
         catch (EksenException exception)
         {
-            if (exception.ErrorDescriptor.ErrorType != ErrorType.NotFound)
+            if (exception.Descriptor.ErrorType != ErrorType.NotFound)
             {
                 throw;
             }
@@ -361,7 +360,7 @@ public abstract class EfCoreReadOnlyRepository<TDbContext, TEntity, TFilterParam
 
         if (entity == null)
         {
-            throw CoreErrors.ObjectNotFound.Raise(typeof(TEntity), filterParameters);
+            throw CommonErrors.ObjectNotFound.Raise(typeof(TEntity), filterParameters);
         }
 
         return entity;
@@ -472,7 +471,7 @@ public abstract class EfCoreReadOnlyIdRepository<TDbContext, TEntity, TId, TIdVa
         }
         catch (EksenException exception)
         {
-            if (exception.ErrorDescriptor.ErrorType != ErrorType.NotFound)
+            if (exception.Descriptor.ErrorType != ErrorType.NotFound)
             {
                 throw;
             }
@@ -489,6 +488,6 @@ public abstract class EfCoreReadOnlyIdRepository<TDbContext, TEntity, TId, TIdVa
         CancellationToken cancellationToken = default)
     {
         return await queryable.SingleOrDefaultAsync(x => (object)x.Id == (object)id, cancellationToken)
-               ?? throw CoreErrors.ObjectNotFound.Raise(typeof(TEntity), id);
+               ?? throw CommonErrors.ObjectNotFound.Raise(typeof(TEntity), id);
     }
 }

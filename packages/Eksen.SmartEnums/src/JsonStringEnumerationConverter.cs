@@ -1,8 +1,7 @@
 ﻿using System.Reflection;
 using System.Text.Json;
 using System.Text.Json.Serialization;
-using Eksen.Core;
-using Eksen.Core.ErrorHandling;
+using Eksen.ErrorHandling;
 
 namespace Eksen.SmartEnums;
 
@@ -18,7 +17,7 @@ public class JsonStringEnumerationConverter<T> : JsonConverter<T> where T : Enum
         {
             return (T)parseMethod.Invoke(null!, [code])!;
         }
-        catch (EksenException e) when (e.ErrorType == ErrorType.NotFound)
+        catch (EksenException e) when (e.Descriptor.ErrorType == ErrorType.NotFound)
         {
             throw new JsonException($"Invalid {typeof(T).Name} code: \"{code}\"");
         }

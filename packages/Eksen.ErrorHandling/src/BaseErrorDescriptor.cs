@@ -1,4 +1,4 @@
-﻿namespace Eksen.Core.ErrorHandling;
+﻿namespace Eksen.ErrorHandling;
 
 public record BaseErrorDescriptor : IErrorDescriptor
 {

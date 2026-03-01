@@ -2,5 +2,6 @@
   <Import Project="..\..\..\common.props" />
   <ItemGroup>
     <ProjectReference Include="..\..\Eksen.Core\src\Eksen.Core.csproj" />
+    <ProjectReference Include="..\..\Eksen.ErrorHandling\src\Eksen.ErrorHandling.csproj" />
   </ItemGroup>
 </Project>

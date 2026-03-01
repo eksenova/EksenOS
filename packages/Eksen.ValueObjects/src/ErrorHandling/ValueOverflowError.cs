@@ -1,4 +1,4 @@
-﻿using Eksen.Core.ErrorHandling;
+﻿using Eksen.ErrorHandling;
 
 namespace Eksen.ValueObjects.ErrorHandling;
 

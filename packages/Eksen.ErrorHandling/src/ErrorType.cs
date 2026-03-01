@@ -1,4 +1,4 @@
-﻿namespace Eksen.Core;
+﻿namespace Eksen.ErrorHandling;
 
 public static class ErrorType
 {

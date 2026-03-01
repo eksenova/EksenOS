@@ -1,8 +1,8 @@
-﻿using Eksen.Core.ErrorHandling;
+﻿using Eksen.Core;
 
-namespace Eksen.Core;
+namespace Eksen.ErrorHandling;
 
-public static class CoreErrors
+public static class CommonErrors
 {
     public static readonly string Category = AppModules.Eksen;
 

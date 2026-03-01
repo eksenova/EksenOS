@@ -1,7 +1,7 @@
 ﻿using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
 using System.Runtime.CompilerServices;
-using Eksen.Core;
+using Eksen.ErrorHandling;
 
 namespace Eksen.SmartEnums;
 
@@ -54,7 +54,7 @@ public abstract record Enumeration<TSelf> : IEnumeration, IComparable<TSelf> whe
             .Values
             .FirstOrDefault(s => string.Equals(s.Code.Replace(oldValue: " ", newValue: ""), code, StringComparison.OrdinalIgnoreCase));
 
-        return match ?? throw CoreErrors.ObjectNotFound.Raise(typeof(TSelf), code);
+        return match ?? throw CommonErrors.ObjectNotFound.Raise(typeof(TSelf), code);
     }
 
     public override string ToString()
