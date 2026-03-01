@@ -5,7 +5,7 @@ namespace Eksen.Permissions.AspNetCore;
 
 internal sealed class PermissionAuthorizationPolicyProvider(
     IOptions<AuthorizationOptions> authorizationOptions,
-    IOptions<PermissionOptions> permissionOptions
+    IOptions<EksenPermissionOptions> permissionOptions
 ) : DefaultAuthorizationPolicyProvider(authorizationOptions)
 {
     public override async Task<AuthorizationPolicy?> GetPolicyAsync(string policyName)

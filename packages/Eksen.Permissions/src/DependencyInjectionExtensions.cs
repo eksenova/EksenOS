@@ -25,11 +25,14 @@ public static class DependencyInjectionExtensions
         services.TryAddScoped<IPermissionStore, PermissionStore<TUser, TRole, TTenant>>();
         services.TryAddScoped<IPermissionChecker, PermissionChecker<TUser, TTenant>>();
 
-        if (configureAction != null)
+        services.Configure<EksenPermissionOptions>(options =>
         {
-            var permissionBuilder = new EksenPermissionBuilder(builder);
-            configureAction(permissionBuilder);
-        }
+            if (configureAction != null)
+            {
+                var permissionBuilder = new EksenPermissionBuilder(builder, options);
+                configureAction(permissionBuilder);
+            }
+        });
 
         return builder;
     }
@@ -38,12 +41,16 @@ public static class DependencyInjectionExtensions
 public interface IEksenPermissionBuilder
 {
     IEksenBuilder EksenBuilder { get; }
+
+    EksenPermissionOptions Options { get; }
 }
 
-public class EksenPermissionBuilder(IEksenBuilder eksenBuilder)
+public class EksenPermissionBuilder(IEksenBuilder eksenBuilder, EksenPermissionOptions options)
     : IEksenPermissionBuilder
 {
     public IEksenBuilder EksenBuilder { get; } = eksenBuilder;
+
+    public EksenPermissionOptions Options { get; } = options;
 }
 
 public static class EksenPermissionBuilderExtensions

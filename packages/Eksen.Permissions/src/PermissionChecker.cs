@@ -5,7 +5,7 @@ using Microsoft.Extensions.Options;
 
 namespace Eksen.Permissions;
 
-public sealed class PermissionOptions
+public sealed class EksenPermissionOptions
 {
     public ICollection<DefinedPermission> Permissions
     {
@@ -21,7 +21,7 @@ public sealed class PermissionOptions
 public sealed class PermissionChecker<TUser, TTenant>(
     IPermissionCache permissionCache,
     IEksenUserRepository<TUser, TTenant> userRepository,
-    IOptions<PermissionOptions> permissionOptions,
+    IOptions<EksenPermissionOptions> permissionOptions,
     IAuthContext authContext
 ) : IPermissionChecker
     where TUser : class, IEksenUser<TTenant>
