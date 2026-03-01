@@ -14,6 +14,7 @@ public sealed class
 {
     public void Configure(EntityTypeBuilder<EksenUserRole<TUser, TRole, TTenant>> builder)
     {
+        builder.ToTable(name: "UserRoles");
         builder.ConfigureEksenUserRole();
     }
 }
