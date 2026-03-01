@@ -7,7 +7,7 @@ namespace Eksen.Permissions.EntityFrameworkCore;
 
 public static class ModelBuilderExtensions
 {
-    public static void AddEksenPermissionsTypeConfigurations<TUser, TRole, TTenant>(this ModelBuilder builder)
+    public static void ApplyEksenPermissionsConfigurations<TUser, TRole, TTenant>(this ModelBuilder builder)
         where TUser : class, IEksenUser<TTenant>
         where TRole : class, IEksenRole<TTenant>
         where TTenant : class, IEksenTenant
