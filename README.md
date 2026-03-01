@@ -1,11 +1,11 @@
 ﻿# EksenOS - Eksenova Open-Source Code Libraries
 
-EksenOS is an open-source project that provides a collection of lightweight general-use code libraries for .NET developers.
+![](https://repository-images.githubusercontent.com/1163403392/86acfe23-548a-4988-8bcc-ae4bb9da7496) 
 
+EksenOS is an collection of general-use open-source lightweight code libraries for .NET.
 
 ## License
 
-Copyright (c) EKSENOVA TEKNOLOJİ ANONİM 
-ŞİRKETİ  
+All code is licensed under the terms of the [MIT license](./LICENSE).
 
-**License: [MIT](./LICENSE)**
+Copyright (c) EKSENOVA TEKNOLOJİ ANONİM ŞİRKETİ
