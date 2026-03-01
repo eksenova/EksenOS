@@ -83,6 +83,10 @@ public class EfCoreEksenUserRepository<TDbContext, TUser, TTenant>(TDbContext db
                     .Contains(filterParameters.SearchFilter))
             : queryable;
 
+        queryable = filterParameters.IsActive.HasValue
+            ? queryable.Where(x => x.IsActive == filterParameters.IsActive.Value)
+            : queryable;
+
         return queryable;
     }
 }

@@ -40,4 +40,6 @@ public record EksenUserFilterParameters<TUser, TTenant> : BaseFilterParameters<T
     where TTenant : class, IEksenTenant
 {
     public string? SearchFilter { get; set; }
+
+    public bool? IsActive { get; set; }
 }
