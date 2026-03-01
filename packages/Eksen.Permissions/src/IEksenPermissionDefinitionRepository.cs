@@ -8,4 +8,6 @@ public interface IEksenPermissionDefinitionRepository
 public record PermissionFilterParameters : BaseFilterParameters<PermissionDefinition>
 {
     public bool? IsDisabled { get; set; }
+
+    public string? SearchFilter { get; set; }
 }

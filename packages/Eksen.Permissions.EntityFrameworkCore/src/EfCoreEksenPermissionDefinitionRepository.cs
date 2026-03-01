@@ -12,10 +12,18 @@ public class EfCoreEksenPermissionDefinitionRepository<TDbContext>(TDbContext db
     {
         queryable = base.ApplyQueryFilters(queryable, filterParameters);
 
-        if (filterParameters?.IsDisabled is not null)
+        if (filterParameters == null)
         {
-            queryable = queryable.Where(x => x.IsDisabled == filterParameters.IsDisabled);
+            return queryable;
         }
+
+        queryable = filterParameters.IsDisabled is not null
+            ? queryable.Where(x => x.IsDisabled == filterParameters.IsDisabled)
+            : queryable;
+
+        queryable = !string.IsNullOrWhiteSpace(filterParameters.SearchFilter)
+            ? queryable.Where(x => ((string)(object)x.Name).Contains(filterParameters.SearchFilter))
+            : queryable;
 
         return queryable;
     }
