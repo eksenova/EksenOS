@@ -20,12 +20,12 @@ public static class RoleErrors
                 .WithValue(value)
                 .WithValue(maxLength));
 
-    public delegate ErrorInstance RoleNameAlreadyExistsError(string roleName);
+    public delegate ErrorInstance RoleNameAlreadyExistsError(RoleName roleName);
 
     public static readonly ErrorDescriptor<RoleNameAlreadyExistsError> RoleNameAlreadyExists = new(
         ErrorType.Conflict,
         Category,
         self => roleName =>
             new ErrorInstance(self)
-                .WithValue(roleName));
+                .WithValue(roleName.Value, nameof(roleName)));
 }

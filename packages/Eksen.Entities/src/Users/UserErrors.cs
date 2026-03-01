@@ -30,6 +30,6 @@ public static class UserErrors
         Category,
         self => emailAddress =>
             new ErrorInstance(self)
-                .WithValue(emailAddress.Value)
+                .WithValue(emailAddress.Value, nameof(emailAddress))
     );
 }
