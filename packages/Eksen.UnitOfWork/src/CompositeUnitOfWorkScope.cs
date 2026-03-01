@@ -6,6 +6,7 @@ public class CompositeUnitOfWorkScope : IUnitOfWorkScope
     private readonly UnitOfWorkManager _unitOfWorkManager;
     private readonly IServiceProvider _serviceProvider;
     private readonly ICollection<IUnitOfWorkProviderScope> _scopes;
+    private bool _isDisposed;
 
     public CompositeUnitOfWorkScope(
         UnitOfWorkManager unitOfWorkManager,
@@ -44,7 +45,7 @@ public class CompositeUnitOfWorkScope : IUnitOfWorkScope
         }
 
         await AlertCallbacksAsync(CallbackType.Completed, cancellationToken);
-        _unitOfWorkManager.PopScope(this);
+        await DisposeAsync();
     }
 
     public async Task RollbackAsync(CancellationToken cancellationToken = default)
@@ -55,7 +56,7 @@ public class CompositeUnitOfWorkScope : IUnitOfWorkScope
         }
 
         await AlertCallbacksAsync(CallbackType.Rollback, cancellationToken);
-        _unitOfWorkManager.PopScope(this);
+        await DisposeAsync();
     }
 
     public async Task SaveChangesAsync(CancellationToken cancellationToken = default)
@@ -83,12 +84,19 @@ public class CompositeUnitOfWorkScope : IUnitOfWorkScope
 
     public virtual async ValueTask DisposeAsync()
     {
+        if (_isDisposed)
+        {
+            return;
+        }
+
         foreach (var scope in _scopes)
         {
             await scope.DisposeAsync();
         }
 
         _unitOfWorkManager.PopScope(this);
+
+        _isDisposed = true;
     }
 
     protected virtual async Task AlertCallbacksAsync(
