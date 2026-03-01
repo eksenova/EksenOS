@@ -7,6 +7,10 @@
     <File Path="LICENSE" />
     <File Path="README.md" />
   </Folder>
+  <Folder Name="/test/">
+    <Project Path="packages/Eksen.EntityFrameworkCore.SqlServer/test/Eksen.EntityFrameworkCore.SqlServer.Tests.csproj" />
+    <Project Path="packages/Eksen.TestBase/src/Eksen.TestBase.csproj" />
+  </Folder>
   <Project Path="packages/Eksen.Core/src/Eksen.Core.csproj" />
   <Project Path="packages/Eksen.DataSeeding/src/Eksen.DataSeeding.csproj" />
   <Project Path="packages/Eksen.Emailing/src/Eksen.Emailing.csproj" />

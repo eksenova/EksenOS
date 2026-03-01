@@ -12,7 +12,7 @@ public static class DependencyInjectionExtensions
 {
     public static IEksenEntityFrameworkCoreBuilder UseSqlServerDbContext<TDbContext>(
         this IEksenEntityFrameworkCoreBuilder builder,
-        string connectionName = "Default",
+        string connectionString = "Default",
         Action<DbContextOptionsBuilder<TDbContext>>? dbContextOptionsAction = null,
         Action<SqlServerDbContextOptionsBuilder>? sqlServerOptionsAction = null)
         where TDbContext : DbContext
@@ -22,7 +22,7 @@ public static class DependencyInjectionExtensions
         services.AddScoped<DbContextOptions<TDbContext>>(serviceProvider =>
         {
             var dbContextOptionsBuilder = new DbContextOptionsBuilder<TDbContext>();
-            dbContextOptionsBuilder.UseSqlServer(connectionName, sqlServerOptionsAction);
+            dbContextOptionsBuilder.UseSqlServer(connectionString, sqlServerOptionsAction);
             dbContextOptionsAction?.Invoke(dbContextOptionsBuilder);
 
             var dbContextTracker = serviceProvider.GetRequiredService<IDbContextTracker>();
