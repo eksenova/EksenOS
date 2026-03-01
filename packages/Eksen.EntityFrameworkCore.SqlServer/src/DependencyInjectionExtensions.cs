@@ -12,7 +12,7 @@ public static class DependencyInjectionExtensions
 {
     public static IEksenEntityFrameworkCoreBuilder UseSqlServerDbContext<TDbContext>(
         this IEksenEntityFrameworkCoreBuilder builder,
-        string connectionString = "Default",
+        string connectionString,
         Action<DbContextOptionsBuilder<TDbContext>>? dbContextOptionsAction = null,
         Action<SqlServerDbContextOptionsBuilder>? sqlServerOptionsAction = null)
         where TDbContext : DbContext
