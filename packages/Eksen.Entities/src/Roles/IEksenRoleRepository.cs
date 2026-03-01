@@ -20,6 +20,8 @@ public record EksenRoleFilterParameters<TRole, TTenant> : BaseFilterParameters<T
     public string? SearchFilter { get; set; }
 
     public RoleName? Name { get; set; }
+
+    public EksenTenantId? TenantId { get; set; }
 }
 
 public record EksenRoleIncludeOptions<TRole, TTenant> : BaseIncludeOptions<TRole>

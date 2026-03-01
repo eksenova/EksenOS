@@ -57,6 +57,10 @@ public class EfCoreEksenRoleRepository<TDbContext, TRole, TTenant>(TDbContext db
             ? queryable.Where(x => x.Name == filterParameters.Name)
             : queryable;
 
+        queryable = filterParameters.TenantId != null
+            ? queryable.Where(x => x.Tenant!.Id == filterParameters.TenantId)
+            : queryable;
+
         return queryable;
     }
 }

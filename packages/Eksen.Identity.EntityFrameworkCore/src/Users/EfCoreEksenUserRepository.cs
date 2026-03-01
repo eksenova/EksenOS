@@ -87,6 +87,10 @@ public class EfCoreEksenUserRepository<TDbContext, TUser, TTenant>(TDbContext db
             ? queryable.Where(x => x.IsActive == filterParameters.IsActive.Value)
             : queryable;
 
+        queryable = filterParameters.TenantId != null
+            ? queryable.Where(x => x.Tenant!.Id == filterParameters.TenantId)
+            : queryable;
+
         return queryable;
     }
 }
