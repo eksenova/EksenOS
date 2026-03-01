@@ -12,8 +12,8 @@ public static class TenantTypeConfigurationExtensions
         {
             builder.Property(x => x.Id)
                 .HasConversion(
-                    v => v.Value,
-                    v => new EksenTenantId(v)
+                    v => v.Value.ToString(),
+                    v => EksenTenantId.Parse(v)
                 )
                 .HasMaxLength(EksenTenantId.Length)
                 .IsRequired();

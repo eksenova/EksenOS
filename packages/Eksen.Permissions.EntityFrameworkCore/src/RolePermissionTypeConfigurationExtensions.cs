@@ -16,8 +16,8 @@ public static class RolePermissionTypeConfigurationExtensions
         {
             builder.Property(x => x.Id)
                 .HasConversion(
-                    v => v.Value,
-                    v => new EksenRolePermissionId(v)
+                    v => v.Value.ToString(),
+                    v => EksenRolePermissionId.Parse(v)
                 )
                 .HasMaxLength(EksenRolePermissionId.Length)
                 .IsRequired();

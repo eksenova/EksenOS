@@ -10,8 +10,8 @@ public static class PermissionDefinitionTypeConfigurationExtensions
         {
             builder.Property(x => x.Id)
                 .HasConversion(
-                    id => id.Value,
-                    value => new PermissionDefinitionId(value))
+                    id => id.Value.ToString(),
+                    value => PermissionDefinitionId.Parse(value))
                 .HasMaxLength(PermissionDefinitionId.Length)
                 .ValueGeneratedNever();
 

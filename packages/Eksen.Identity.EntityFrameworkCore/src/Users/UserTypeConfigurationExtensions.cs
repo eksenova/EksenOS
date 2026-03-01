@@ -18,8 +18,8 @@ public static class UserTypeConfigurationExtensions
         {
             builder.Property(x => x.Id)
                 .HasConversion(
-                    v => v.Value,
-                    v => new EksenUserId(v)
+                    v => v.Value.ToString(),
+                    v => EksenUserId.Parse(v)
                 )
                 .HasMaxLength(EksenUserId.Length)
                 .IsRequired();

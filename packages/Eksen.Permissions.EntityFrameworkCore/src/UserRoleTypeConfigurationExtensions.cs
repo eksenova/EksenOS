@@ -18,8 +18,8 @@ public static class UserRoleTypeConfigurationExtensions
         {
             builder.Property(x => x.Id)
                 .HasConversion(
-                    v => v.Value,
-                    v => new EksenUserRoleId(v)
+                    v => v.Value.ToString(),
+                    v => EksenUserRoleId.Parse(v)
                 )
                 .HasMaxLength(EksenUserRoleId.Length)
                 .IsRequired();
