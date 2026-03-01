@@ -8,7 +8,7 @@ namespace Eksen.Permissions;
 
 public record EksenRolePermissionId(System.Ulid Value) : UlidEntityId<EksenRolePermissionId>(Value);
 
-public class EksenRolePermission<TRole, TTenant> : IEntity<EksenRolePermissionId, System.Ulid>, IHasTenant<TTenant>
+public class EksenRolePermission<TRole, TTenant> : IEntity<EksenRolePermissionId, System.Ulid>, IMayHaveTenant<TTenant>
     where TRole : class, IEksenRole<TTenant>
     where TTenant : class, IEksenTenant
 {
@@ -16,7 +16,7 @@ public class EksenRolePermission<TRole, TTenant> : IEntity<EksenRolePermissionId
 
     public TRole Role { get; private set; }
 
-    public TTenant Tenant { get; private set; }
+    public TTenant? Tenant { get; private set; }
 
     public PermissionDefinition PermissionDefinition { get; private set; }
 
@@ -32,7 +32,7 @@ public class EksenRolePermission<TRole, TTenant> : IEntity<EksenRolePermissionId
     public EksenRolePermission(
         TRole role,
         PermissionDefinition permissionDefinition,
-        TTenant tenant) : this()
+        TTenant? tenant) : this()
     {
         Id = EksenRolePermissionId.NewId();
 
