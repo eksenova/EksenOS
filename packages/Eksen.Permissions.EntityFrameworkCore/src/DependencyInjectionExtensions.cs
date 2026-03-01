@@ -12,13 +12,13 @@ namespace Microsoft.Extensions.DependencyInjection;
 
 public static class DependencyInjectionExtensions
 {
-    extension<TUser, TRole, TTenant>(IEksenPermissionBuilder<TUser, TRole, TTenant> builder)
-        where TUser : class, IEksenUser<TTenant>
-        where TRole : class, IEksenRole<TTenant>
-        where TTenant : class, IEksenTenant
+    extension(IEksenPermissionBuilder builder)
     {
-        public IEksenPermissionBuilder<TUser, TRole, TTenant> UseEntityFrameworkCore<TDbContext>()
+        public IEksenPermissionBuilder UseEntityFrameworkCore<TUser, TRole, TTenant, TDbContext>()
             where TDbContext : EksenDbContext
+            where TUser : class, IEksenUser<TTenant>
+            where TRole : class, IEksenRole<TTenant>
+            where TTenant : class, IEksenTenant
         {
             var services = builder.Services;
 

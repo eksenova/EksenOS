@@ -14,7 +14,7 @@ public static class DependencyInjectionExtensions
 {
     public static IEksenBuilder AddPermissions<TUser, TRole, TTenant>(
         this IEksenBuilder builder,
-        Action<IEksenPermissionBuilder<TUser, TRole, TTenant>>? configureAction = null)
+        Action<IEksenPermissionBuilder>? configureAction = null)
         where TUser : class, IEksenUser<TTenant>
         where TRole : class, IEksenRole<TTenant>
         where TTenant : class, IEksenTenant
@@ -27,7 +27,7 @@ public static class DependencyInjectionExtensions
 
         if (configureAction != null)
         {
-            var permissionBuilder = new EksenPermissionBuilder<TUser, TRole, TTenant>(builder);
+            var permissionBuilder = new EksenPermissionBuilder(builder);
             configureAction(permissionBuilder);
         }
 
@@ -35,29 +35,20 @@ public static class DependencyInjectionExtensions
     }
 }
 
-public interface IEksenPermissionBuilder<TUser, TRole, TTenant>
-    where TUser : class, IEksenUser<TTenant>
-    where TRole : class, IEksenRole<TTenant>
-    where TTenant : class, IEksenTenant
+public interface IEksenPermissionBuilder
 {
     IEksenBuilder EksenBuilder { get; }
 }
 
-public class EksenPermissionBuilder<TUser, TRole, TTenant>(IEksenBuilder eksenBuilder)
-    : IEksenPermissionBuilder<TUser, TRole, TTenant>
-    where TUser : class, IEksenUser<TTenant>
-    where TRole : class, IEksenRole<TTenant>
-    where TTenant : class, IEksenTenant
+public class EksenPermissionBuilder(IEksenBuilder eksenBuilder)
+    : IEksenPermissionBuilder
 {
     public IEksenBuilder EksenBuilder { get; } = eksenBuilder;
 }
 
 public static class EksenPermissionBuilderExtensions
 {
-    extension<TUser, TRole, TTenant>(IEksenPermissionBuilder<TUser, TRole, TTenant> builder)
-        where TUser : class, IEksenUser<TTenant>
-        where TRole : class, IEksenRole<TTenant>
-        where TTenant : class, IEksenTenant
+    extension(IEksenPermissionBuilder builder)
     {
         public IServiceCollection Services
         {

@@ -27,6 +27,7 @@
   <Project Path="packages/Eksen.SmartEnums.OpenApi/src/Eksen.SmartEnums.OpenApi.csproj" />
   <Project Path="packages/Eksen.SmartEnums/src/Eksen.SmartEnums.csproj" />
   <Project Path="packages/Eksen.Templating/src/Eksen.Templating.csproj" />
+  <Project Path="packages/Eksen.Ulid.AspNetCore/src/Eksen.Ulid.AspNetCore.csproj" />
   <Project Path="packages/Eksen.Ulid.OpenApi/src/Eksen.Ulid.OpenApi.csproj" />
   <Project Path="packages/Eksen.Ulid/src/Eksen.Ulid.csproj" />
   <Project Path="packages/Eksen.UnitOfWork.AspNetCore/src/Eksen.UnitOfWork.AspNetCore.csproj" />

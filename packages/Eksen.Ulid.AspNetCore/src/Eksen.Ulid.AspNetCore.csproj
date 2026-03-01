@@ -1,9 +1,14 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 	<Import Project="..\..\..\common.props" />
+
 	<ItemGroup>
-		<ProjectReference Include="..\..\Eksen.Ulid.AspNetCore\src\Eksen.Ulid.AspNetCore.csproj" />
+		<FrameworkReference Include="Microsoft.AspNetCore.App" />
+	</ItemGroup>
+
+	<ItemGroup>
 		<ProjectReference Include="..\..\Eksen.Ulid\src\Eksen.Ulid.csproj" />
 	</ItemGroup>
+
 	<ItemGroup>
 		<PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="10.0.3" />
 	</ItemGroup>
