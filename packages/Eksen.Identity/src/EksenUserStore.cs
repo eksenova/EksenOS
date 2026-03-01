@@ -1,17 +1,21 @@
-﻿using Eksen.Entities.Tenants;
+﻿using Eksen.Entities.Roles;
+using Eksen.Entities.Tenants;
 using Eksen.Entities.Users;
+using Eksen.Permissions;
 using Eksen.ValueObjects.Emailing;
 using Eksen.ValueObjects.Hashing;
 using Microsoft.AspNetCore.Identity;
 
 namespace Eksen.Identity;
 
-public class EksenUserStore<TUser, TTenant>(
-    IEksenUserRepository<TUser, TTenant> userRepository
+public class EksenUserStore<TUser, TRole, TTenant>(
+    IEksenUserRepository<TUser, TTenant> userRepository,
+    IEksenUserRoleRepository<TUser, TRole, TTenant> userRoleRepository
 ) : IUserPasswordStore<TUser>,
     IUserEmailStore<TUser>,
     IUserRoleStore<TUser>
     where TUser : class, IEksenUser<TTenant>
+    where TRole : class, IEksenRole<TTenant>
     where TTenant : class, IEksenTenant
 {
     public Task SetEmailAsync(TUser user, string? email, CancellationToken cancellationToken)
@@ -166,14 +170,19 @@ public class EksenUserStore<TUser, TTenant>(
         return Task.FromException(new NotImplementedException());
     }
 
-    public virtual Task<IList<string>> GetRolesAsync(TUser user, CancellationToken cancellationToken)
+    public virtual async Task<IList<string>> GetRolesAsync(TUser user, CancellationToken cancellationToken)
     {
-        return Task.FromException<IList<string>>(new NotImplementedException());
+        var roles = await userRoleRepository.GetRolesByUserIdAsync(user.Id, cancellationToken);
+
+        var roleNames = roles.Select(r => r.Name.Value).ToList();
+
+        return roleNames;
     }
 
-    public virtual Task<bool> IsInRoleAsync(TUser user, string roleName, CancellationToken cancellationToken)
+    public virtual async Task<bool> IsInRoleAsync(TUser user, string roleName, CancellationToken cancellationToken)
     {
-        return Task.FromException<bool>(new NotImplementedException());
+        var roleNames = await GetRolesAsync(user, cancellationToken);
+        return roleNames.Contains(roleName);
     }
 
     public virtual Task<IList<TUser>> GetUsersInRoleAsync(string roleName, CancellationToken cancellationToken)
