@@ -1,11 +1,11 @@
 ﻿using Cysharp.Serialization.Json;
 using Eksen.Ulid.AspNetCore;
 using Microsoft.AspNetCore.Http.Json;
-using Microsoft.Extensions.DependencyInjection;
 
 #pragma warning disable IDE0130
 
 // ReSharper disable once CheckNamespace
+namespace Microsoft.Extensions.DependencyInjection;
 
 public static class DependencyInjectionExtensions
 {

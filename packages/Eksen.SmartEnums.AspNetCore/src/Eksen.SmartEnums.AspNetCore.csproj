@@ -7,7 +7,7 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<ProjectReference Include="..\..\Eksen.ValueObjects\src\Eksen.ValueObjects.csproj" />
+		<ProjectReference Include="..\..\Eksen.SmartEnums\src\Eksen.SmartEnums.csproj" />
 	</ItemGroup>
 
 </Project>

@@ -1,6 +1,6 @@
 ﻿namespace Eksen.SmartEnums;
 
-public static class EnumerationExtensions
+public static class SmartEnumTypeExtensions
 {
     extension(Type type)
     {

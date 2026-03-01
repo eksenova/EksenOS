@@ -26,6 +26,7 @@
   <Project Path="packages/Eksen.Permissions/src/Eksen.Permissions.csproj" />
   <Project Path="packages/Eksen.Repositories/src/Eksen.Repositories.csproj" />
   <Project Path="packages/Eksen.Scalar/src/Eksen.Scalar.csproj" />
+  <Project Path="packages/Eksen.SmartEnums.AspNetCore/src/Eksen.SmartEnums.AspNetCore.csproj" />
   <Project Path="packages/Eksen.SmartEnums.OpenApi/src/Eksen.SmartEnums.OpenApi.csproj" />
   <Project Path="packages/Eksen.SmartEnums/src/Eksen.SmartEnums.csproj" />
   <Project Path="packages/Eksen.Templating/src/Eksen.Templating.csproj" />

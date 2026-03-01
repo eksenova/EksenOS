@@ -4,7 +4,7 @@ using System.Reflection;
 
 namespace Eksen.SmartEnums;
 
-public class EnumerationTypeConverter<T> : TypeConverter where T : Enumeration<T>
+public class SmartEnumTypeConverter<T> : TypeConverter where T : Enumeration<T>
 {
     public override bool CanConvertFrom(ITypeDescriptorContext? context, Type sourceType)
     {

@@ -5,7 +5,7 @@ using Eksen.ErrorHandling;
 
 namespace Eksen.SmartEnums;
 
-public class JsonStringEnumerationConverter<T> : JsonConverter<T> where T : Enumeration<T>
+public class JsonStringSmartEnumConverter<T> : JsonConverter<T> where T : Enumeration<T>
 {
     public override T Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
     {
@@ -38,7 +38,7 @@ public class JsonStringEnumerationConverter : JsonConverterFactory
 
     public override JsonConverter CreateConverter(Type typeToConvert, JsonSerializerOptions options)
     {
-        var converterType = typeof(JsonStringEnumerationConverter<>).MakeGenericType(typeToConvert);
+        var converterType = typeof(JsonStringSmartEnumConverter<>).MakeGenericType(typeToConvert);
         return (JsonConverter)Activator.CreateInstance(converterType)!;
     }
 }

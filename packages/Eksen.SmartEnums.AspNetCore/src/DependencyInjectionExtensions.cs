@@ -7,20 +7,20 @@ namespace Microsoft.Extensions.DependencyInjection;
 
 public static class DependencyInjectionExtensions
 {
-    public static IEksenValueObjectsBuilder AddAspNetCoreSupport(this IEksenValueObjectsBuilder builder)
+    public static IEksenSmartEnumsBuilder AddAspNetCoreSupport(this IEksenSmartEnumsBuilder builder)
     {
         var services = builder.Services;
-        var valueObjectOptions = builder.Options;
+        var smartEnumOptions = builder.Options;
 
         services.Configure<JsonOptions>(options =>
         {
-            valueObjectOptions.ConfigureJsonOptions(options.SerializerOptions);
+            smartEnumOptions.ConfigureJsonOptions(options.SerializerOptions);
         });
 
         services.AddMvcCore()
             .AddJsonOptions(options =>
             {
-                valueObjectOptions.ConfigureJsonOptions(options.JsonSerializerOptions);
+                smartEnumOptions.ConfigureJsonOptions(options.JsonSerializerOptions);
             });
 
         return builder;

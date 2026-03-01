@@ -1,6 +1,9 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
-  <Import Project="..\..\..\common.props" />
-  <ItemGroup>
-    <ProjectReference Include="..\..\Eksen.SmartEnums\src\Eksen.SmartEnums.csproj" />
-  </ItemGroup>
+	<Import Project="..\..\..\common.props" />
+	<ItemGroup>
+		<ProjectReference Include="..\..\Eksen.SmartEnums\src\Eksen.SmartEnums.csproj" />
+	</ItemGroup>
+	<ItemGroup>
+		<PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="10.0.3" />
+	</ItemGroup>
 </Project>

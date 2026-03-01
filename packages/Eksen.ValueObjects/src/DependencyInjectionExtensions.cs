@@ -1,9 +1,9 @@
 ﻿using Eksen.ValueObjects;
-using Microsoft.Extensions.DependencyInjection;
 
 #pragma warning disable IDE0130
 
 // ReSharper disable once CheckNamespace
+namespace Microsoft.Extensions.DependencyInjection;
 
 public static class DependencyInjectionExtensions
 {
@@ -11,15 +11,16 @@ public static class DependencyInjectionExtensions
         this IEksenBuilder builder,
         Action<IEksenValueObjectsBuilder>? configureAction = null)
     {
-        var options = new EksenValueObjectOptions();
-        options.AddAssembly(typeof(DependencyInjectionExtensions).Assembly);
-
-        var ulidBuilder = new EksenValueObjectsBuilder(builder, options);
-
-        if (configureAction != null)
+        builder.Services.Configure<EksenValueObjectOptions>(options =>
         {
-            configureAction(ulidBuilder);
-        }
+            options.AddAssembly(typeof(DependencyInjectionExtensions).Assembly);
+
+            if (configureAction != null)
+            {
+                var ulidBuilder = new EksenValueObjectsBuilder(builder, options);
+                configureAction(ulidBuilder);
+            }
+        });
 
         return builder;
     }

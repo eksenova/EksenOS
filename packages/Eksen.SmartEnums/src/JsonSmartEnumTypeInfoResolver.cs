@@ -4,7 +4,7 @@ using System.Text.Json.Serialization.Metadata;
 
 namespace Eksen.SmartEnums;
 
-public class JsonEnumerationTypeInfoResolver(
+public class JsonSmartEnumTypeInfoResolver(
     IJsonTypeInfoResolver baseTypeInfoResolver
 ) : IJsonTypeInfoResolver
 {
