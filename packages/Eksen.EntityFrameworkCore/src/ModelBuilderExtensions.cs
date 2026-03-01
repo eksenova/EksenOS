@@ -37,13 +37,13 @@ public static class ModelBuilderExtensions
         }
     }
 
-    public static void ApplyEksenQueryFilters<TBaseEntity>(
+    public static void ApplyEksenQueryFilters(
         this ModelBuilder modelBuilder)
     {
-        modelBuilder.ApplySoftDeleteQueryFilter<TBaseEntity>();
+        modelBuilder.ApplySoftDeleteQueryFilter();
     }
 
-    public static void ApplySoftDeleteQueryFilter<TBaseEntity>(
+    public static void ApplySoftDeleteQueryFilter(
         this ModelBuilder modelBuilder)
     {
         modelBuilder.ApplyQueryFilter<ISoftDelete>(e => !e.IsDeleted);
