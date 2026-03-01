@@ -98,7 +98,7 @@ public static class EksenIdentityBuilderExtensions
             get { return builder.EksenBuilder.Services; }
         }
 
-        public IEksenIdentityBuilder AddUserRepository<TUser, TTenant, TUserRepository>()
+        public IEksenIdentityBuilder AddUserRepository<TUserRepository, TUser, TTenant>()
             where TUserRepository : class, IEksenUserRepository<TUser, TTenant>
             where TUser : class, IEksenUser<TTenant>
             where TTenant : class, IEksenTenant
@@ -108,7 +108,7 @@ public static class EksenIdentityBuilderExtensions
             return builder;
         }
 
-        public IEksenIdentityBuilder AddRoleRepository<TRole, TTenant, TRoleRepository>()
+        public IEksenIdentityBuilder AddRoleRepository<TRoleRepository, TRole, TTenant>()
             where TRoleRepository : class, IEksenRoleRepository<TRole, TTenant>
             where TRole : class, IEksenRole<TTenant>
             where TTenant : class, IEksenTenant
@@ -118,7 +118,7 @@ public static class EksenIdentityBuilderExtensions
             return builder;
         }
 
-        public IEksenIdentityBuilder AddTenantRepository<TTenant, TTenantRepository>()
+        public IEksenIdentityBuilder AddTenantRepository<TTenantRepository, TTenant>()
             where TTenantRepository : class, IEksenTenantRepository<TTenant>
             where TTenant : class, IEksenTenant
         {

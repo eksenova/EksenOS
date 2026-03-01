@@ -50,6 +50,11 @@ public static class UserTypeConfigurationExtensions
 
             builder.HasKey(x => x.Id);
 
+            builder.HasOne(x => x.Tenant)
+                .WithMany()
+                .HasForeignKey("TenantId")
+                .OnDelete(DeleteBehavior.Restrict);
+
             var tableName = builder.Metadata.GetTableName();
             var tenantIdColumnName = builder.Metadata.FindNavigation(nameof(IEksenUser<>.Tenant))
                 ?.ForeignKey.Properties

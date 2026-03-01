@@ -2,19 +2,15 @@
 
 namespace Eksen.Entities.Tenants;
 
-public interface IEksenTenantRepository<TTenant>
-    : IEksenTenantRepository<TTenant, EksenTenantFilterParameters<TTenant>, EksenTenantIncludeOptions<TTenant>>
-    where TTenant : class, IEksenTenant;
-
-public interface IEksenTenantRepository<TTenant, in TFilterParameters, in TIncludeOptions> : IIdRepository<
+public interface IEksenTenantRepository<TTenant> : IIdRepository<
     TTenant,
     EksenTenantId,
     System.Ulid,
-    TFilterParameters,
-    TIncludeOptions>
-    where TTenant : class, IEksenTenant
-    where TFilterParameters : EksenTenantFilterParameters<TTenant>, new()
-    where TIncludeOptions : EksenTenantIncludeOptions<TTenant>, new();
+    EksenTenantFilterParameters<TTenant>,
+    EksenTenantIncludeOptions<TTenant>
+>
+    where TTenant :
+    class, IEksenTenant;
 
 public record EksenTenantFilterParameters<TTenant> : BaseFilterParameters<TTenant>
     where TTenant : class, IEksenTenant

@@ -1,22 +1,27 @@
 ﻿using Eksen.Entities.Roles;
 using Eksen.Entities.Tenants;
 using Eksen.EntityFrameworkCore;
-using Eksen.Repositories;
 using Microsoft.EntityFrameworkCore;
 
 namespace Eksen.Identity.EntityFrameworkCore.Roles;
 
-public class EfCoreEksenRoleRepository<TDbContext, TRole, TTenant, TFilterParameters, TIncludeOptions>(TDbContext dbContext)
-    : EfCoreIdRepository<TDbContext, TRole, EksenRoleId, System.Ulid, TFilterParameters, TIncludeOptions>(dbContext),
-        IEksenRoleRepository<TRole, TTenant, TFilterParameters, TIncludeOptions>,
+public class EfCoreEksenRoleRepository<TDbContext, TRole, TTenant>(TDbContext dbContext)
+    : EfCoreIdRepository<
+            TDbContext,
+            TRole,
+            EksenRoleId,
+            System.Ulid,
+            EksenRoleFilterParameters<TRole, TTenant>,
+            EksenRoleIncludeOptions<TRole, TTenant>
+        >(dbContext),
         IEksenRoleRepository<TRole, TTenant>
     where TDbContext : EksenDbContext
     where TRole : class, IEksenRole<TTenant>
     where TTenant : class, IEksenTenant
-    where TFilterParameters : EksenRoleFilterParameters<TRole, TTenant>, new()
-    where TIncludeOptions : EksenRoleIncludeOptions<TRole, TTenant>, new()
 {
-    protected override IQueryable<TRole> ApplyIncludes(IQueryable<TRole> queryable, TIncludeOptions? includeOptions = default)
+    protected override IQueryable<TRole> ApplyIncludes(
+        IQueryable<TRole> queryable,
+        EksenRoleIncludeOptions<TRole, TTenant>? includeOptions = null)
     {
         queryable = base.ApplyIncludes(queryable, includeOptions);
 
@@ -33,7 +38,9 @@ public class EfCoreEksenRoleRepository<TDbContext, TRole, TTenant, TFilterParame
     }
 
 
-    protected override IQueryable<TRole> ApplyQueryFilters(IQueryable<TRole> queryable, TFilterParameters? filterParameters = default)
+    protected override IQueryable<TRole> ApplyQueryFilters(
+        IQueryable<TRole> queryable,
+        EksenRoleFilterParameters<TRole, TTenant>? filterParameters = null)
     {
         queryable = base.ApplyQueryFilters(queryable, filterParameters);
 
@@ -47,107 +54,5 @@ public class EfCoreEksenRoleRepository<TDbContext, TRole, TTenant, TFilterParame
             : queryable;
 
         return queryable;
-    }
-
-    public Task<TRole?> FindAsync(
-        EksenRoleFilterParameters<TRole, TTenant> filterParameters,
-        EksenRoleIncludeOptions<TRole, TTenant>? includeOptions = null,
-        DefaultQueryOptions? queryOptions = null,
-        CancellationToken cancellationToken = default)
-    {
-        return base.FindAsync(
-            (TFilterParameters)filterParameters,
-            (TIncludeOptions?)includeOptions,
-            queryOptions,
-            cancellationToken
-        );
-    }
-
-    public Task<TRole> GetAsync(
-        EksenRoleFilterParameters<TRole, TTenant> filterParameters,
-        EksenRoleIncludeOptions<TRole, TTenant>? includeOptions = null,
-        DefaultQueryOptions? queryOptions = null,
-        CancellationToken cancellationToken = default)
-    {
-        return base.GetAsync(
-            (TFilterParameters)filterParameters,
-            (TIncludeOptions?)includeOptions,
-            queryOptions,
-            cancellationToken
-        );
-    }
-
-    public Task<ICollection<TRole>> GetListAsync(
-        EksenRoleFilterParameters<TRole, TTenant>? filterParameters = null,
-        EksenRoleIncludeOptions<TRole, TTenant>? includeOptions = null,
-        DefaultPaginationParameters? paginationParameters = null,
-        DefaultSortingParameters<TRole>? sortingParameters = null,
-        DefaultQueryOptions? queryOptions = null,
-        CancellationToken cancellationToken = default)
-    {
-        return base.GetListAsync(
-            (TFilterParameters?)filterParameters,
-            (TIncludeOptions?)includeOptions,
-            paginationParameters,
-            sortingParameters,
-            queryOptions,
-            cancellationToken
-        );
-    }
-
-    public Task<long> CountAsync(
-        EksenRoleFilterParameters<TRole, TTenant>? filterParameters = null,
-        DefaultQueryOptions? queryOptions = null,
-        CancellationToken cancellationToken = default)
-    {
-        return base.CountAsync(
-            (TFilterParameters?)filterParameters,
-            queryOptions,
-            cancellationToken
-        );
-    }
-
-    public Task<TRole?> FindAsync(
-        EksenRoleId id,
-        EksenRoleFilterParameters<TRole, TTenant>? filterParameters = null,
-        EksenRoleIncludeOptions<TRole, TTenant>? includeOptions = null,
-        DefaultQueryOptions? queryOptions = null,
-        CancellationToken cancellationToken = default)
-    {
-        return base.FindAsync(
-            id,
-            (TFilterParameters?)filterParameters,
-            (TIncludeOptions?)includeOptions,
-            queryOptions,
-            cancellationToken
-        );
-    }
-
-    public Task<TRole> GetAsync(
-        EksenRoleId id,
-        EksenRoleFilterParameters<TRole, TTenant>? filterParameters = null,
-        EksenRoleIncludeOptions<TRole, TTenant>? includeOptions = null,
-        DefaultQueryOptions? queryOptions = null,
-        CancellationToken cancellationToken = default)
-    {
-        return base.GetAsync(
-            id,
-            (TFilterParameters?)filterParameters,
-            (TIncludeOptions?)includeOptions,
-            queryOptions,
-            cancellationToken
-        );
-    }
-
-    public Task RemoveAsync(
-        EksenRoleFilterParameters<TRole, TTenant> predicate,
-        bool autoSave = false,
-        CancellationToken cancellationToken = default)
-    {
-        return base.RemoveAsync(
-            (TFilterParameters)predicate,
-            autoSave,
-            cancellationToken
-        );
     }
 }
