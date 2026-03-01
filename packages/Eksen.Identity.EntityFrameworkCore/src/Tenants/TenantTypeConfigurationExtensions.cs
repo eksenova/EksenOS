@@ -31,7 +31,7 @@ public static class TenantTypeConfigurationExtensions
 
             var tableName = builder.Metadata.GetTableName();
 
-            builder.HasIndex("Name", $"IX_{tableName}_Name")
+            builder.HasIndex(["Name"], $"IX_{tableName}_Name")
                 .IsUnique();
 
             return builder;

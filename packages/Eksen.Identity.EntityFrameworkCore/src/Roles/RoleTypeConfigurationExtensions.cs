@@ -53,7 +53,7 @@ public static class RoleTypeConfigurationExtensions
                 .HasFilter($"{tenantIdColumnName} IS NOT NULL")
                 .IsUnique();
 
-            builder.HasIndex("Name",
+            builder.HasIndex(["Name"],
                     $"IX_{tableName}_Name")
                 .HasFilter($"{tenantIdColumnName} IS NULL")
                 .IsUnique();

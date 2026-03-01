@@ -69,7 +69,7 @@ public static class UserTypeConfigurationExtensions
                 .HasFilter($"{tenantIdColumnName} IS NOT NULL")
                 .IsUnique();
 
-            builder.HasIndex("EmailAddress",
+            builder.HasIndex(["EmailAddress"],
                     $"IX_{tableName}_EmailAddress")
                 .HasFilter($"{tenantIdColumnName} IS NULL")
                 .IsUnique();
