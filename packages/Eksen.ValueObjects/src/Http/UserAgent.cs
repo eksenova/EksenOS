@@ -1,23 +1,39 @@
 ﻿namespace Eksen.ValueObjects.Http;
 
-public sealed record UserAgent
+public sealed record UserAgent : ValueObject<UserAgent, string, UserAgent>,
+    IConcreteValueObject<UserAgent, string>
 {
     public const int MaxLength = 255;
 
-    public string Value { get; }
+    private UserAgent(string value) : base(value) { }
 
-    public UserAgent(string userAgent)
+    public override string ToParseableString(IFormatProvider? provider = null)
     {
-        if (string.IsNullOrWhiteSpace(userAgent))
+        return Value;
+    }
+
+    protected override string Validate(string value)
+    {
+        if (string.IsNullOrWhiteSpace(value))
         {
             throw HttpErrors.EmptyUserAgent.Raise();
         }
 
-        if (userAgent.Length > MaxLength)
+        if (value.Length > MaxLength)
         {
-            throw HttpErrors.UserAgentOverflow.Raise(userAgent, MaxLength);
+            throw HttpErrors.UserAgentOverflow.Raise(value, MaxLength);
         }
 
-        Value = userAgent;
+        return value;
+    }
+
+    public static UserAgent Create(string value)
+    {
+        return Parse(value);
+    }
+
+    public static UserAgent Parse(string value, IFormatProvider? formatProvider = null)
+    {
+        return new UserAgent(value);
     }
 }
