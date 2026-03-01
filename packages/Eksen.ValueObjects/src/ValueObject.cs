@@ -15,59 +15,7 @@ public interface IValueObject
 
     object Value { get; }
 
-    private static readonly List<(
-        Type ValueObjectType,
-        Type UnderlyingValueType,
-        Type ValueObjectImplementationType)> KnownValueObjectTypes = [];
-
     public static abstract Type GetUnderlyingValueType();
-
-    public static void Register<TValueObject>()
-        where TValueObject : IValueObject
-    {
-        if (!typeof(TValueObject).IsConcreteValueObject)
-        {
-            throw new ArgumentException($"ValueObject does not implement {nameof(IConcreteValueObject<,>)}: " +
-                                        $"{typeof(TValueObject).FullName}", nameof(TValueObject));
-        }
-
-        KnownValueObjectTypes.Add((
-            typeof(TValueObject),
-            TValueObject.GetUnderlyingValueType(),
-            typeof(TValueObject)
-        ));
-
-        TypeDescriptor.AddAttributes(
-            typeof(TValueObject),
-            new TypeConverterAttribute(typeof(ValueObjectTypeConverter<,,>)
-                .MakeGenericType(
-                    typeof(TValueObject),
-                    TValueObject.GetUnderlyingValueType(),
-                    typeof(TValueObject)))
-        );
-
-        TypeDescriptor.AddAttributes(
-            typeof(TValueObject),
-            new JsonConverterAttribute(typeof(JsonValueObjectConverter<,,>)
-                .MakeGenericType(
-                    typeof(TValueObject),
-                    TValueObject.GetUnderlyingValueType(),
-                    typeof(TValueObject)))
-        );
-    }
-
-    public static void RegisterFor(JsonSerializerOptions options)
-    {
-        var factory = new JsonValueObjectConverter();
-        var baseTypeResolver = options.TypeInfoResolver ?? new DefaultJsonTypeInfoResolver();
-        options.TypeInfoResolver = new JsonValueObjectTypeInfoResolver(baseTypeResolver);
-
-        foreach (var knownValueObjectType in KnownValueObjectTypes)
-        {
-            var converter = factory.CreateConverter(knownValueObjectType.ValueObjectType, options);
-            options.Converters.Add(converter);
-        }
-    }
 }
 
 public interface IValueObject<TValueObject, out TUnderlyingValue> : IValueObject

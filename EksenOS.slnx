@@ -32,5 +32,6 @@
   <Project Path="packages/Eksen.Ulid/src/Eksen.Ulid.csproj" />
   <Project Path="packages/Eksen.UnitOfWork.AspNetCore/src/Eksen.UnitOfWork.AspNetCore.csproj" />
   <Project Path="packages/Eksen.UnitOfWork/src/Eksen.UnitOfWork.csproj" />
+  <Project Path="packages/Eksen.ValueObjects.AspNetCore/src/Eksen.ValueObjects.AspNetCore.csproj" />
   <Project Path="packages/Eksen.ValueObjects/src/Eksen.ValueObjects.csproj" />
 </Solution>
