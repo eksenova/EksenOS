@@ -1,7 +1,7 @@
 ﻿using Microsoft.AspNetCore.OpenApi;
 using Microsoft.OpenApi;
 
-namespace EksenDefter.Infrastructure.OpenApi;
+namespace Eksen.OpenApi;
 
 [AttributeUsage(AttributeTargets.Property | AttributeTargets.Field)]
 public class ExampleValueAttribute(object? value) : Attribute
@@ -9,7 +9,7 @@ public class ExampleValueAttribute(object? value) : Attribute
     public object? Value { get; } = value;
 }
 
-internal sealed class ExampleValueSchemaTransformer : IOpenApiSchemaTransformer
+public sealed class ExampleValueSchemaTransformer : IOpenApiSchemaTransformer
 {
     public Task TransformAsync(OpenApiSchema schema, OpenApiSchemaTransformerContext context, CancellationToken cancellationToken)
     {

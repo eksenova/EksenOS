@@ -3,9 +3,9 @@ using System.Reflection;
 using Microsoft.AspNetCore.OpenApi;
 using Microsoft.OpenApi;
 
-namespace EksenDefter.Infrastructure.OpenApi;
+namespace Eksen.OpenApi;
 
-internal sealed class NotMappedSchemaTransformer : IOpenApiSchemaTransformer
+public sealed class NotMappedSchemaTransformer : IOpenApiSchemaTransformer
 {
     public Task TransformAsync(
         OpenApiSchema schema, 

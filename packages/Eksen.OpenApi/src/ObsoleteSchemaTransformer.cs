@@ -2,9 +2,9 @@
 using Microsoft.AspNetCore.OpenApi;
 using Microsoft.OpenApi;
 
-namespace EksenDefter.Infrastructure.OpenApi;
+namespace Eksen.OpenApi;
 
-internal sealed class ObsoleteSchemaTransformer : IOpenApiSchemaTransformer
+public sealed class ObsoleteSchemaTransformer : IOpenApiSchemaTransformer
 {
     public Task TransformAsync(
         OpenApiSchema schema,

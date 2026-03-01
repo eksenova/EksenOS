@@ -4,9 +4,9 @@ using System.Text.Json.Nodes;
 using Microsoft.AspNetCore.OpenApi;
 using Microsoft.OpenApi;
 
-namespace EksenDefter.Infrastructure.OpenApi;
+namespace Eksen.OpenApi;
 
-internal sealed class EnumStringSchemaTransformer : IOpenApiSchemaTransformer
+public sealed class EnumStringSchemaTransformer : IOpenApiSchemaTransformer
 {
     public Task TransformAsync(OpenApiSchema schema, OpenApiSchemaTransformerContext context, CancellationToken cancellationToken)
     {
