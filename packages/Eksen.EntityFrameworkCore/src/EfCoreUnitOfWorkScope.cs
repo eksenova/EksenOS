@@ -54,7 +54,7 @@ public class EfCoreUnitOfWorkScope(
         _isCommited = true;
     }
 
-    public Task RollbackAsync(CancellationToken cancellationToken = default)
+    public async Task RollbackAsync(CancellationToken cancellationToken = default)
     {
         if (_isCommited)
         {
@@ -63,15 +63,14 @@ public class EfCoreUnitOfWorkScope(
 
         if (!isTransactional || !_transactions.Any())
         {
-            return Task.CompletedTask;
+            return;
         }
 
-        var rollbackTasks = _transactions.Values
-            .Select(t => t.RollbackAsync(cancellationToken));
-
-        _transactions.Clear();
-
-        return Task.WhenAll(rollbackTasks);
+        foreach (var (dbContext, transaction) in _transactions.ToList())
+        {
+            await transaction.RollbackAsync(cancellationToken);
+            _transactions.Remove(dbContext);
+        }
     }
 
     public Task SaveChangesAsync(CancellationToken cancellationToken = default)
@@ -82,7 +81,8 @@ public class EfCoreUnitOfWorkScope(
     protected virtual async Task SaveChangesInternalAsync(bool createTransactionIfNotExists, CancellationToken cancellationToken = default)
     {
         var dbContexts = dbContextTracker.GetScopeDbContexts(ParentScope);
-        var saveChangesTasks = dbContexts.Select(async dbContext =>
+
+        foreach (var dbContext in dbContexts)
         {
             if (createTransactionIfNotExists && !_transactions.ContainsKey(dbContext))
             {
@@ -95,9 +95,7 @@ public class EfCoreUnitOfWorkScope(
             }
 
             await dbContext.SaveChangesAsync(cancellationToken);
-        });
-
-        await Task.WhenAll(saveChangesTasks);
+        }
     }
 
     public IUnitOfWorkProvider Provider { get; } = provider;
