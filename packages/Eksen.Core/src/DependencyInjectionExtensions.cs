@@ -1,4 +1,6 @@
-﻿#pragma warning disable IDE0130
+﻿using Eksen.Core.Text;
+
+#pragma warning disable IDE0130
 
 // ReSharper disable once CheckNamespace
 namespace Microsoft.Extensions.DependencyInjection;
@@ -7,11 +9,16 @@ public static class DependencyInjectionExtensions
 {
     public static IServiceCollection AddEksen(
         this IServiceCollection services,
-        Action<IEksenBuilder> configureAction
+        Action<IEksenBuilder>? configureAction = null
     )
     {
-        var builder = new EksenBuilder(services);
-        configureAction(builder);
+        services.AddSingleton<IRandomStringGenerator, RandomStringGenerator>();
+
+        if (configureAction != null)
+        {
+            var builder = new EksenBuilder(services);
+            configureAction(builder);
+        }
 
         return services;
     }
