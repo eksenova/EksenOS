@@ -74,22 +74,23 @@ public sealed record EksenValueObjectOptions
 
     public void AddAssembly(Assembly assembly)
     {
+        List<Type> types;
+
+        try
         {
-            Type[] types;
+            types = assembly.GetTypes().ToList();
+        }
+        catch (ReflectionTypeLoadException typeLoadException)
+        {
+            types = typeLoadException.Types
+                .Where(t => t != null)
+                .Select(x => x!)
+                .ToList();
+        }
 
-            try
-            {
-                types = assembly.GetTypes().Where(t => t.IsConcreteValueObject).ToArray();
-            }
-            catch (ReflectionTypeLoadException typeLoadException)
-            {
-                types = typeLoadException.Types.Where(t => t != null).ToArray()!;
-            }
-
-            foreach (var type in types)
-            {
-                Add(type);
-            }
+        foreach (var type in types.Where(t => t.IsConcreteValueObject))
+        {
+            Add(type);
         }
     }
 

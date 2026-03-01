@@ -8,6 +8,7 @@
     <File Path="README.md" />
   </Folder>
   <Project Path="packages/Eksen.Core/src/Eksen.Core.csproj" />
+  <Project Path="packages/Eksen.DataSeeding/src/Eksen.DataSeeding.csproj" />
   <Project Path="packages/Eksen.Emailing/src/Eksen.Emailing.csproj" />
   <Project Path="packages/Eksen.Entities.AspNetCore/src/Eksen.Entities.AspNetCore.csproj" />
   <Project Path="packages/Eksen.Entities/src/Eksen.Entities.csproj" />

@@ -11,7 +11,7 @@ public static class DependencyInjectionExtensions
         this IEksenBuilder builder,
         Action<IEksenSmartEnumsBuilder>? configureAction = null)
     {
-        builder.Services.Configure<SmartEnumOptions>(options =>
+        builder.Services.Configure<EksenSmartEnumOptions>(options =>
         {
             options.AddAssembly(typeof(DependencyInjectionExtensions).Assembly);
 
@@ -30,15 +30,15 @@ public interface IEksenSmartEnumsBuilder
 {
     IEksenBuilder EksenBuilder { get; }
 
-    SmartEnumOptions Options { get; }
+    EksenSmartEnumOptions Options { get; }
 }
 
-public class EksenSmartEnumsBuilder(IEksenBuilder eksenBuilder, SmartEnumOptions options)
+public class EksenSmartEnumsBuilder(IEksenBuilder eksenBuilder, EksenSmartEnumOptions options)
     : IEksenSmartEnumsBuilder
 {
     public IEksenBuilder EksenBuilder { get; } = eksenBuilder;
 
-    public SmartEnumOptions Options { get; } = options;
+    public EksenSmartEnumOptions Options { get; } = options;
 }
 
 public static class EksenSmartEnumsBuilderExtensions

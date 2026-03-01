@@ -6,7 +6,7 @@ using System.Text.Json.Serialization.Metadata;
 
 namespace Eksen.SmartEnums;
 
-public sealed class SmartEnumOptions
+public sealed class EksenSmartEnumOptions
 {
     public IReadOnlyCollection<Type> EnumerationTypes
     {
@@ -25,7 +25,7 @@ public sealed class SmartEnumOptions
 
     public void Add(Type enumerationType)
     {
-        var method = typeof(SmartEnumOptions)
+        var method = typeof(EksenSmartEnumOptions)
             .GetMethod(nameof(Add), Type.EmptyTypes)!
             .MakeGenericMethod(enumerationType);
         method.Invoke(this, parameters: null);
@@ -54,18 +54,21 @@ public sealed class SmartEnumOptions
 
     public void AddAssembly(Assembly assembly)
     {
-        Type[] types;
+        List<Type> types;
 
         try
         {
-            types = assembly.GetTypes().Where(t => t.IsEnumeration).ToArray();
+            types = assembly.GetTypes().ToList();
         }
         catch (ReflectionTypeLoadException typeLoadException)
         {
-            types = typeLoadException.Types.Where(t => t != null).ToArray()!;
+            types = typeLoadException.Types
+                .Where(t => t != null)
+                .Select(x => x!)
+                .ToList();
         }
 
-        foreach (var type in types)
+        foreach (var type in types.Where(t => t.IsEnumeration))
         {
             Add(type);
         }
