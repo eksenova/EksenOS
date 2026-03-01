@@ -7,7 +7,7 @@ namespace Eksen.EntityFrameworkCore;
 
 public static class ModelBuilderExtensions
 {
-    public static void ApplyQueryFilter<TBaseEntity>(
+    public static void AddQueryFilter<TBaseEntity>(
         this ModelBuilder builder,
         Expression<Func<TBaseEntity, bool>> filter)
     {
@@ -37,15 +37,15 @@ public static class ModelBuilderExtensions
         }
     }
 
-    public static void ApplyEksenQueryFilters(
+    public static void AddEksenQueryFilters(
         this ModelBuilder modelBuilder)
     {
-        modelBuilder.ApplySoftDeleteQueryFilter();
+        modelBuilder.AddEksenSoftDeleteQueryFilter();
     }
 
-    public static void ApplySoftDeleteQueryFilter(
+    public static void AddEksenSoftDeleteQueryFilter(
         this ModelBuilder modelBuilder)
     {
-        modelBuilder.ApplyQueryFilter<ISoftDelete>(e => !e.IsDeleted);
+        modelBuilder.AddQueryFilter<ISoftDelete>(e => !e.IsDeleted);
     }
 }
