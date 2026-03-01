@@ -1,3 +1,8 @@
-﻿namespace Eksen.Repositories;
+﻿using System.Linq.Expressions;
 
-public record BaseFilterParameters<TEntity> { }
+namespace Eksen.Repositories;
+
+public record BaseFilterParameters<TEntity>
+{
+    public Expression<Func<TEntity, bool>>? Predicate { get; set; }
+}

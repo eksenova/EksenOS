@@ -28,4 +28,8 @@ public static class RoleErrors
         self => roleName =>
             new ErrorInstance(self)
                 .WithValue(roleName.Value, nameof(roleName)));
+
+    public static readonly ErrorDescriptor CannotDeleteWithUsers = new(
+        ErrorType.Conflict,
+        Category);
 }
