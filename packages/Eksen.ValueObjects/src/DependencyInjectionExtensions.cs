@@ -14,7 +14,7 @@ public static class DependencyInjectionExtensions
         var valueObjectBuilder = new EksenValueObjectsBuilder(builder);
         valueObjectBuilder.Configure(options =>
         {
-            options.AddAssembly(typeof(DependencyInjectionExtensions).Assembly);
+            options.AddAssembly(typeof(ValueObject<,,>).Assembly);
         });
 
         if (configureAction != null)

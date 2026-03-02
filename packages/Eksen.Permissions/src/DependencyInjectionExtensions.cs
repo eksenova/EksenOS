@@ -19,6 +19,14 @@ public static class DependencyInjectionExtensions
         where TRole : class, IEksenRole<TTenant>
         where TTenant : class, IEksenTenant
     {
+        builder.AddValueObjects(valueObjectsBuilder =>
+        {
+            valueObjectsBuilder.Configure(options =>
+            {
+                options.AddAssembly(typeof(IPermissionChecker).Assembly);
+            });
+        });
+
         var services = builder.Services;
 
         services.TryAddScoped<IPermissionCache, DistributedPermissionCache>();

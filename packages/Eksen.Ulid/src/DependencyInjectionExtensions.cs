@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel;
+using Eksen.Ulid;
 
 #pragma warning disable IDE0130
 
@@ -11,6 +12,14 @@ public static class DependencyInjectionExtensions
         this IEksenBuilder builder,
         Action<IEksenUlidBuilder>? configureAction = null)
     {
+        builder.AddValueObjects(valueObjectsBuilder =>
+        {
+            valueObjectsBuilder.Configure(options =>
+            {
+                options.AddAssembly(typeof(UlidEntityId<>).Assembly);
+            });
+        });
+
         TypeDescriptor.AddAttributes(
             typeof(Ulid), 
             new TypeConverterAttribute(typeof(UlidTypeConverter)));
