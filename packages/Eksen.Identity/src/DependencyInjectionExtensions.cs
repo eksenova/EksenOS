@@ -42,9 +42,9 @@ public static class DependencyInjectionExtensions
         services.TryAddTransient(typeof(SignInManager<TUser>),
             provider => provider.GetService(typeof(EksenUserSignInManager<TUser, TTenant>))!);
 
-        services.TryAddScoped<EksenUserStore<TUser, TTenant>>();
+        services.TryAddScoped<EksenUserStore<TUser, TRole, TTenant>>();
         services.TryAddTransient(typeof(IUserStore<TUser>),
-            provider => provider.GetService(typeof(EksenUserStore<TUser, TTenant>))!);
+            provider => provider.GetService(typeof(EksenUserStore<TUser, TRole, TTenant>))!);
 
         services.TryAddScoped<EksenRoleStore<TRole, TTenant>>();
         services.TryAddTransient(typeof(IRoleStore<TRole>),
