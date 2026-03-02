@@ -11,16 +11,16 @@ public static class DependencyInjectionExtensions
         this IEksenBuilder builder,
         Action<IEksenSmartEnumsBuilder>? configureAction = null)
     {
-        builder.Services.Configure<EksenSmartEnumOptions>(options =>
+        var smartEnumsBuilder = new EksenSmartEnumsBuilder(builder);
+        smartEnumsBuilder.Configure(options =>
         {
             options.AddAssembly(typeof(DependencyInjectionExtensions).Assembly);
-
-            if (configureAction != null)
-            {
-                var smartEnumsBuilder = new EksenSmartEnumsBuilder(builder, options);
-                configureAction(smartEnumsBuilder);
-            }
         });
+
+        if (configureAction != null)
+        {
+            configureAction(smartEnumsBuilder);
+        }
 
         return builder;
     }
@@ -30,15 +30,19 @@ public interface IEksenSmartEnumsBuilder
 {
     IEksenBuilder EksenBuilder { get; }
 
-    EksenSmartEnumOptions Options { get; }
+    IEksenSmartEnumsBuilder Configure(Action<EksenSmartEnumOptions> configureOptions);
 }
 
-public class EksenSmartEnumsBuilder(IEksenBuilder eksenBuilder, EksenSmartEnumOptions options)
+public class EksenSmartEnumsBuilder(IEksenBuilder eksenBuilder)
     : IEksenSmartEnumsBuilder
 {
     public IEksenBuilder EksenBuilder { get; } = eksenBuilder;
 
-    public EksenSmartEnumOptions Options { get; } = options;
+    public IEksenSmartEnumsBuilder Configure(Action<EksenSmartEnumOptions> configureOptions)
+    {
+        this.Services.Configure(configureOptions);
+        return this;
+    }
 }
 
 public static class EksenSmartEnumsBuilderExtensions

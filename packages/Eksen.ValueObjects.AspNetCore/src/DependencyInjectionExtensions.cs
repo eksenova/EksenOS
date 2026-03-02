@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Http.Json;
+﻿using Eksen.ValueObjects;
 
 #pragma warning disable IDE0130
 
@@ -10,18 +10,20 @@ public static class DependencyInjectionExtensions
     public static IEksenValueObjectsBuilder AddAspNetCoreSupport(this IEksenValueObjectsBuilder builder)
     {
         var services = builder.Services;
-        var valueObjectOptions = builder.Options;
 
-        services.Configure<JsonOptions>(options =>
+        services.PostConfigure<EksenValueObjectOptions>(valueObjectOptions =>
         {
-            valueObjectOptions.ConfigureJsonOptions(options.SerializerOptions);
-        });
-
-        services.AddMvcCore()
-            .AddJsonOptions(options =>
+            services.ConfigureHttpJsonOptions(jsonOptions =>
             {
-                valueObjectOptions.ConfigureJsonOptions(options.JsonSerializerOptions);
+                valueObjectOptions.ConfigureJsonOptions(jsonOptions.SerializerOptions);
             });
+
+            services.AddMvcCore()
+                .AddJsonOptions(jsonOptions =>
+                {
+                    valueObjectOptions.ConfigureJsonOptions(jsonOptions.JsonSerializerOptions);
+                });
+        });
 
         return builder;
     }

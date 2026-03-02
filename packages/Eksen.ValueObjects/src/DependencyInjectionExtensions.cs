@@ -11,16 +11,16 @@ public static class DependencyInjectionExtensions
         this IEksenBuilder builder,
         Action<IEksenValueObjectsBuilder>? configureAction = null)
     {
-        builder.Services.Configure<EksenValueObjectOptions>(options =>
+        var valueObjectBuilder = new EksenValueObjectsBuilder(builder);
+        valueObjectBuilder.Configure(options =>
         {
             options.AddAssembly(typeof(DependencyInjectionExtensions).Assembly);
-
-            if (configureAction != null)
-            {
-                var ulidBuilder = new EksenValueObjectsBuilder(builder, options);
-                configureAction(ulidBuilder);
-            }
         });
+
+        if (configureAction != null)
+        {
+            configureAction(valueObjectBuilder);
+        }
 
         return builder;
     }
@@ -30,15 +30,18 @@ public interface IEksenValueObjectsBuilder
 {
     IEksenBuilder EksenBuilder { get; }
 
-    EksenValueObjectOptions Options { get; }
+    IEksenValueObjectsBuilder Configure(Action<EksenValueObjectOptions> configureOptions);
 }
 
-public class EksenValueObjectsBuilder(IEksenBuilder eksenBuilder, EksenValueObjectOptions options)
-    : IEksenValueObjectsBuilder
+public class EksenValueObjectsBuilder(IEksenBuilder eksenBuilder) : IEksenValueObjectsBuilder
 {
     public IEksenBuilder EksenBuilder { get; } = eksenBuilder;
 
-    public EksenValueObjectOptions Options { get; } = options;
+    public IEksenValueObjectsBuilder Configure(Action<EksenValueObjectOptions> configureOptions)
+    {
+        this.Services.Configure(configureOptions);
+        return this;
+    }
 }
 
 public static class EksenValueObjectsBuilderExtensions

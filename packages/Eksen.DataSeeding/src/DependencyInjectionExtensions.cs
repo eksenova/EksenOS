@@ -14,14 +14,11 @@ public static class DependencyInjectionExtensions
             var services = builder.Services;
             services.AddSingleton<IDataSeeder, DataSeeder>();
 
-            services.Configure<EksenDataSeedingOptions>(options =>
+            if (configureAction != null)
             {
-                if (configureAction != null)
-                {
-                    var dataSeedingBuilder = new EksenDataSeedingBuilder(builder, options);
-                    configureAction(dataSeedingBuilder);
-                }
-            });
+                var dataSeedingBuilder = new EksenDataSeedingBuilder(builder);
+                configureAction(dataSeedingBuilder);
+            }
 
             return builder;
         }
@@ -32,15 +29,19 @@ public interface IEksenDataSeedingBuilder
 {
     IEksenBuilder EksenBuilder { get; }
 
-    EksenDataSeedingOptions Options { get; }
+    IEksenDataSeedingBuilder Configure(Action<EksenDataSeedingOptions> configureOptions);
 }
 
-public class EksenDataSeedingBuilder(IEksenBuilder eksenBuilder, EksenDataSeedingOptions options)
+public class EksenDataSeedingBuilder(IEksenBuilder eksenBuilder)
     : IEksenDataSeedingBuilder
 {
     public IEksenBuilder EksenBuilder { get; } = eksenBuilder;
 
-    public EksenDataSeedingOptions Options { get; } = options;
+    public IEksenDataSeedingBuilder Configure(Action<EksenDataSeedingOptions> configureOptions)
+    {
+        this.Services.Configure(configureOptions);
+        return this;
+    }
 }
 
 public static class EksenDataSeedingBuilderExtensions
