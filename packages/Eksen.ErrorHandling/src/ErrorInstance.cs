@@ -55,7 +55,7 @@ public record ErrorInstance(IErrorDescriptor Descriptor) : IErrorData
             paramValue = type.Name;
         }
 
-        if (paramValue != null && paramName.GetType() != typeof(string))
+        if (paramValue != null && paramValue.GetType() != typeof(string))
         {
             var converter = TypeDescriptor.GetConverter(paramValue.GetType());
             if (converter.CanConvertTo(typeof(string)))

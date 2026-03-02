@@ -159,4 +159,19 @@ public abstract record BaseEntityId<TSelf, TUnderlyingValue, TValueInitializer>(
         result = CreateInternal(value);
         return true;
     }
+
+    public string ToParseableString(IFormatProvider? provider = null)
+    {
+        return Value.ToString()!;
+    }
+
+    object IValueObject.Value
+    {
+        get { return Value; }
+    }
+
+    public static Type GetUnderlyingValueType()
+    {
+        return typeof(TUnderlyingValue);
+    }
 }

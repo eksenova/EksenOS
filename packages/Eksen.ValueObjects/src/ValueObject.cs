@@ -27,7 +27,7 @@ public interface IValueObject<TValueObject, out TUnderlyingValue> : IValueObject
 public interface IConcreteValueObject<out TValueObject, in TUnderlyingValue>
     where TValueObject : IValueObject<TValueObject, TUnderlyingValue>
 {
-    static abstract TValueObject Create(TUnderlyingValue value);
+    public static abstract TValueObject Create(TUnderlyingValue value);
 
     public static abstract TValueObject Parse(
         string value,

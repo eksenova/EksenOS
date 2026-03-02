@@ -25,12 +25,12 @@ public abstract class GuidValueInitializer : IEntityIdValueInitializer<Guid>
     }
 }
 
-public abstract record GuidEntityId<TSelf> 
+public abstract record GuidEntityId<TSelf>
     : BaseEntityId<TSelf, Guid, GuidValueInitializer>,
         IComparable<Guid>,
-        IEquatable<Guid> 
+        IEquatable<Guid>, IConcreteValueObject<TSelf, Guid>
     where TSelf : GuidEntityId<TSelf>
-   
+
 {
     public const int Length = GuidConsts.Length;
     
@@ -46,5 +46,10 @@ public abstract record GuidEntityId<TSelf>
     public override int CompareTo(Guid other)
     {
         return base.CompareTo(other);
+    }
+
+    public static TSelf Create(Guid value)
+    {
+        return (TSelf)Activator.CreateInstance(typeof(TSelf), value)!;
     }
 }

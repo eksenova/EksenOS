@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel;
+using Eksen.ValueObjects;
 using Eksen.ValueObjects.Entities;
 
 namespace Eksen.Ulid;
@@ -6,7 +7,7 @@ namespace Eksen.Ulid;
 public abstract record UlidEntityId<TSelf>
     : BaseEntityId<TSelf, System.Ulid, UlidValueInitializer>,
         IComparable<System.Ulid>,
-        IEquatable<System.Ulid>
+        IEquatable<System.Ulid>, IConcreteValueObject<TSelf, System.Ulid>
     where TSelf : UlidEntityId<TSelf>
 
 {
@@ -24,5 +25,10 @@ public abstract record UlidEntityId<TSelf>
     public override int CompareTo(System.Ulid other)
     {
         return base.CompareTo(other);
+    }
+
+    public static TSelf Create(System.Ulid value)
+    {
+        return (TSelf)Activator.CreateInstance(typeof(TSelf), value)!;
     }
 }

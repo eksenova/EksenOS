@@ -1,12 +1,12 @@
 ﻿namespace Eksen.ValueObjects.Entities;
 
-public interface IEntityId<TSelf, TUnderlyingValue> :
+public interface IEntityId<TSelf, out TUnderlyingValue> :
     IComparable,
     IComparable<TSelf>,
     IEquatable<TSelf>,
     ISpanFormattable,
     ISpanParsable<TSelf>,
-    IUtf8SpanFormattable
+    IUtf8SpanFormattable, IValueObject<TSelf, TUnderlyingValue>
     where TSelf :
     IEntityId<TSelf, TUnderlyingValue>
     where TUnderlyingValue :
@@ -17,7 +17,5 @@ public interface IEntityId<TSelf, TUnderlyingValue> :
     ISpanParsable<TUnderlyingValue>,
     IUtf8SpanFormattable
 {
-    TUnderlyingValue Value { get; init; }
-
     static abstract TSelf NewId();
 }

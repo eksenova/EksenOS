@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel;
+using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 
 namespace Eksen.ValueObjects.Entities;
@@ -30,5 +31,20 @@ public class EntityIdStringTypeConverter<TEntityId, TValue> : TypeConverter
         return TEntityId.TryParse(stringValue, culture, out var entityId)
             ? entityId
             : throw new FormatException($"Invalid {typeof(TValue).Name}: \"{stringValue}\"");
+    }
+
+    public override bool CanConvertTo(ITypeDescriptorContext? context, [NotNullWhen(returnValue: true)] Type? destinationType)
+    {
+        return destinationType == typeof(string) || base.CanConvertTo(context, destinationType);
+    }
+
+    public override object? ConvertTo(ITypeDescriptorContext? context, CultureInfo? culture, object? value, Type destinationType)
+    {
+        if (destinationType == typeof(string) && value is TEntityId entityId)
+        {
+            return entityId.Value.ToString();
+        }
+
+        return base.ConvertTo(context, culture, value, destinationType);
     }
 }
