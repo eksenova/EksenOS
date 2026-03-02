@@ -13,7 +13,7 @@ public sealed class EksenSmartEnumOptions
         get { return _knownEnumerationTypes.AsReadOnly(); }
     }
 
-    private readonly List<Type> _knownEnumerationTypes = [];
+    private readonly HashSet<Type> _knownEnumerationTypes = [];
 
     public void AddRange(IEnumerable<Type> enumerationTypes)
     {
@@ -40,7 +40,10 @@ public sealed class EksenSmartEnumOptions
                                         $"{typeof(TEnumeration).FullName}", nameof(TEnumeration));
         }
 
-        _knownEnumerationTypes.Add(typeof(TEnumeration));
+        if (!_knownEnumerationTypes.Add(typeof(TEnumeration)))
+        {
+            return;
+        }
 
         TypeDescriptor.AddAttributes(
             typeof(TEnumeration),

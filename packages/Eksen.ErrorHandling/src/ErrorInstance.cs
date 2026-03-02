@@ -1,4 +1,5 @@
-﻿using System.Runtime.CompilerServices;
+﻿using System.ComponentModel;
+using System.Runtime.CompilerServices;
 
 namespace Eksen.ErrorHandling;
 
@@ -48,6 +49,20 @@ public record ErrorInstance(IErrorDescriptor Descriptor) : IErrorData
         string? paramName = null)
     {
         ArgumentNullException.ThrowIfNull(paramName);
+
+        if (paramValue is Type type)
+        {
+            paramValue = type.Name;
+        }
+
+        if (paramValue != null && paramName.GetType() != typeof(string))
+        {
+            var converter = TypeDescriptor.GetConverter(paramValue.GetType());
+            if (converter.CanConvertTo(typeof(string)))
+            {
+                paramValue = converter.ConvertToString(paramValue);
+            }
+        }
 
         return WithData(paramName, paramValue);
     }

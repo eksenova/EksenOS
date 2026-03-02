@@ -1,6 +1,6 @@
-﻿using Eksen.Entities.Tenants;
-using Eksen.Entities.Users;
-using Eksen.EntityFrameworkCore;
+﻿using Eksen.EntityFrameworkCore;
+using Eksen.Identity.Tenants;
+using Eksen.Identity.Users;
 using Eksen.Repositories;
 using Eksen.ValueObjects.Emailing;
 using Microsoft.EntityFrameworkCore;

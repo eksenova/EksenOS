@@ -1,6 +1,6 @@
-﻿using Eksen.Entities.Tenants;
-using Eksen.Entities.Users;
-using Eksen.Identity.Abstractions;
+﻿using Eksen.Identity;
+using Eksen.Identity.Tenants;
+using Eksen.Identity.Users;
 using Microsoft.Extensions.Options;
 
 namespace Eksen.Permissions;

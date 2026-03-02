@@ -1,6 +1,6 @@
-﻿using Eksen.Entities.Roles;
-using Eksen.Entities.Tenants;
-using Eksen.EntityFrameworkCore;
+﻿using Eksen.EntityFrameworkCore;
+using Eksen.Identity.Roles;
+using Eksen.Identity.Tenants;
 using Microsoft.EntityFrameworkCore;
 
 namespace Eksen.Permissions.EntityFrameworkCore;

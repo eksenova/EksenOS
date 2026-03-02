@@ -1,4 +1,4 @@
-﻿using Eksen.Entities.Tenants;
+﻿using Eksen.Identity.Tenants;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 

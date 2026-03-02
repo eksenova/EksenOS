@@ -20,7 +20,7 @@
   <Project Path="packages/Eksen.EntityFrameworkCore/src/Eksen.EntityFrameworkCore.csproj" />
   <Project Path="packages/Eksen.ErrorHandling.AspNetCore/src/Eksen.ErrorHandling.AspNetCore.csproj" />
   <Project Path="packages/Eksen.ErrorHandling/src/Eksen.ErrorHandling.csproj" />
-  <Project Path="packages/Eksen.Identity.Abstractions/src/Eksen.Identity.Abstractions.csproj" />
+  <Project Path="packages/Eksen.Identity.AspNetCore/src/Eksen.Identity.AspNetCore.csproj" />
   <Project Path="packages/Eksen.Identity.EntityFrameworkCore/src/Eksen.Identity.EntityFrameworkCore.csproj" />
   <Project Path="packages/Eksen.Identity/src/Eksen.Identity.csproj" />
   <Project Path="packages/Eksen.Localization/src/Eksen.Localization.csproj" />

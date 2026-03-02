@@ -9,7 +9,30 @@ public static class DependencyInjectionExtensions
 {
     extension(IEksenBuilder builder)
     {
-        public IEksenBuilder AddEmailTemplates(string configSectionPath = SmtpConfiguration.DefaultConfigSectionPath)
+        public IEksenEmailingBuilder AddEmailing(Action<IEksenEmailingBuilder>? configureAction = null)
+        {
+            builder.AddValueObjects(valueObjectBuilder =>
+            {
+                valueObjectBuilder.Configure(options =>
+                {
+                    options.AddAssembly(typeof(IEmailSender).Assembly);
+                });
+            });
+
+            var emailBuilder = new EksenEmailingBuilder(builder);
+
+            if (configureAction != null)
+            {
+                configureAction(emailBuilder);
+            }
+
+            return emailBuilder;
+        }
+    }
+
+    extension(IEksenEmailingBuilder builder)
+    {
+        public IEksenEmailingBuilder AddEmailTemplates(string configSectionPath = SmtpConfiguration.DefaultConfigSectionPath)
         {
             var services = builder.Services;
 
@@ -18,7 +41,7 @@ public static class DependencyInjectionExtensions
             return builder;
         }
 
-        public IEksenBuilder AddSmtpEmailing(string configSectionPath = SmtpConfiguration.DefaultConfigSectionPath)
+        public IEksenEmailingBuilder UseSmtp(string configSectionPath = SmtpConfiguration.DefaultConfigSectionPath)
         {
             var services = builder.Services;
 
@@ -31,6 +54,28 @@ public static class DependencyInjectionExtensions
             services.AddSingleton<IEmailSender, SmtpEmailSender>();
 
             return builder;
+        }
+    }
+}
+
+public interface IEksenEmailingBuilder
+{
+    IEksenBuilder EksenBuilder { get; }
+}
+
+public class EksenEmailingBuilder(IEksenBuilder eksenBuilder)
+    : IEksenEmailingBuilder
+{
+    public IEksenBuilder EksenBuilder { get; } = eksenBuilder;
+}
+
+public static class EksenEmailingBuilderExtensions
+{
+    extension(IEksenEmailingBuilder builder)
+    {
+        public IServiceCollection Services
+        {
+            get { return builder.EksenBuilder.Services; }
         }
     }
 }

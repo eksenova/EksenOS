@@ -1,6 +1,6 @@
-﻿using Eksen.Entities;
-using Eksen.Entities.Roles;
-using Eksen.Entities.Tenants;
+﻿using Eksen.Identity;
+using Eksen.Identity.Roles;
+using Eksen.Identity.Tenants;
 using Eksen.Ulid;
 using Eksen.ValueObjects.Entities;
 

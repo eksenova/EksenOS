@@ -12,8 +12,9 @@ public static class CommonErrors
 
     public delegate ErrorInstance ObjectNotFoundDelegate(Type type, object? id = null);
 
-    public static readonly ErrorDescriptor<ObjectNotFoundDelegate> ObjectNotFound = new(Category,
+    public static readonly ErrorDescriptor<ObjectNotFoundDelegate> ObjectNotFound = new(
         ErrorType.NotFound,
+        Category,
         self => (type, id) =>
             new ErrorInstance(self)
                 .WithValue(id)
@@ -21,8 +22,9 @@ public static class CommonErrors
 
     public delegate ErrorInstance ObjectsNotFoundDelegate(Type type, ICollection<object>? ids = null);
 
-    public static readonly ErrorDescriptor<ObjectsNotFoundDelegate> ObjectsNotFound = new(Category,
+    public static readonly ErrorDescriptor<ObjectsNotFoundDelegate> ObjectsNotFound = new(
         ErrorType.NotFound,
+        Category,
         self => (type, ids) =>
             new ErrorInstance(self)
                 .WithValue(ids)

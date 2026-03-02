@@ -1,6 +1,6 @@
-﻿using Eksen.Entities.Roles;
-using Eksen.Entities.Tenants;
-using Eksen.Entities.Users;
+﻿using Eksen.Identity.Roles;
+using Eksen.Identity.Tenants;
+using Eksen.Identity.Users;
 using Eksen.Repositories;
 
 namespace Eksen.Permissions;

@@ -1,5 +1,5 @@
-﻿using Eksen.Entities.Users;
-using Eksen.Identity.Abstractions;
+﻿using Eksen.Identity;
+using Eksen.Identity.Users;
 
 namespace Eksen.Permissions.Caching;
 

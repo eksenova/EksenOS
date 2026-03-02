@@ -1,4 +1,4 @@
-﻿using Eksen.Entities.Users;
+﻿using Eksen.Identity.Users;
 
 namespace Eksen.Permissions;
 

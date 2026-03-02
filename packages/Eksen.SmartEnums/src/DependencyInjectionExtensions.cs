@@ -14,7 +14,7 @@ public static class DependencyInjectionExtensions
         var smartEnumsBuilder = new EksenSmartEnumsBuilder(builder);
         smartEnumsBuilder.Configure(options =>
         {
-            options.AddAssembly(typeof(DependencyInjectionExtensions).Assembly);
+            options.AddAssembly(typeof(Enumeration<>).Assembly);
         });
 
         if (configureAction != null)

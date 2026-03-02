@@ -1,5 +1,5 @@
-﻿using Eksen.Entities.Tenants;
-using Eksen.Entities.Users;
+﻿using Eksen.Identity.Tenants;
+using Eksen.Identity.Users;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 

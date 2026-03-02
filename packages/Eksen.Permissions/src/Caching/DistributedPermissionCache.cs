@@ -1,7 +1,7 @@
 ﻿using System.Text;
 using System.Text.Json;
-using Eksen.Entities.Users;
-using Eksen.Identity.Abstractions;
+using Eksen.Identity;
+using Eksen.Identity.Users;
 using Microsoft.Extensions.Caching.Distributed;
 
 namespace Eksen.Permissions.Caching;

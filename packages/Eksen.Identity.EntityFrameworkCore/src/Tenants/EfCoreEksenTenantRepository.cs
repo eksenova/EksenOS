@@ -1,5 +1,5 @@
-﻿using Eksen.Entities.Tenants;
-using Eksen.EntityFrameworkCore;
+﻿using Eksen.EntityFrameworkCore;
+using Eksen.Identity.Tenants;
 
 namespace Eksen.Identity.EntityFrameworkCore.Tenants;
 

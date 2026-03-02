@@ -1,7 +1,5 @@
-﻿using System.Text;
-using System.Text.Json;
-using Eksen.Entities.Users;
-using Eksen.Identity.Abstractions;
+﻿using Eksen.Identity;
+using Eksen.Identity.Users;
 using Microsoft.Extensions.Caching.Memory;
 
 namespace Eksen.Permissions.Caching;
@@ -32,11 +30,8 @@ public class InMemoryPermissionCache(
         CancellationToken cancellationToken = default)
         where T : class
     {
-        var json = JsonSerializer.Serialize(value, JsonSerializerOptions.Web);
-        var bytes = Encoding.UTF8.GetBytes(json);
-
         cancellationToken.ThrowIfCancellationRequested();
-        memoryCache.Set(cacheKey, bytes, options);
+        memoryCache.Set<T>(cacheKey, value, options);
         return Task.CompletedTask;
     }
 

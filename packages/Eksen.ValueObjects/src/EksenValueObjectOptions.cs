@@ -46,6 +46,10 @@ public sealed record EksenValueObjectOptions
                                         $"{typeof(TValueObject).FullName}", nameof(TValueObject));
         }
 
+        if (_knownValueObjectTypes.Any(t => t.ValueObjectType == typeof(TValueObject)))
+        {
+            return;
+        }
 
         TypeDescriptor.AddAttributes(
             typeof(TValueObject),

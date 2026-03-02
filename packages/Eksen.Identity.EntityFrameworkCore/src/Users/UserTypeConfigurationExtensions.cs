@@ -1,5 +1,5 @@
-﻿using Eksen.Entities.Tenants;
-using Eksen.Entities.Users;
+﻿using Eksen.Identity.Tenants;
+using Eksen.Identity.Users;
 using Eksen.ValueObjects.Emailing;
 using Eksen.ValueObjects.Hashing;
 using Microsoft.EntityFrameworkCore;

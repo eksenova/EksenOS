@@ -5,7 +5,7 @@
 	</ItemGroup>
 	<ItemGroup>
 		<ProjectReference Include="..\..\Eksen.Core\src\Eksen.Core.csproj" />
-		<ProjectReference Include="..\..\Eksen.Identity.Abstractions\src\Eksen.Identity.Abstractions.csproj" />
+		<ProjectReference Include="..\..\Eksen.Identity\src\Eksen.Identity.csproj" />
 		<ProjectReference Include="..\..\Eksen.Repositories\src\Eksen.Repositories.csproj" />
 		<ProjectReference Include="..\..\Eksen.Ulid\src\Eksen.Ulid.csproj" />
 	</ItemGroup>
