@@ -32,7 +32,7 @@ public static class QueryableExtensions
         public IQueryable<TEntity> OrderBy(BaseSortingParameters<TEntity> sortingParameters)
         {
             return !string.IsNullOrWhiteSpace(sortingParameters.Sorting)
-                ? queryable.OrderBy(sortingParameters.Sorting)
+                ? DynamicQueryableExtensions.OrderBy(queryable, sortingParameters.Sorting)
                 : queryable.OrderByDefault();
         }
 
@@ -47,7 +47,7 @@ public static class QueryableExtensions
         public IQueryable<TEntity> Where(BaseFilterParameters<TEntity> filterParameters)
         {
             queryable = filterParameters.Predicate != null
-                ? queryable.Where(filterParameters.Predicate)
+                ? Queryable.Where(queryable, filterParameters.Predicate)
                 : queryable;
 
             return queryable;

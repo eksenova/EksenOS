@@ -216,15 +216,12 @@ public abstract class EfCoreReadOnlyRepository<TDbContext, TEntity, TFilterParam
         IQueryable<TEntity> queryable,
         TIncludeOptions? includeOptions = null)
     {
-        switch (includeOptions)
+        if (includeOptions == null)
         {
-            case BaseIncludeOptions<TEntity> defaultIncludeOptions:
-                queryable.Include(defaultIncludeOptions);
-                break;
-
-            case null:
-                return ApplyDefaultIncludes(queryable);
+            return ApplyDefaultIncludes(queryable);
         }
+
+        queryable = queryable.Include(includeOptions);
 
         return queryable;
     }
