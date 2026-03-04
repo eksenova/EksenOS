@@ -24,13 +24,13 @@ public static class RoleErrors
     public delegate ErrorInstance RoleNameAlreadyExistsError(RoleName roleName);
 
     public static readonly ErrorDescriptor<RoleNameAlreadyExistsError> RoleNameAlreadyExists = new(
-        ErrorType.Conflict,
+        ErrorType.Validation,
         Category,
         self => roleName =>
             new ErrorInstance(self)
                 .WithValue(roleName.Value, nameof(roleName)));
 
     public static readonly ErrorDescriptor CannotDeleteWithUsers = new(
-        ErrorType.Conflict,
+        ErrorType.Validation,
         Category);
 }

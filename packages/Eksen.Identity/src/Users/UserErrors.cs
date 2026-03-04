@@ -27,7 +27,7 @@ public static class UserErrors
     public delegate ErrorInstance UserEmailAddressAlreadyTaken(EmailAddress emailAddress);
 
     public static readonly ErrorDescriptor<UserEmailAddressAlreadyTaken> EmailAddressAlreadyExists = new(
-        ErrorType.Conflict,
+        ErrorType.Validation,
         Category,
         self => emailAddress =>
             new ErrorInstance(self)
