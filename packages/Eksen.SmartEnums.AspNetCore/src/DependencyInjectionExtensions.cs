@@ -1,4 +1,6 @@
 ﻿using Eksen.SmartEnums;
+using Microsoft.AspNetCore.Http.Json;
+using Microsoft.Extensions.Options;
 
 #pragma warning disable IDE0130
 
@@ -11,19 +13,17 @@ public static class DependencyInjectionExtensions
     {
         var services = builder.Services;
 
-        services.PostConfigure<EksenSmartEnumOptions>(smartEnumOptions =>
-        {
-            services.ConfigureHttpJsonOptions(jsonOptions =>
+        services.AddOptions<JsonOptions>()
+            .PostConfigure<IOptions<EksenSmartEnumOptions>>((jsonOptions, smartEnumOptions) =>
             {
-                smartEnumOptions.ConfigureJsonOptions(jsonOptions.SerializerOptions);
+                smartEnumOptions.Value.ConfigureJsonOptions(jsonOptions.SerializerOptions);
             });
 
-            services.AddMvcCore()
-                .AddJsonOptions(jsonOptions =>
-                {
-                    smartEnumOptions.ConfigureJsonOptions(jsonOptions.JsonSerializerOptions);
-                });
-        });
+        services.AddOptions<Microsoft.AspNetCore.Mvc.JsonOptions>()
+            .PostConfigure<IOptions<EksenSmartEnumOptions>>((mvcJsonOptions, smartEnumOptions) =>
+            {
+                smartEnumOptions.Value.ConfigureJsonOptions(mvcJsonOptions.JsonSerializerOptions);
+            });
 
         return builder;
     }

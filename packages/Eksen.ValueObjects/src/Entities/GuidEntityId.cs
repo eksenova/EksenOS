@@ -13,10 +13,7 @@ public abstract class GuidValueInitializer : IEntityIdValueInitializer<Guid>
 
     public static Guid Empty
     {
-        get
-        {
-            return Guid.Empty;
-        }
+        get { return Guid.Empty; }
     }
 
     public static Guid New()
@@ -28,12 +25,12 @@ public abstract class GuidValueInitializer : IEntityIdValueInitializer<Guid>
 public abstract record GuidEntityId<TSelf>
     : BaseEntityId<TSelf, Guid, GuidValueInitializer>,
         IComparable<Guid>,
-        IEquatable<Guid>, IConcreteValueObject<TSelf, Guid>
+        IEquatable<Guid>, IValueObjectParser<TSelf, Guid>
     where TSelf : GuidEntityId<TSelf>
 
 {
     public const int Length = GuidConsts.Length;
-    
+
     static GuidEntityId()
     {
         TypeDescriptor.AddAttributes(

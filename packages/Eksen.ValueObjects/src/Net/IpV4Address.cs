@@ -2,8 +2,8 @@
 
 namespace Eksen.ValueObjects.Net;
 
-public sealed partial record IpV4Address : ValueObject<IpV4Address, string, IpV4Address>,
-    IConcreteValueObject<IpV4Address, string>
+public sealed partial record IpV4Address : ValueObject<IpV4Address, string>,
+    IValueObjectParser<IpV4Address, string>
 {
     public const int MaxLength = 15;
 

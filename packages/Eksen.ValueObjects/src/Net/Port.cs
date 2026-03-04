@@ -1,7 +1,7 @@
 ﻿namespace Eksen.ValueObjects.Net;
 
-public sealed record Port : ValueObject<Port, int, Port>,
-    IConcreteValueObject<Port, int>
+public sealed record Port : ValueObject<Port, int>,
+    IValueObjectParser<Port, int>
 {
     public const int MinValue = ushort.MinValue;
     public const int MaxValue = ushort.MaxValue;

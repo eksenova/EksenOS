@@ -2,8 +2,8 @@
 
 namespace Eksen.ValueObjects.Emailing;
 
-public sealed partial record EmailAddress : ValueObject<EmailAddress, string, EmailAddress>,
-    IConcreteValueObject<EmailAddress, string>
+public sealed partial record EmailAddress : ValueObject<EmailAddress, string>,
+    IValueObjectParser<EmailAddress, string>
 {
     public const int MaxLength = 50;
 

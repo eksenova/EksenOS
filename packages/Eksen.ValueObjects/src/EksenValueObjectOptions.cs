@@ -42,7 +42,7 @@ public sealed record EksenValueObjectOptions
     {
         if (!typeof(TValueObject).IsConcreteValueObject)
         {
-            throw new ArgumentException($"ValueObject does not implement {nameof(IConcreteValueObject<,>)}: " +
+            throw new ArgumentException($"ValueObject does not implement {nameof(IValueObjectParser<,>)}: " +
                                         $"{typeof(TValueObject).FullName}", nameof(TValueObject));
         }
 
@@ -53,20 +53,18 @@ public sealed record EksenValueObjectOptions
 
         TypeDescriptor.AddAttributes(
             typeof(TValueObject),
-            new TypeConverterAttribute(typeof(ValueObjectTypeConverter<,,>)
+            new TypeConverterAttribute(typeof(ValueObjectTypeConverter<,>)
                 .MakeGenericType(
                     typeof(TValueObject),
-                    TValueObject.GetUnderlyingValueType(),
-                    typeof(TValueObject)))
+                    TValueObject.GetUnderlyingValueType()))
         );
 
         TypeDescriptor.AddAttributes(
             typeof(TValueObject),
-            new JsonConverterAttribute(typeof(JsonValueObjectConverter<,,>)
+            new JsonConverterAttribute(typeof(JsonValueObjectConverter<,>)
                 .MakeGenericType(
                     typeof(TValueObject),
-                    TValueObject.GetUnderlyingValueType(),
-                    typeof(TValueObject)))
+                    TValueObject.GetUnderlyingValueType()))
         );
 
         _knownValueObjectTypes.Add((

@@ -1,6 +1,6 @@
 ﻿namespace Eksen.ValueObjects.Companies;
 
-public sealed record TaxOffice : ValueObject<TaxOffice, string, TaxOffice>, IConcreteValueObject<TaxOffice, string>
+public sealed record TaxOffice : ValueObject<TaxOffice, string>, IValueObjectParser<TaxOffice, string>
 {
     public const int MaxLength = 100;
 

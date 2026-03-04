@@ -2,8 +2,8 @@
 
 namespace Eksen.Identity.Tenants;
 
-public sealed record TenantName : ValueObject<TenantName, string, TenantName>,
-    IConcreteValueObject<TenantName, string>
+public sealed record TenantName : ValueObject<TenantName, string>,
+    IValueObjectParser<TenantName, string>
 {
     public const int MaxLength = 50;
 

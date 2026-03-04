@@ -4,8 +4,8 @@ using Eksen.ValueObjects;
 namespace Eksen.Repositories;
 
 public sealed record SortingIndex
-    : ValueObject<SortingIndex, int, SortingIndex>,
-        IConcreteValueObject<SortingIndex, int>,
+    : ValueObject<SortingIndex, int>,
+        IValueObjectParser<SortingIndex, int>,
         IComparable<SortingIndex>
 {
     private SortingIndex(int value) : base(value) {

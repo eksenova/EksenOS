@@ -1,7 +1,7 @@
 ﻿namespace Eksen.ValueObjects.Hashing;
 
-public sealed record PasswordHash : ValueObject<PasswordHash, string, PasswordHash>,
-    IConcreteValueObject<PasswordHash, string>
+public sealed record PasswordHash : ValueObject<PasswordHash, string>,
+    IValueObjectParser<PasswordHash, string>
 {
     public const int MaxLength = 256;
 

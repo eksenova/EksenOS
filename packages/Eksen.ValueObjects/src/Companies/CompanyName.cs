@@ -1,6 +1,6 @@
 ﻿namespace Eksen.ValueObjects.Companies;
 
-public sealed record CompanyName : ValueObject<CompanyName, string, CompanyName>, IConcreteValueObject<CompanyName, string>
+public sealed record CompanyName : ValueObject<CompanyName, string>, IValueObjectParser<CompanyName, string>
 {
     public const int MaxLength = 50;
 

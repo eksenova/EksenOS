@@ -40,6 +40,9 @@ public class EksenSmartEnumsBuilder(IEksenBuilder eksenBuilder)
 
     public IEksenSmartEnumsBuilder Configure(Action<EksenSmartEnumOptions> configureOptions)
     {
+        var eager = new EksenSmartEnumOptions();
+        configureOptions(eager);
+
         this.Services.Configure(configureOptions);
         return this;
     }

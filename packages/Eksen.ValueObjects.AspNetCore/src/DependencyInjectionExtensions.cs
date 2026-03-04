@@ -1,4 +1,6 @@
 ﻿using Eksen.ValueObjects;
+using Microsoft.AspNetCore.Http.Json;
+using Microsoft.Extensions.Options;
 
 #pragma warning disable IDE0130
 
@@ -11,19 +13,17 @@ public static class DependencyInjectionExtensions
     {
         var services = builder.Services;
 
-        services.PostConfigure<EksenValueObjectOptions>(valueObjectOptions =>
-        {
-            services.ConfigureHttpJsonOptions(jsonOptions =>
+        services.AddOptions<JsonOptions>()
+            .PostConfigure<IOptions<EksenValueObjectOptions>>((jsonOptions, valueObjectOptions) =>
             {
-                valueObjectOptions.ConfigureJsonOptions(jsonOptions.SerializerOptions);
+                valueObjectOptions.Value.ConfigureJsonOptions(jsonOptions.SerializerOptions);
             });
 
-            services.AddMvcCore()
-                .AddJsonOptions(jsonOptions =>
-                {
-                    valueObjectOptions.ConfigureJsonOptions(jsonOptions.JsonSerializerOptions);
-                });
-        });
+        services.AddOptions<Microsoft.AspNetCore.Mvc.JsonOptions>()
+            .PostConfigure<IOptions<EksenValueObjectOptions>>((mvcJsonOptions, valueObjectOptions) =>
+            {
+                valueObjectOptions.Value.ConfigureJsonOptions(mvcJsonOptions.JsonSerializerOptions);
+            });
 
         return builder;
     }

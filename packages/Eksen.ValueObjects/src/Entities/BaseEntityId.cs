@@ -4,12 +4,13 @@ using System.Runtime.CompilerServices;
 
 namespace Eksen.ValueObjects.Entities;
 
-public abstract record BaseEntityId<TSelf, TUnderlyingValue, TValueInitializer>(TUnderlyingValue Value)
+public abstract record BaseEntityId<TSelf, TUnderlyingValue, TEntityIdValueInitializer>(TUnderlyingValue Value)
     : IEntityId<TSelf, TUnderlyingValue>
     where TSelf :
-    BaseEntityId<TSelf, TUnderlyingValue, TValueInitializer>,
+    BaseEntityId<TSelf, TUnderlyingValue, TEntityIdValueInitializer>,
     IComparable<TUnderlyingValue>,
     IEquatable<TUnderlyingValue>
+    where TEntityIdValueInitializer : IEntityIdValueInitializer<TUnderlyingValue>
     where TUnderlyingValue :
     IComparable,
     IComparable<TUnderlyingValue>,
@@ -17,16 +18,16 @@ public abstract record BaseEntityId<TSelf, TUnderlyingValue, TValueInitializer>(
     ISpanFormattable,
     ISpanParsable<TUnderlyingValue>,
     IUtf8SpanFormattable
-    where TValueInitializer : IEntityIdValueInitializer<TUnderlyingValue>
 {
     public static TSelf NewId()
     {
-        return CreateInternal(TValueInitializer.New());
+        return CreateInternal(TEntityIdValueInitializer.New());
     }
+
 
     public static TSelf Empty
     {
-        get { return CreateInternal(TValueInitializer.Empty); }
+        get { return CreateInternal(TEntityIdValueInitializer.Empty); }
     }
 
     private static TSelf CreateInternal(TUnderlyingValue value)
@@ -39,12 +40,12 @@ public abstract record BaseEntityId<TSelf, TUnderlyingValue, TValueInitializer>(
         return instance;
     }
 
-    public static explicit operator TUnderlyingValue(BaseEntityId<TSelf, TUnderlyingValue, TValueInitializer> id)
+    public static explicit operator TUnderlyingValue(BaseEntityId<TSelf, TUnderlyingValue, TEntityIdValueInitializer> id)
     {
         return id.Value;
     }
 
-    public static explicit operator string(BaseEntityId<TSelf, TUnderlyingValue, TValueInitializer> id)
+    public static explicit operator string(BaseEntityId<TSelf, TUnderlyingValue, TEntityIdValueInitializer> id)
     {
         return id.Value.ToString()!;
     }
@@ -83,7 +84,7 @@ public abstract record BaseEntityId<TSelf, TUnderlyingValue, TValueInitializer>(
             : 1;
     }
 
-    public virtual int CompareTo(BaseEntityId<TSelf, TUnderlyingValue, TValueInitializer>? other)
+    public virtual int CompareTo(BaseEntityId<TSelf, TUnderlyingValue, TEntityIdValueInitializer>? other)
     {
         return other != null
             ? Value.CompareTo(other.Value)

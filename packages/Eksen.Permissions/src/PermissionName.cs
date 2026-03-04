@@ -2,8 +2,8 @@
 
 namespace Eksen.Permissions;
 
-public sealed record PermissionName : ValueObject<PermissionName, string, PermissionName>,
-    IConcreteValueObject<PermissionName, string>
+public sealed record PermissionName : ValueObject<PermissionName, string>,
+    IValueObjectParser<PermissionName, string>
 {
     public const int MaxLength = 50;
 

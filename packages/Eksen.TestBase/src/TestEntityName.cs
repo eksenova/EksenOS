@@ -3,8 +3,8 @@ using Eksen.ValueObjects;
 
 namespace Eksen.TestBase;
 
-public record TestEntityName : ValueObject<TestEntityName, string, TestEntityName>,
-    IConcreteValueObject<TestEntityName, string>
+public record TestEntityName : ValueObject<TestEntityName, string>,
+    IValueObjectParser<TestEntityName, string>
 {
     public TestEntityName(string value) : base(value) { }
 

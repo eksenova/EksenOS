@@ -14,7 +14,7 @@ public static class DependencyInjectionExtensions
         var valueObjectBuilder = new EksenValueObjectsBuilder(builder);
         valueObjectBuilder.Configure(options =>
         {
-            options.AddAssembly(typeof(ValueObject<,,>).Assembly);
+            options.AddAssembly(typeof(ValueObject<,>).Assembly);
         });
 
         if (configureAction != null)
@@ -39,6 +39,9 @@ public class EksenValueObjectsBuilder(IEksenBuilder eksenBuilder) : IEksenValueO
 
     public IEksenValueObjectsBuilder Configure(Action<EksenValueObjectOptions> configureOptions)
     {
+        var eager = new EksenValueObjectOptions();
+        configureOptions(eager);
+
         this.Services.Configure(configureOptions);
         return this;
     }

@@ -24,7 +24,7 @@ public interface IValueObject<TValueObject, out TUnderlyingValue> : IValueObject
     new TUnderlyingValue Value { get; }
 }
 
-public interface IConcreteValueObject<out TValueObject, in TUnderlyingValue>
+public interface IValueObjectParser<out TValueObject, in TUnderlyingValue>
     where TValueObject : IValueObject<TValueObject, TUnderlyingValue>
 {
     public static abstract TValueObject Create(TUnderlyingValue value);
@@ -34,10 +34,9 @@ public interface IConcreteValueObject<out TValueObject, in TUnderlyingValue>
         IFormatProvider? formatProvider = null);
 }
 
-public abstract record ValueObject<TSelf, TUnderlyingValue, TValueObjectImplementation>
+public abstract record ValueObject<TSelf, TUnderlyingValue>
     : IValueObject<TSelf, TUnderlyingValue>
-    where TSelf : ValueObject<TSelf, TUnderlyingValue, TValueObjectImplementation>, IValueObject<TSelf, TUnderlyingValue>
-    where TValueObjectImplementation : IConcreteValueObject<TSelf, TUnderlyingValue>
+    where TSelf : ValueObject<TSelf, TUnderlyingValue>, IValueObject<TSelf, TUnderlyingValue>, IValueObjectParser<TSelf, TUnderlyingValue>
     where TUnderlyingValue : notnull
 {
     [Pure]
@@ -58,7 +57,7 @@ public abstract record ValueObject<TSelf, TUnderlyingValue, TValueObjectImplemen
         {
             if (!string.IsNullOrWhiteSpace(value))
             {
-                parsedValue = TValueObjectImplementation.Parse(value, formatProvider);
+                parsedValue = TSelf.Parse(value, formatProvider);
             }
         }
         catch
@@ -80,7 +79,6 @@ public abstract record ValueObject<TSelf, TUnderlyingValue, TValueObjectImplemen
     [Pure]
     public static bool TryCreate(
         TUnderlyingValue? value,
-        IFormatProvider? formatProvider,
         [NotNullWhen(returnValue: true)] out TSelf? createdValue)
     {
         createdValue = null;
@@ -89,7 +87,7 @@ public abstract record ValueObject<TSelf, TUnderlyingValue, TValueObjectImplemen
         {
             if (value != null)
             {
-                createdValue = TValueObjectImplementation.Create(value);
+                createdValue = TSelf.Create(value);
             }
         }
         catch
@@ -129,10 +127,9 @@ public abstract record ValueObject<TSelf, TUnderlyingValue, TValueObjectImplemen
     }
 }
 
-public class ValueObjectTypeConverter<TValueObject, TUnderlyingValue, TValueObjectImplementation>
+public class ValueObjectTypeConverter<TValueObject, TUnderlyingValue>
     : TypeConverter
-    where TValueObject : IValueObject<TValueObject, TUnderlyingValue>
-    where TValueObjectImplementation : IConcreteValueObject<TValueObject, TUnderlyingValue>
+    where TValueObject : IValueObject<TValueObject, TUnderlyingValue>, IValueObjectParser<TValueObject, TUnderlyingValue>
 {
     public override bool CanConvertFrom(ITypeDescriptorContext? context, Type sourceType)
     {
@@ -153,14 +150,14 @@ public class ValueObjectTypeConverter<TValueObject, TUnderlyingValue, TValueObje
     {
         if (value is string stringValue)
         {
-            return TValueObjectImplementation.Parse(stringValue);
+            return TValueObject.Parse(stringValue);
         }
 
         var baseConverter = TypeDescriptor.GetConverter(typeof(TUnderlyingValue));
         var underlyingValue = (TUnderlyingValue?)baseConverter.ConvertFrom(context, culture, value);
 
         return underlyingValue != null
-            ? TValueObjectImplementation.Create(underlyingValue)
+            ? TValueObject.Create(underlyingValue)
             : null;
     }
 
@@ -192,7 +189,7 @@ public class JsonValueObjectTypeInfoResolver(
                 .GetTypeInfo(type, options);
         }
 
-        var getUnderlyingTypeMethod = type.GetMethod(nameof(ValueObject<,,>.GetUnderlyingValueType),
+        var getUnderlyingTypeMethod = type.GetMethod(nameof(ValueObject<,>.GetUnderlyingValueType),
             BindingFlags.Public | BindingFlags.Static | BindingFlags.FlattenHierarchy)!;
 
         var underlyingType = (Type)getUnderlyingTypeMethod.Invoke(obj: null, [])!;
@@ -212,17 +209,19 @@ public class JsonValueObjectConverter : JsonConverterFactory
 
     public override JsonConverter CreateConverter(Type typeToConvert, JsonSerializerOptions options)
     {
-        var converterType = typeof(JsonValueObjectConverter<,,>)
-            .MakeGenericType(typeToConvert.BaseType!.GetGenericArguments());
+        var type = typeToConvert.GetInterfaces()
+            .First(x => x.IsGenericType && x.GetGenericTypeDefinition() == typeof(IValueObject<,>).GetGenericTypeDefinition());
+
+        var converterType = typeof(JsonValueObjectConverter<,>)
+            .MakeGenericType(type.GetGenericArguments());
 
         return (JsonConverter)Activator.CreateInstance(converterType)!;
     }
 }
 
-public class JsonValueObjectConverter<TValueObject, TUnderlyingValue, TValueObjectImplementation>
+public class JsonValueObjectConverter<TValueObject, TUnderlyingValue>
     : JsonConverter<TValueObject>
-    where TValueObject : class, IValueObject<TValueObject, TUnderlyingValue>
-    where TValueObjectImplementation : IConcreteValueObject<TValueObject, TUnderlyingValue>
+    where TValueObject : class, IValueObject<TValueObject, TUnderlyingValue>, IValueObjectParser<TValueObject, TUnderlyingValue>
 
 {
     public override bool CanConvert(Type typeToConvert)
@@ -244,7 +243,7 @@ public class JsonValueObjectConverter<TValueObject, TUnderlyingValue, TValueObje
 
         var value = converter.Read(ref reader, typeToConvert, options);
         return value != null
-            ? TValueObjectImplementation.Create(value)
+            ? TValueObject.Create(value)
             : null;
     }
 
@@ -263,6 +262,7 @@ public class JsonValueObjectConverter<TValueObject, TUnderlyingValue, TValueObje
         converter.Write(writer, value.Value, options);
     }
 }
+
 public static class ValueObjectExtensions
 {
     extension(Type type)
@@ -271,12 +271,12 @@ public static class ValueObjectExtensions
         {
             get
             {
-                return type is { IsClass: true }
+                return type is { IsClass: true, IsAbstract: false, IsGenericTypeDefinition: false }
                        && type
                            .GetInterfaces()
                            .Any(y =>
                                y.IsGenericType
-                               && typeof(IConcreteValueObject<,>) == y.GetGenericTypeDefinition());
+                               && typeof(IValueObjectParser<,>) == y.GetGenericTypeDefinition());
             }
         }
     }

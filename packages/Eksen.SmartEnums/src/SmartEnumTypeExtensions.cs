@@ -8,7 +8,7 @@ public static class SmartEnumTypeExtensions
         {
             get
             {
-                return type is { IsClass: true, BaseType.IsGenericType: true }
+                return type is { IsClass: true, BaseType.IsGenericType: true, IsAbstract: false }
                        && typeof(Enumeration<>).IsAssignableFrom(type.BaseType.GetGenericTypeDefinition());
             }
         }

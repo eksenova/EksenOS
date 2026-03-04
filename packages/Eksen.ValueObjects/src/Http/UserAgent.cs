@@ -1,7 +1,7 @@
 ﻿namespace Eksen.ValueObjects.Http;
 
-public sealed record UserAgent : ValueObject<UserAgent, string, UserAgent>,
-    IConcreteValueObject<UserAgent, string>
+public sealed record UserAgent : ValueObject<UserAgent, string>,
+    IValueObjectParser<UserAgent, string>
 {
     public const int MaxLength = 255;
 

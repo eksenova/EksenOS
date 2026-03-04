@@ -1,7 +1,7 @@
 ﻿namespace Eksen.ValueObjects.Identification;
 
-public sealed record FirstName : ValueObject<FirstName, string, FirstName>,
-    IConcreteValueObject<FirstName, string>
+public sealed record FirstName : ValueObject<FirstName, string>,
+    IValueObjectParser<FirstName, string>
 {
     public const int MaxLength = 24;
 

@@ -2,8 +2,8 @@
 
 namespace Eksen.Identity.Roles;
 
-public sealed record RoleName : ValueObject<RoleName, string, RoleName>,
-    IConcreteValueObject<RoleName, string>
+public sealed record RoleName : ValueObject<RoleName, string>,
+    IValueObjectParser<RoleName, string>
 {
     public const int MaxLength = 50;
 

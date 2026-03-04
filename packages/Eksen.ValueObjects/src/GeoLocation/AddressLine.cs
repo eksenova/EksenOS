@@ -1,7 +1,7 @@
 ﻿namespace Eksen.ValueObjects.GeoLocation;
 
-public sealed record AddressLine : ValueObject<AddressLine, string, AddressLine>,
-    IConcreteValueObject<AddressLine, string>
+public sealed record AddressLine : ValueObject<AddressLine, string>,
+    IValueObjectParser<AddressLine, string>
 {
     public const int MaxLength = 255;
 

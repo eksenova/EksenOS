@@ -2,9 +2,8 @@
 
 namespace Eksen.ValueObjects.Finance;
 
-public sealed record MoneyAmount
-    : ValueObject<MoneyAmount, decimal, MoneyAmount>,
-      IConcreteValueObject<MoneyAmount, decimal>
+public sealed record MoneyAmount : ValueObject<MoneyAmount, decimal>,
+    IValueObjectParser<MoneyAmount, decimal>
 {
     public const decimal MaxValue = long.MaxValue;
     public const decimal MinValue = 0m;

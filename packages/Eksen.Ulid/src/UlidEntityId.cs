@@ -7,7 +7,7 @@ namespace Eksen.Ulid;
 public abstract record UlidEntityId<TSelf>
     : BaseEntityId<TSelf, System.Ulid, UlidValueInitializer>,
         IComparable<System.Ulid>,
-        IEquatable<System.Ulid>, IConcreteValueObject<TSelf, System.Ulid>
+        IEquatable<System.Ulid>, IValueObjectParser<TSelf, System.Ulid>
     where TSelf : UlidEntityId<TSelf>
 
 {

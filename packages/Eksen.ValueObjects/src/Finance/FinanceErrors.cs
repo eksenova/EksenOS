@@ -37,6 +37,13 @@ public static class FinanceErrors
                 new ErrorInstance(self)
                     .WithValue(amount));
 
+    public static readonly ErrorDescriptor<ValueParseError> InvalidMoneyFormat = new(
+        ErrorType.Validation,
+        Category,
+        self => value =>
+            new ErrorInstance(self)
+                .WithValue(value));
+
     public static readonly ErrorDescriptor EmptyIban =
         new(Category,
             ErrorType.Validation);

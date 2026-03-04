@@ -2,8 +2,8 @@
 
 namespace Eksen.ValueObjects.Finance;
 
-public sealed partial record Iban : ValueObject<Iban, string, Iban>,
-    IConcreteValueObject<Iban, string>
+public sealed partial record Iban : ValueObject<Iban, string>,
+    IValueObjectParser<Iban, string>
 {
     public const int MaxLength = 34;
 
