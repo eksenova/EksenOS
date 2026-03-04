@@ -194,18 +194,14 @@ public abstract class EfCoreReadOnlyRepository<TDbContext, TEntity, TFilterParam
         IQueryable<TEntity> queryable,
         TFilterParameters? filterParameters = null)
     {
-        if (filterParameters is DefaultFilterParameters<TEntity> defaultFilterParameters)
+        switch (filterParameters)
         {
-            var predicate = defaultFilterParameters.Predicate;
+            case BaseFilterParameters<TEntity> defaultFilterParameters:
+                queryable = queryable.Where(defaultFilterParameters);
+                break;
 
-            queryable = predicate != null
-                ? queryable.Where(predicate)
-                : queryable;
-        }
-
-        if (filterParameters == null)
-        {
-            return ApplyDefaultFilters(queryable);
+            case null:
+                return ApplyDefaultFilters(queryable);
         }
 
         return queryable;
@@ -222,29 +218,12 @@ public abstract class EfCoreReadOnlyRepository<TDbContext, TEntity, TFilterParam
     {
         switch (includeOptions)
         {
+            case BaseIncludeOptions<TEntity> defaultIncludeOptions:
+                queryable.Include(defaultIncludeOptions);
+                break;
+
             case null:
                 return ApplyDefaultIncludes(queryable);
-
-            case DefaultIncludeOptions<TEntity> defaultIncludeOptions:
-            {
-                var includes = defaultIncludeOptions.Includes;
-
-                if (includes is { Count: > 0 })
-                {
-                    queryable = includes
-                        .Aggregate(queryable,
-                            (current, include)
-                                => current.Include(include));
-                }
-
-                break;
-            }
-        }
-
-        if (includeOptions.IgnoreAutoIncludes)
-        {
-            queryable = queryable
-                .IgnoreAutoIncludes();
         }
 
         return queryable;
@@ -259,20 +238,12 @@ public abstract class EfCoreReadOnlyRepository<TDbContext, TEntity, TFilterParam
         IQueryable<TEntity> queryable,
         TQueryOptions? queryOptions = null)
     {
-        if (queryOptions != null)
+        if (queryOptions == null)
         {
-            if (queryOptions.IgnoreQueryFilters)
-            {
-                queryable = queryable
-                    .IgnoreQueryFilters();
-            }
-
-            if (queryOptions.AsNoTracking)
-            {
-                queryable = queryable
-                    .AsNoTracking();
-            }
+            return queryable;
         }
+
+        queryable = queryable.WithOptions(queryOptions);
 
         return queryable;
     }
@@ -286,16 +257,7 @@ public abstract class EfCoreReadOnlyRepository<TDbContext, TEntity, TFilterParam
             return ApplyDefaultSorting(queryable);
         }
 
-        if (sortingParameters is DefaultSortingParameters<TEntity> defaultSortingParameters)
-        {
-            var sorting = defaultSortingParameters.Sorting;
-
-            queryable = !string.IsNullOrWhiteSpace(sorting)
-                ? queryable.OrderBy(sorting)
-                : typeof(IHasCreationTime).IsAssignableFrom(typeof(TEntity))
-                    ? queryable.OrderByDescending(x => EF.Property<DateTime>(x, "CreationTime"))
-                    : queryable.OrderByDescending(x => EF.Property<int>(x, "Id"));
-        }
+        queryable = queryable.OrderBy(sortingParameters);
 
         return queryable;
     }
@@ -319,20 +281,7 @@ public abstract class EfCoreReadOnlyRepository<TDbContext, TEntity, TFilterParam
             return ApplyDefaultPaging(queryable);
         }
 
-        var skipCount = paginationParameters.SkipCount;
-        var maxResultCount = paginationParameters.MaxResultCount;
-
-        if (skipCount.HasValue)
-        {
-            queryable = queryable
-                .Skip(skipCount.Value);
-        }
-
-        if (maxResultCount.HasValue)
-        {
-            queryable = queryable
-                .Take(maxResultCount.Value);
-        }
+        queryable = queryable.Page(paginationParameters);
 
         return queryable;
     }
