@@ -93,6 +93,11 @@ public class EksenExceptionHandler(
             return HttpStatusCode.BadRequest;
         }
 
+        if (descriptor.ErrorType == ErrorType.RateLimit)
+        {
+            return HttpStatusCode.TooManyRequests;
+        }
+
         if (descriptor.ErrorType == ErrorType.Conflict)
         {
             return HttpStatusCode.Conflict;

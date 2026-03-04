@@ -21,4 +21,9 @@ public static class ErrorType
     {
         get { return nameof(Conflict); }
     }
+
+    public static string RateLimit
+    {
+        get { return nameof(RateLimit); }
+    }
 }
