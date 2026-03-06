@@ -28,14 +28,18 @@ public sealed class SmartEnumOperationTransformer : IOpenApiOperationTransformer
 
             var parameterType = actionParameter.ModelMetadata.UnderlyingOrModelType;
 
-            if (!parameterType.IsEnumeration)
-            {
-                continue;
-            }
-
             SmartEnumSchemaTransformer.ProcessSchema(
                 (OpenApiSchema)parameter.Schema,
-                parameterType);
+                parameterType,
+                out _,
+                out var isCollection,
+                out _);
+
+            if (isCollection)
+            {
+                parameter.Style = ParameterStyle.Form;
+                parameter.Explode = true;
+            }
         }
 
         return Task.CompletedTask;

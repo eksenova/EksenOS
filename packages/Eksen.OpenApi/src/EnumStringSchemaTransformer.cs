@@ -1,6 +1,7 @@
 ﻿using System.Reflection;
 using System.Runtime.Serialization;
 using System.Text.Json.Nodes;
+using Eksen.Core.Helpers;
 using Microsoft.AspNetCore.OpenApi;
 using Microsoft.OpenApi;
 
@@ -10,9 +11,7 @@ public sealed class EnumStringSchemaTransformer : IOpenApiSchemaTransformer
 {
     public Task TransformAsync(OpenApiSchema schema, OpenApiSchemaTransformerContext context, CancellationToken cancellationToken)
     {
-        var schemaClrType = context.JsonTypeInfo.Type;
-        schemaClrType = Nullable.GetUnderlyingType(schemaClrType) ?? schemaClrType;
-
+        var schemaClrType = TypeHelper.GetUnderlyingType(context.JsonTypeInfo.Type);
         if (!schemaClrType.IsEnum)
         {
             return Task.CompletedTask;

@@ -1,7 +1,7 @@
 ﻿using System.Collections;
 using System.Reflection;
-using System.Runtime.CompilerServices;
 using System.Text.Json.Nodes;
+using Eksen.Core.Helpers;
 using Microsoft.AspNetCore.OpenApi;
 using Microsoft.OpenApi;
 
@@ -9,25 +9,31 @@ namespace Eksen.SmartEnums.OpenApi;
 
 public sealed class SmartEnumSchemaTransformer : IOpenApiSchemaTransformer
 {
-    private static readonly ConditionalWeakTable<IOpenApiSchema, object> ProcessedSchemas = new();
-
     public Task TransformAsync(OpenApiSchema schema, OpenApiSchemaTransformerContext context, CancellationToken cancellationToken)
     {
         var schemaClrType = context.JsonPropertyInfo?.AttributeProvider as Type
                             ?? context.JsonPropertyInfo?.PropertyType ?? context.JsonTypeInfo.Type;
-        schemaClrType = Nullable.GetUnderlyingType(schemaClrType) ?? schemaClrType;
 
         ProcessSchema(schema, schemaClrType);
 
         return Task.CompletedTask;
     }
 
-    public static void ProcessSchema(OpenApiSchema schema, Type schemaClrType)
+    public static void ProcessSchema(
+        OpenApiSchema schema,
+        Type schemaClrType)
     {
-        if (ProcessedSchemas.TryGetValue(schema, out _))
-        {
-            return;
-        }
+        ProcessSchema(schema, schemaClrType, out _, out _, out _);
+    }
+
+    public static void ProcessSchema(
+        OpenApiSchema schema,
+        Type schemaClrType,
+        out bool isNullable,
+        out bool isCollection,
+        out bool isNullableCollection)
+    {
+        schemaClrType = TypeHelper.GetUnderlyingType(schemaClrType, out isNullable, out isCollection, out isNullableCollection);
 
         if (schemaClrType is not { IsEnumeration: true })
         {
@@ -55,25 +61,46 @@ public sealed class SmartEnumSchemaTransformer : IOpenApiSchemaTransformer
                     continue;
                 }
 
-                schemaClrType = Nullable.GetUnderlyingType(schemaClrType) ?? schemaClrType;
-
                 ProcessSchema((OpenApiSchema)properties[propertyName], schemaClrType);
             }
-
 
             return;
         }
 
-        schema.Type |= JsonSchemaType.String;
-        schema.Type &= ~JsonSchemaType.Object;
+        if (isCollection)
+        {
+            schema.Type = JsonSchemaType.Array;
+            if (isNullableCollection)
+            {
+                schema.Type |= JsonSchemaType.Null;
+            }
 
-        schema.Enum ??= new List<JsonNode>();
-        schema.Enum.Clear();
+            schema.Items ??= new OpenApiSchema();
 
-        var method = schemaClrType.GetMethod(nameof(Enumeration<>.GetValues),
+            SetElementSchema((OpenApiSchema)schema.Items, schemaClrType, isNullable);
+        }
+        else
+        {
+            SetElementSchema(schema, schemaClrType, isNullable);
+        }
+    }
+
+    private static void SetElementSchema(OpenApiSchema elementSchema, Type elementType, bool isNullable)
+    {
+        elementSchema.Type = JsonSchemaType.String;
+
+        if (isNullable)
+        {
+            elementSchema.Type |= JsonSchemaType.Null;
+        }
+
+        elementSchema.Enum ??= new List<JsonNode>();
+        elementSchema.Enum.Clear();
+
+        var method = elementType.GetMethod(nameof(Enumeration<>.GetValues),
             BindingFlags.Public | BindingFlags.Static | BindingFlags.FlattenHierarchy)!;
         var allValuesEnumerable = (IEnumerable)method.Invoke(obj: null, Array.Empty<object>())!;
-        var codePropertyGetter = schemaClrType
+        var codePropertyGetter = elementType
             .GetProperty(nameof(Enumeration<>.Code), BindingFlags.Instance | BindingFlags.Public)!
             .GetGetMethod()!;
 
@@ -83,12 +110,11 @@ public sealed class SmartEnumSchemaTransformer : IOpenApiSchemaTransformer
             while (enumerator.MoveNext())
             {
                 var code = codePropertyGetter.Invoke(enumerator.Current, []);
-                schema.Enum.Add(JsonValue.Create(code)!);
+                elementSchema.Enum.Add(JsonValue.Create(code)!);
             }
         }
         finally
         {
-            ProcessedSchemas.TryAdd(schema, new object());
             (enumerator as IDisposable)?.Dispose();
         }
     }
