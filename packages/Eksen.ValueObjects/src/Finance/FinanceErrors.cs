@@ -62,5 +62,49 @@ public static class FinanceErrors
             new ErrorInstance(self)
                 .WithValue(value)
                 .WithValue(maxLength));
+
+    public static readonly ErrorDescriptor<ValueValidationError<decimal>> NegativeDiscountRate = new(
+        ErrorType.Validation,
+        Category,
+        self => value =>
+            new ErrorInstance(self)
+                .WithValue(value));
+
+    public static readonly ErrorDescriptor<ValueOverflowError<decimal>> DiscountRateOverflow = new(
+        ErrorType.Validation,
+        Category,
+        self => (value, maxValue) =>
+            new ErrorInstance(self)
+                .WithValue(value)
+                .WithValue(maxValue));
+
+    public static readonly ErrorDescriptor<ValueParseError> InvalidDiscountRate = new(
+        ErrorType.Validation,
+        Category,
+        self => value =>
+            new ErrorInstance(self)
+                .WithValue(value));
+
+    public static readonly ErrorDescriptor<ValueValidationError<decimal>> NegativeTaxRate = new(
+        ErrorType.Validation,
+        Category,
+        self => value =>
+            new ErrorInstance(self)
+                .WithValue(value));
+
+    public static readonly ErrorDescriptor<ValueOverflowError<decimal>> TaxRateOverflow = new(
+        ErrorType.Validation,
+        Category,
+        self => (value, maxValue) =>
+            new ErrorInstance(self)
+                .WithValue(value)
+                .WithValue(maxValue));
+
+    public static readonly ErrorDescriptor<ValueParseError> InvalidTaxRate = new(
+        ErrorType.Validation,
+        Category,
+        self => value =>
+            new ErrorInstance(self)
+                .WithValue(value));
 }
 
