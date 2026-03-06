@@ -249,7 +249,7 @@ public abstract class EfCoreReadOnlyRepository<TDbContext, TEntity, TFilterParam
         IQueryable<TEntity> queryable,
         TSortingParameters? sortingParameters = null)
     {
-        if (sortingParameters == null)
+        if (string.IsNullOrWhiteSpace(sortingParameters?.Sorting))
         {
             return ApplyDefaultSorting(queryable);
         }
