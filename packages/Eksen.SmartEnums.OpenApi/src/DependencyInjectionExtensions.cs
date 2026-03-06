@@ -15,6 +15,7 @@ public static class DependencyInjectionExtensions
         services.AddOpenApi(options =>
         {
             options.AddSchemaTransformer<SmartEnumSchemaTransformer>();
+            options.AddOperationTransformer<SmartEnumOperationTransformer>();
         });
 
         return builder;

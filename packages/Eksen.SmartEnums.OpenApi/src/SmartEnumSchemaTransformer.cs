@@ -1,16 +1,20 @@
 ﻿using System.Collections;
 using System.Reflection;
+using System.Runtime.CompilerServices;
 using System.Text.Json.Nodes;
 using Microsoft.AspNetCore.OpenApi;
 using Microsoft.OpenApi;
 
 namespace Eksen.SmartEnums.OpenApi;
 
-internal sealed class SmartEnumSchemaTransformer : IOpenApiSchemaTransformer
+public sealed class SmartEnumSchemaTransformer : IOpenApiSchemaTransformer
 {
+    private static readonly ConditionalWeakTable<IOpenApiSchema, object> ProcessedSchemas = new();
+
     public Task TransformAsync(OpenApiSchema schema, OpenApiSchemaTransformerContext context, CancellationToken cancellationToken)
     {
-        var schemaClrType = context.JsonPropertyInfo?.AttributeProvider as Type ?? context.JsonPropertyInfo?.PropertyType ?? context.JsonTypeInfo.Type;
+        var schemaClrType = context.JsonPropertyInfo?.AttributeProvider as Type
+                            ?? context.JsonPropertyInfo?.PropertyType ?? context.JsonTypeInfo.Type;
         schemaClrType = Nullable.GetUnderlyingType(schemaClrType) ?? schemaClrType;
 
         ProcessSchema(schema, schemaClrType);
@@ -18,8 +22,13 @@ internal sealed class SmartEnumSchemaTransformer : IOpenApiSchemaTransformer
         return Task.CompletedTask;
     }
 
-    private void ProcessSchema(OpenApiSchema schema, Type schemaClrType)
+    public static void ProcessSchema(OpenApiSchema schema, Type schemaClrType)
     {
+        if (ProcessedSchemas.TryGetValue(schema, out _))
+        {
+            return;
+        }
+
         if (schemaClrType is not { IsEnumeration: true })
         {
             var properties = schema.Properties ?? new Dictionary<string, IOpenApiSchema>();
@@ -61,7 +70,8 @@ internal sealed class SmartEnumSchemaTransformer : IOpenApiSchemaTransformer
         schema.Enum ??= new List<JsonNode>();
         schema.Enum.Clear();
 
-        var method = schemaClrType.GetMethod(nameof(Enumeration<>.GetValues), BindingFlags.Public | BindingFlags.Static | BindingFlags.FlattenHierarchy)!;
+        var method = schemaClrType.GetMethod(nameof(Enumeration<>.GetValues),
+            BindingFlags.Public | BindingFlags.Static | BindingFlags.FlattenHierarchy)!;
         var allValuesEnumerable = (IEnumerable)method.Invoke(obj: null, Array.Empty<object>())!;
         var codePropertyGetter = schemaClrType
             .GetProperty(nameof(Enumeration<>.Code), BindingFlags.Instance | BindingFlags.Public)!
@@ -78,6 +88,7 @@ internal sealed class SmartEnumSchemaTransformer : IOpenApiSchemaTransformer
         }
         finally
         {
+            ProcessedSchemas.TryAdd(schema, new object());
             (enumerator as IDisposable)?.Dispose();
         }
     }
