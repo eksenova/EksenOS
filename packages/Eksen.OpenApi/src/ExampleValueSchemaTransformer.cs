@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.OpenApi;
+﻿using System.Text.Json;
+using Microsoft.AspNetCore.OpenApi;
 using Microsoft.OpenApi;
 
 namespace Eksen.OpenApi;
@@ -19,7 +20,9 @@ public sealed class ExampleValueSchemaTransformer : IOpenApiSchemaTransformer
         var defaultValueAttribute = attributes.FirstOrDefault() as ExampleValueAttribute;
         if (defaultValueAttribute?.Value != null)
         {
-            schema.Example = defaultValueAttribute.Value.ToString();
+            var exampleValue = defaultValueAttribute.Value;
+
+            schema.Example = JsonSerializer.SerializeToNode(exampleValue, context.JsonTypeInfo);
         }
 
         return Task.CompletedTask;
