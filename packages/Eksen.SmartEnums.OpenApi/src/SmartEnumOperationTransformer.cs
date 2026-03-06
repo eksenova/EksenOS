@@ -33,7 +33,7 @@ public sealed class SmartEnumOperationTransformer : IOpenApiOperationTransformer
                 continue;
             }
 
-            EnumerationSchemaTransformer.ProcessSchema(
+            SmartEnumSchemaTransformer.ProcessSchema(
                 (OpenApiSchema)parameter.Schema,
                 parameterType);
         }
