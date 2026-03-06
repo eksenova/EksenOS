@@ -1,0 +1,10 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+	<Import Project="..\..\..\common.props" />
+
+	<ItemGroup>
+		<ProjectReference Include="..\..\Eksen.Auditing\src\Eksen.Auditing.csproj" />
+		<ProjectReference Include="..\..\Eksen.EntityFrameworkCore\src\Eksen.EntityFrameworkCore.csproj" />
+	</ItemGroup>
+
+</Project>
