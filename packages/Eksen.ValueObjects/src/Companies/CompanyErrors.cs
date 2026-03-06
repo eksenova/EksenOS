@@ -33,4 +33,30 @@ public static class CompanyErrors
             new ErrorInstance(self)
                 .WithValue(value)
                 .WithValue(maxLength));
+
+    public static readonly ErrorDescriptor EmptyCompanyTitle = new(
+        ErrorType.Validation,
+        Category
+    );
+
+    public static readonly ErrorDescriptor<ValueLengthOverflowError> CompanyTitleOverflow = new(
+        ErrorType.Validation,
+        Category,
+        self => (value, maxLength) =>
+            new ErrorInstance(self)
+                .WithValue(value)
+                .WithValue(maxLength));
+
+    public static readonly ErrorDescriptor EmptyTaxNumber = new(
+        ErrorType.Validation,
+        Category
+    );
+
+    public static readonly ErrorDescriptor<ValueLengthOverflowError> TaxNumberOverflow = new(
+        ErrorType.Validation,
+        Category,
+        self => (value, maxLength) =>
+            new ErrorInstance(self)
+                .WithValue(value)
+                .WithValue(maxLength));
 }
