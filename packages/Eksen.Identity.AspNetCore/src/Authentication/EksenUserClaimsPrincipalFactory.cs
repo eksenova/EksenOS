@@ -39,6 +39,8 @@ public class EksenUserClaimsPrincipalFactory<TUser, TRole, TTenant>(
             identity.AddIfNotExists(new Claim(EksenClaims.TenantName, user.Tenant.Name.Value));
         }
 
+        identity.AddIfNotExists(new Claim(EksenClaims.IsImpersonating, false.ToString().ToLower(), ClaimValueTypes.Boolean));
+
         return identity;
     }
 }

@@ -67,9 +67,11 @@ internal sealed class ClaimsBasedAuthContext(
                 return false;
             }
 
-            const string tenantIdClaimType = EksenClaims.OriginalTenantId;
-
-            return principal.FindFirst(tenantIdClaimType) != null;
+            const string impersonatingClaimType = EksenClaims.IsImpersonating;
+            var claim = principal.FindFirst(impersonatingClaimType);
+            return claim != null
+                   && bool.TryParse(claim.Value, out var isImpersonating)
+                   && isImpersonating;
         }
     }
 
