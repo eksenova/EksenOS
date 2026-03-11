@@ -24,12 +24,12 @@ internal sealed class GotenbergHtmlPdfRenderer
             { htmlContent, "index.html", "index.html" }
         };
 
-        content.Add(new StringContent(content: "148mm"), name: "paperWidth");
-        content.Add(new StringContent(content: "210mm"), name: "paperHeight");
-        content.Add(new StringContent(content: "4mm"), name: "marginTop");
-        content.Add(new StringContent(content: "2mm"), name: "marginBottom");
-        content.Add(new StringContent(content: "2mm"), name: "marginLeft");
-        content.Add(new StringContent(content: "2mm"), name: "marginRight");
+        content.Add(new StringContent(content: "210mm"), name: "paperWidth");
+        content.Add(new StringContent(content: "297mm"), name: "paperHeight");
+        content.Add(new StringContent(content: "10mm"), name: "marginTop");
+        content.Add(new StringContent(content: "10mm"), name: "marginBottom");
+        content.Add(new StringContent(content: "10mm"), name: "marginLeft");
+        content.Add(new StringContent(content: "10mm"), name: "marginRight");
         content.Add(new StringContent(content: "true"), name: "printBackground");
         content.Add(new StringContent(content: "false"), name: "landscape");
         content.Add(new StringContent(content: "1.0"), name: "scale");
