@@ -1,0 +1,14 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+	<Import Project="..\..\..\common.props" />
+
+	<ItemGroup>
+		<PackageReference Include="Npgsql" Version="9.0.3" />
+		<PackageReference Include="System.IO.Hashing" Version="9.0.4" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<ProjectReference Include="..\..\Eksen.DistributedLocks\src\Eksen.DistributedLocks.csproj" />
+	</ItemGroup>
+
+</Project>
