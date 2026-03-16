@@ -1,20 +1,25 @@
-﻿namespace Eksen.UnitOfWork;
+using Eksen.UnitOfWork;
 
-public class CompositeUnitOfWorkScope : IUnitOfWorkScope
+namespace Eksen.DistributedTransactions;
+
+internal sealed class DistributedUnitOfWorkScope : IUnitOfWorkScope
 {
     private readonly Dictionary<CallbackType, List<Func<IServiceProvider, CancellationToken, Task>>> _callbacks = new();
     private readonly List<Func<IServiceProvider, CancellationToken, Task>> _postCommitActions = [];
-    private readonly UnitOfWorkManager _unitOfWorkManager;
+    private readonly DistributedUnitOfWorkManager _manager;
     private readonly IServiceProvider _serviceProvider;
+    private readonly IDistributedTransactionManager _txManager;
     private readonly ICollection<IUnitOfWorkProviderScope> _scopes;
     private bool _isDisposed;
 
-    public CompositeUnitOfWorkScope(
-        UnitOfWorkManager unitOfWorkManager,
-        IServiceProvider serviceProvider)
+    public DistributedUnitOfWorkScope(
+        DistributedUnitOfWorkManager manager,
+        IServiceProvider serviceProvider,
+        IDistributedTransactionManager txManager)
     {
-        _unitOfWorkManager = unitOfWorkManager;
+        _manager = manager;
         _serviceProvider = serviceProvider;
+        _txManager = txManager;
         _scopes = new List<IUnitOfWorkProviderScope>();
         ScopeId = Guid.NewGuid();
 
@@ -43,10 +48,18 @@ public class CompositeUnitOfWorkScope : IUnitOfWorkScope
     {
         await AlertCallbacksAsync(CallbackType.Completing, cancellationToken);
 
-        foreach (var scope in _scopes)
+        var tx = _txManager.Begin($"UoW-{ScopeId:N}");
+
+        foreach (var providerScope in _scopes)
         {
-            await scope.CommitAsync(cancellationToken);
+            var scope = providerScope;
+            tx.AddStep(
+                $"Commit-{scope.Provider.GetType().Name}",
+                async (_, ct) => await scope.CommitAsync(ct),
+                async (_, ct) => await scope.RollbackAsync(ct));
         }
+
+        await tx.CommitAsync(cancellationToken);
 
         await AlertCallbacksAsync(CallbackType.Completed, cancellationToken);
 
@@ -77,27 +90,27 @@ public class CompositeUnitOfWorkScope : IUnitOfWorkScope
         }
     }
 
-    public virtual void AddRollbackCallback(Func<IServiceProvider, CancellationToken, Task> callback)
+    public void AddRollbackCallback(Func<IServiceProvider, CancellationToken, Task> callback)
     {
         _callbacks[CallbackType.Rollback].Add(callback);
     }
 
-    public virtual void AddCompletingCallback(Func<IServiceProvider, CancellationToken, Task> callback)
+    public void AddCompletingCallback(Func<IServiceProvider, CancellationToken, Task> callback)
     {
         _callbacks[CallbackType.Completing].Add(callback);
     }
 
-    public virtual void AddCompletedCallback(Func<IServiceProvider, CancellationToken, Task> callback)
+    public void AddCompletedCallback(Func<IServiceProvider, CancellationToken, Task> callback)
     {
         _callbacks[CallbackType.Completed].Add(callback);
     }
 
-    public virtual void AddPostCommitAction(Func<IServiceProvider, CancellationToken, Task> action)
+    public void AddPostCommitAction(Func<IServiceProvider, CancellationToken, Task> action)
     {
         _postCommitActions.Add(action);
     }
 
-    public virtual async ValueTask DisposeAsync()
+    public async ValueTask DisposeAsync()
     {
         if (_isDisposed)
         {
@@ -109,12 +122,12 @@ public class CompositeUnitOfWorkScope : IUnitOfWorkScope
             await scope.DisposeAsync();
         }
 
-        _unitOfWorkManager.PopScope(this);
+        _manager.PopScope(this);
 
         _isDisposed = true;
     }
 
-    protected virtual async Task AlertCallbacksAsync(
+    private async Task AlertCallbacksAsync(
         CallbackType callbackType,
         CancellationToken cancellationToken = default)
     {
@@ -124,7 +137,7 @@ public class CompositeUnitOfWorkScope : IUnitOfWorkScope
         }
     }
 
-    protected enum CallbackType
+    private enum CallbackType
     {
         Rollback,
         Completing,

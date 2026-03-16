@@ -28,6 +28,8 @@ public interface IUnitOfWorkProviderScope : IAsyncDisposable
 
 public interface IUnitOfWorkScope : IAsyncDisposable
 {
+    Guid ScopeId { get; }
+
     Task CommitAsync(CancellationToken cancellationToken = default);
 
     Task RollbackAsync(CancellationToken cancellationToken = default);
@@ -39,6 +41,8 @@ public interface IUnitOfWorkScope : IAsyncDisposable
     void AddCompletingCallback(Func<IServiceProvider, CancellationToken, Task> callback);
 
     void AddCompletedCallback(Func<IServiceProvider, CancellationToken, Task> callback);
+
+    void AddPostCommitAction(Func<IServiceProvider, CancellationToken, Task> action);
 
     IReadOnlyCollection<IUnitOfWorkProviderScope> ProviderScopes { get; }
 
