@@ -83,7 +83,8 @@ public sealed class SqlServerFixture : IAsyncLifetime
 }
 
 [Collection(SqlServerCollection.Name)]
-public abstract class EksenSqlServerTestBase(SqlServerFixture fixture) : EksenTestBase
+public abstract class EksenSqlServerTestBase(SqlServerFixture fixture)
+    : EksenDatabaseTestBase<TestDbContext>
 {
     private SqlServerWorker? _worker;
 
@@ -96,27 +97,17 @@ public abstract class EksenSqlServerTestBase(SqlServerFixture fixture) : EksenTe
         }
     }
 
-    protected override async Task BuildServicesAsync(ServiceCollection services)
+    protected override async Task<string> GetConnectionStringAsync()
     {
-        await base.BuildServicesAsync(services);
-
         _worker = await fixture.AcquireAsync();
-
-        services.AddEksen(eksenBuilder =>
-        {
-            eksenBuilder.AddEntityFrameworkCore(efCoreBuilder =>
-            {
-                efCoreBuilder.UseSqlServerDbContext<TestDbContext>(ConnectionString);
-            });
-        });
+        return _worker.ConnectionString;
     }
 
-    public override async Task InitializeAsync()
+    protected override void ConfigureDbContext(
+        IEksenEntityFrameworkCoreBuilder efCoreBuilder,
+        string connectionString)
     {
-        await base.InitializeAsync();
-
-        var dbContext = ServiceProvider.GetRequiredService<TestDbContext>();
-        await dbContext.Database.EnsureCreatedAsync();
+        efCoreBuilder.UseSqlServerDbContext<TestDbContext>(connectionString);
     }
 
     public override async Task DisposeAsync()

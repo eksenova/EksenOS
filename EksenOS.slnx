@@ -8,8 +8,10 @@
     <File Path="README.md" />
   </Folder>
   <Folder Name="/test/">
+    <Project Path="packages/Eksen.Auditing/test/Eksen.Auditing.Tests.csproj" />
     <Project Path="packages/Eksen.EntityFrameworkCore.SqlServer/test/Eksen.EntityFrameworkCore.SqlServer.Tests.csproj" />
     <Project Path="packages/Eksen.TestBase/src/Eksen.TestBase.csproj" />
+    <Project Path="packages/Eksen.TestBase.AspNetCore/src/Eksen.TestBase.AspNetCore.csproj" />
   </Folder>
   <Project Path="packages/Eksen.Auditing/src/Eksen.Auditing.csproj" />
   <Project Path="packages/Eksen.Auditing.AspNetCore/src/Eksen.Auditing.AspNetCore.csproj" />
@@ -17,6 +19,12 @@
     Path="packages/Eksen.Auditing.EntityFrameworkCore/src/Eksen.Auditing.EntityFrameworkCore.csproj" />
   <Project Path="packages/Eksen.Core/src/Eksen.Core.csproj" />
   <Project Path="packages/Eksen.DataSeeding/src/Eksen.DataSeeding.csproj" />
+  <Project Path="packages/Eksen.DistributedLocks/src/Eksen.DistributedLocks.csproj" />
+  <Project
+    Path="packages/Eksen.DistributedLocks.PostgreSql/src/Eksen.DistributedLocks.PostgreSql.csproj" />
+  <Project
+    Path="packages/Eksen.DistributedLocks.SqlServer/src/Eksen.DistributedLocks.SqlServer.csproj" />
+  <Project Path="packages/Eksen.DistributedTransactions/src/Eksen.DistributedTransactions.csproj" />
   <Project Path="packages/Eksen.Emailing/src/Eksen.Emailing.csproj" />
   <Project Path="packages/Eksen.Entities/src/Eksen.Entities.csproj" />
   <Project Path="packages/Eksen.EntityFrameworkCore.SqlServer/src/Eksen.EntityFrameworkCore.SqlServer.csproj" />
@@ -43,4 +51,12 @@
   <Project Path="packages/Eksen.UnitOfWork/src/Eksen.UnitOfWork.csproj" />
   <Project Path="packages/Eksen.ValueObjects.AspNetCore/src/Eksen.ValueObjects.AspNetCore.csproj" />
   <Project Path="packages/Eksen.ValueObjects/src/Eksen.ValueObjects.csproj" />
+  <Project Path="packages/Eksen.EventBus/src/Eksen.EventBus.csproj" />
+  <Project Path="packages/Eksen.EventBus.InMemory/src/Eksen.EventBus.InMemory.csproj" />
+  <Project Path="packages/Eksen.EventBus.RabbitMq/src/Eksen.EventBus.RabbitMq.csproj" />
+  <Project
+    Path="packages/Eksen.EventBus.EntityFrameworkCore/src/Eksen.EventBus.EntityFrameworkCore.csproj" />
+  <Project Path="packages/Eksen.EventBus.Dashboard/src/Eksen.EventBus.Dashboard.csproj" />
+  <Project Path="packages/Eksen.EventBus.Alerts/src/Eksen.EventBus.Alerts.csproj" />
+  <Project Path="packages/Eksen.EventBus.Alerts.Slack/src/Eksen.EventBus.Alerts.Slack.csproj" />
 </Solution>
