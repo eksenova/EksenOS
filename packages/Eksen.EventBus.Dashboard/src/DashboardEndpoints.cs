@@ -3,6 +3,7 @@ using Eksen.EventBus.Inbox;
 using Eksen.EventBus.Outbox;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -27,9 +28,9 @@ public static class DashboardEndpoints
     }
 
     private static async Task<IResult> GetStatsAsync(
-        IOutboxStore outboxStore,
-        IInboxStore inboxStore,
-        IDeadLetterStore deadLetterStore)
+        [FromServices] IOutboxStore outboxStore,
+        [FromServices] IInboxStore inboxStore,
+        [FromServices] IDeadLetterStore deadLetterStore)
     {
         var outboxStats = await outboxStore.GetStatsAsync();
         var inboxStats = await inboxStore.GetStatsAsync();
@@ -44,7 +45,7 @@ public static class DashboardEndpoints
     }
 
     private static async Task<IResult> GetOutboxMessagesAsync(
-        IOutboxStore store,
+        [FromServices] IOutboxStore store,
         int? status = null,
         int skip = 0,
         int take = 50)
@@ -55,7 +56,7 @@ public static class DashboardEndpoints
     }
 
     private static async Task<IResult> GetInboxMessagesAsync(
-        IInboxStore store,
+        [FromServices] IInboxStore store,
         int? status = null,
         int skip = 0,
         int take = 50)
@@ -66,7 +67,7 @@ public static class DashboardEndpoints
     }
 
     private static async Task<IResult> GetDeadLetterMessagesAsync(
-        IDeadLetterStore store,
+        [FromServices] IDeadLetterStore store,
         int skip = 0,
         int take = 50)
     {
@@ -76,8 +77,8 @@ public static class DashboardEndpoints
 
     private static async Task<IResult> RequeueDeadLetterAsync(
         Guid id,
-        IDeadLetterStore deadLetterStore,
-        IEventBusTransport transport)
+        [FromServices] IDeadLetterStore deadLetterStore,
+        [FromServices] IEventBusTransport transport)
     {
         var message = await deadLetterStore.GetByIdAsync(id);
         if (message == null)
@@ -97,7 +98,7 @@ public static class DashboardEndpoints
         return Results.Ok(new { requeued = true });
     }
 
-    private static IResult GetHandlersAsync(IEventHandlerRegistry registry)
+    private static IResult GetHandlersAsync([FromServices] IEventHandlerRegistry registry)
     {
         var handlers = registry.GetAllHandlers()
             .Select(h => new

@@ -3,6 +3,10 @@
 	<Import Project="..\..\..\common.props" />
 
 	<ItemGroup>
+		<InternalsVisibleTo Include="Eksen.Identity.EntityFrameworkCore.Tests" />
+	</ItemGroup>
+
+	<ItemGroup>
 		<ProjectReference Include="..\..\Eksen.Core\src\Eksen.Core.csproj" />
 		<ProjectReference Include="..\..\Eksen.Identity\src\Eksen.Identity.csproj" />
 		<ProjectReference Include="..\..\Eksen.EntityFrameworkCore\src\Eksen.EntityFrameworkCore.csproj" />

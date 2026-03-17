@@ -3,6 +3,10 @@
 	<Import Project="..\..\..\common.props" />
 
 	<ItemGroup>
+		<InternalsVisibleTo Include="Eksen.Identity.AspNetCore.Tests" />
+	</ItemGroup>
+
+	<ItemGroup>
 		<FrameworkReference Include="Microsoft.AspNetCore.App" />
 	</ItemGroup>
 

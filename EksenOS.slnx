@@ -9,9 +9,58 @@
   </Folder>
   <Folder Name="/test/">
     <Project Path="packages/Eksen.Auditing/test/Eksen.Auditing.Tests.csproj" />
+    <Project Path="packages/Eksen.Auditing.AspNetCore/test/Eksen.Auditing.AspNetCore.Tests.csproj" />
+    <Project
+      Path="packages/Eksen.Auditing.EntityFrameworkCore/test/Eksen.Auditing.EntityFrameworkCore.Tests.csproj" />
     <Project Path="packages/Eksen.EntityFrameworkCore.SqlServer/test/Eksen.EntityFrameworkCore.SqlServer.Tests.csproj" />
+    <Project Path="packages/Eksen.EventBus/test/Eksen.EventBus.Tests.csproj" />
+    <Project Path="packages/Eksen.EventBus.InMemory/test/Eksen.EventBus.InMemory.Tests.csproj" />
+    <Project Path="packages/Eksen.EventBus.RabbitMq/test/Eksen.EventBus.RabbitMq.Tests.csproj" />
+    <Project
+      Path="packages/Eksen.EventBus.EntityFrameworkCore/test/Eksen.EventBus.EntityFrameworkCore.Tests.csproj" />
+    <Project Path="packages/Eksen.EventBus.Dashboard/test/Eksen.EventBus.Dashboard.Tests.csproj" />
+    <Project Path="packages/Eksen.EventBus.Alerts/test/Eksen.EventBus.Alerts.Tests.csproj" />
+    <Project
+      Path="packages/Eksen.EventBus.Alerts.Slack/test/Eksen.EventBus.Alerts.Slack.Tests.csproj" />
+    <Project Path="packages/Eksen.Identity/test/Eksen.Identity.Tests.csproj" />
+    <Project Path="packages/Eksen.Identity.AspNetCore/test/Eksen.Identity.AspNetCore.Tests.csproj" />
+    <Project
+      Path="packages/Eksen.Identity.EntityFrameworkCore/test/Eksen.Identity.EntityFrameworkCore.Tests.csproj" />
+    <Project Path="packages/Eksen.Permissions/test/Eksen.Permissions.Tests.csproj" />
+    <Project
+      Path="packages/Eksen.Permissions.AspNetCore/test/Eksen.Permissions.AspNetCore.Tests.csproj" />
+    <Project
+      Path="packages/Eksen.Permissions.EntityFrameworkCore/test/Eksen.Permissions.EntityFrameworkCore.Tests.csproj" />
     <Project Path="packages/Eksen.TestBase/src/Eksen.TestBase.csproj" />
     <Project Path="packages/Eksen.TestBase.AspNetCore/src/Eksen.TestBase.AspNetCore.csproj" />
+    <Project Path="packages/Eksen.UnitOfWork/test/Eksen.UnitOfWork.Tests.csproj" />
+    <Project Path="packages/Eksen.Localization/test/Eksen.Localization.Tests.csproj" />
+    <Project Path="packages/Eksen.OpenApi/test/Eksen.OpenApi.Tests.csproj" />
+    <Project Path="packages/Eksen.EntityFrameworkCore/test/Eksen.EntityFrameworkCore.Tests.csproj" />
+    <Project Path="packages/Eksen.ErrorHandling/test/Eksen.ErrorHandling.Tests.csproj" />
+    <Project
+      Path="packages/Eksen.DistributedTransactions/test/Eksen.DistributedTransactions.Tests.csproj" />
+    <Project Path="packages/Eksen.DistributedLocks/test/Eksen.DistributedLocks.Tests.csproj" />
+    <Project
+      Path="packages/Eksen.DistributedLocks.PostgreSql/test/Eksen.DistributedLocks.PostgreSql.Tests.csproj" />
+    <Project
+      Path="packages/Eksen.DistributedLocks.SqlServer/test/Eksen.DistributedLocks.SqlServer.Tests.csproj" />
+    <Project Path="packages/Eksen.DataSeeding/test/Eksen.DataSeeding.Tests.csproj" />
+    <Project Path="packages/Eksen.ValueObjects/test/Eksen.ValueObjects.Tests.csproj" />
+    <Project
+      Path="packages/Eksen.ValueObjects.AspNetCore/test/Eksen.ValueObjects.AspNetCore.Tests.csproj" />
+    <Project
+      Path="packages/Eksen.UnitOfWork.AspNetCore/test/Eksen.UnitOfWork.AspNetCore.Tests.csproj" />
+    <Project
+      Path="packages/Eksen.ErrorHandling.AspNetCore/test/Eksen.ErrorHandling.AspNetCore.Tests.csproj" />
+    <Project Path="packages/Eksen.Ulid/test/Eksen.Ulid.Tests.csproj" />
+    <Project Path="packages/Eksen.Templating/test/Eksen.Templating.Tests.csproj" />
+    <Project Path="packages/Eksen.Repositories/test/Eksen.Repositories.Tests.csproj" />
+    <Project Path="packages/Eksen.SmartEnums/test/Eksen.SmartEnums.Tests.csproj" />
+    <Project
+      Path="packages/Eksen.SmartEnums.AspNetCore/test/Eksen.SmartEnums.AspNetCore.Tests.csproj" />
+    <Project Path="packages/Eksen.SmartEnums.OpenApi/test/Eksen.SmartEnums.OpenApi.Tests.csproj" />
+    <Project Path="packages/Eksen.Emailing/test/Eksen.Emailing.Tests.csproj" />
   </Folder>
   <Project Path="packages/Eksen.Auditing/src/Eksen.Auditing.csproj" />
   <Project Path="packages/Eksen.Auditing.AspNetCore/src/Eksen.Auditing.AspNetCore.csproj" />

@@ -1,0 +1,27 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+	<Import Project="..\..\..\common.props" />
+
+	<PropertyGroup>
+		<IsPackable>false</IsPackable>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<ProjectReference Include="..\..\Eksen.TestBase\src\Eksen.TestBase.csproj" />
+		<ProjectReference Include="..\..\Eksen.Permissions\src\Eksen.Permissions.csproj" />
+		<ProjectReference Include="..\..\Eksen.Identity\src\Eksen.Identity.csproj" />
+		<ProjectReference Include="..\..\Eksen.Identity.EntityFrameworkCore\src\Eksen.Identity.EntityFrameworkCore.csproj" />
+		<ProjectReference Include="..\src\Eksen.Permissions.EntityFrameworkCore.csproj" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<Using Include="Xunit" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.14.1" />
+		<PackageReference Include="xunit.runner.visualstudio" Version="3.1.4" />
+		<PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="10.0.3" />
+	</ItemGroup>
+
+</Project>

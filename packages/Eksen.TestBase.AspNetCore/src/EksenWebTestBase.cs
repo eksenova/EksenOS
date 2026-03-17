@@ -44,6 +44,10 @@ public abstract class EksenWebTestBase<TProgram, TDbContext> : IAsyncLifetime
     {
         var connectionString = await GetConnectionStringAsync();
 
+        // Pre-create the database before building the factory so that data seeders
+        // executed during host startup find the schema already in place.
+        await EnsureDatabaseCreatedAsync(connectionString);
+
         _factory = new WebApplicationFactory<TProgram>()
             .WithWebHostBuilder(builder =>
             {
@@ -64,10 +68,6 @@ public abstract class EksenWebTestBase<TProgram, TDbContext> : IAsyncLifetime
             });
 
         Client = _factory.CreateClient();
-
-        using var scope = _factory.Services.CreateScope();
-        var dbContext = scope.ServiceProvider.GetRequiredService<TDbContext>();
-        await dbContext.Database.EnsureCreatedAsync();
     }
 
     public virtual async Task DisposeAsync()
@@ -86,12 +86,35 @@ public abstract class EksenWebTestBase<TProgram, TDbContext> : IAsyncLifetime
         var descriptors = services
             .Where(d =>
                 d.ServiceType == typeof(TContext) ||
-                d.ServiceType == typeof(DbContextOptions<TContext>))
+                d.ServiceType == typeof(DbContextOptions<TContext>) ||
+                d.ServiceType.FullName == "Eksen.UnitOfWork.IUnitOfWorkProvider" ||
+                d.ServiceType.FullName == "Eksen.EntityFrameworkCore.IDbContextTracker")
             .ToList();
 
         foreach (var descriptor in descriptors)
         {
             services.Remove(descriptor);
         }
+    }
+
+    protected virtual async Task EnsureDatabaseCreatedAsync(string connectionString)
+    {
+        var optionsBuilder = new DbContextOptionsBuilder<TDbContext>();
+        ConfigureDbContextOptions(optionsBuilder, connectionString);
+
+        var dbContext = (TDbContext)Activator.CreateInstance(
+            typeof(TDbContext),
+            optionsBuilder.Options,
+            null)!;
+        await using (dbContext)
+        {
+            await dbContext.Database.EnsureCreatedAsync();
+        }
+    }
+
+    protected virtual void ConfigureDbContextOptions(
+        DbContextOptionsBuilder<TDbContext> optionsBuilder,
+        string connectionString)
+    {
     }
 }

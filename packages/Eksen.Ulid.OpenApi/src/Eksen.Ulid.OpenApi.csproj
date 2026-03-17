@@ -5,6 +5,6 @@
 		<ProjectReference Include="..\..\Eksen.Ulid\src\Eksen.Ulid.csproj" />
 	</ItemGroup>
 	<ItemGroup>
-		<PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="10.0.3" />
+		<PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="10.0.5" />
 	</ItemGroup>
 </Project>
