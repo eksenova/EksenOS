@@ -242,6 +242,142 @@ public class UnitOfWorkMiddlewareTests : EksenUnitTestBase
         scope.Verify(s => s.DisposeAsync(), Times.Once);
     }
 
+    [Fact]
+    public async Task Invoke_Should_Dispose_When_CommitAsync_Throws()
+    {
+        // Arrange
+        var scope = new Mock<IUnitOfWorkScope>();
+        scope
+            .Setup(s => s.CommitAsync(It.IsAny<CancellationToken>()))
+            .ThrowsAsync(new InvalidOperationException("commit failed"));
+
+        _unitOfWorkManager
+            .Setup(m => m.BeginScope(
+                It.IsAny<bool>(),
+                It.IsAny<System.Data.IsolationLevel?>(),
+                It.IsAny<CancellationToken>()))
+            .Returns(scope.Object);
+
+        RequestDelegate next = _ => Task.CompletedTask;
+
+        var middleware = new UnitOfWorkMiddleware(next);
+        var httpContext = CreateHttpContext(method: "POST", hasEndpoint: true);
+
+        // Act & Assert
+        await Should.ThrowAsync<InvalidOperationException>(
+            () => middleware.Invoke(httpContext, _unitOfWorkManager.Object));
+
+        scope.Verify(s => s.CommitAsync(It.IsAny<CancellationToken>()), Times.Once);
+        scope.Verify(s => s.RollbackAsync(It.IsAny<CancellationToken>()), Times.Never);
+        scope.Verify(s => s.DisposeAsync(), Times.Once);
+    }
+
+    #endregion
+
+    #region BeginScope Failure
+
+    [Fact]
+    public async Task Invoke_Should_Not_Dispose_Scope_When_BeginScope_Throws()
+    {
+        // Arrange
+        var expectedException = new InvalidOperationException("provider error");
+        _unitOfWorkManager
+            .Setup(m => m.BeginScope(
+                It.IsAny<bool>(),
+                It.IsAny<System.Data.IsolationLevel?>(),
+                It.IsAny<CancellationToken>()))
+            .Throws(expectedException);
+
+        RequestDelegate next = _ => Task.CompletedTask;
+
+        var middleware = new UnitOfWorkMiddleware(next);
+        var httpContext = CreateHttpContext(method: "POST", hasEndpoint: true);
+
+        // Act & Assert
+        var thrown = await Should.ThrowAsync<InvalidOperationException>(
+            () => middleware.Invoke(httpContext, _unitOfWorkManager.Object));
+
+        thrown.ShouldBe(expectedException);
+
+        _unitOfWorkManager.Verify(
+            m => m.BeginScope(
+                It.IsAny<bool>(),
+                It.IsAny<System.Data.IsolationLevel?>(),
+                It.IsAny<CancellationToken>()),
+            Times.Once);
+    }
+
+    #endregion
+
+    #region Rollback Failure
+
+    [Fact]
+    public async Task Invoke_Should_Dispose_When_Both_Next_And_Rollback_Throw()
+    {
+        // Arrange
+        var scope = new Mock<IUnitOfWorkScope>();
+        scope
+            .Setup(s => s.RollbackAsync(It.IsAny<CancellationToken>()))
+            .ThrowsAsync(new InvalidOperationException("rollback failed"));
+
+        _unitOfWorkManager
+            .Setup(m => m.BeginScope(
+                It.IsAny<bool>(),
+                It.IsAny<System.Data.IsolationLevel?>(),
+                It.IsAny<CancellationToken>()))
+            .Returns(scope.Object);
+
+        RequestDelegate next = _ => throw new InvalidOperationException("next failed");
+
+        var middleware = new UnitOfWorkMiddleware(next);
+        var httpContext = CreateHttpContext(method: "POST", hasEndpoint: true);
+
+        // Act & Assert
+        var thrown = await Should.ThrowAsync<InvalidOperationException>(
+            () => middleware.Invoke(httpContext, _unitOfWorkManager.Object));
+
+        thrown.Message.ShouldBe("rollback failed");
+
+        scope.Verify(s => s.RollbackAsync(It.IsAny<CancellationToken>()), Times.Once);
+        scope.Verify(s => s.CommitAsync(It.IsAny<CancellationToken>()), Times.Never);
+        scope.Verify(s => s.DisposeAsync(), Times.Once);
+    }
+
+    [Theory]
+    [InlineData("post")]
+    [InlineData("put")]
+    [InlineData("patch")]
+    [InlineData("delete")]
+    public async Task Invoke_Should_Create_UoW_For_Lower_Case_Mutating_Methods(string method)
+    {
+        // Arrange
+        var scope = new Mock<IUnitOfWorkScope>();
+        _unitOfWorkManager
+            .Setup(m => m.BeginScope(
+                It.IsAny<bool>(),
+                It.IsAny<System.Data.IsolationLevel?>(),
+                It.IsAny<CancellationToken>()))
+            .Returns(scope.Object);
+
+        RequestDelegate next = _ => Task.CompletedTask;
+
+        var middleware = new UnitOfWorkMiddleware(next);
+        var httpContext = CreateHttpContext(method: method, hasEndpoint: true);
+
+        // Act
+        await middleware.Invoke(httpContext, _unitOfWorkManager.Object);
+
+        // Assert
+        _unitOfWorkManager.Verify(
+            m => m.BeginScope(
+                It.IsAny<bool>(),
+                It.IsAny<System.Data.IsolationLevel?>(),
+                It.IsAny<CancellationToken>()),
+            Times.Once);
+
+        scope.Verify(s => s.CommitAsync(It.IsAny<CancellationToken>()), Times.Once);
+    }
+
     #endregion
 
     #region UnitOfWorkAttribute IsolationLevel
