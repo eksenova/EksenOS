@@ -1,4 +1,4 @@
-using Eksen.TestBase;
+﻿using Eksen.TestBase;
 using Microsoft.Extensions.DependencyInjection;
 using Shouldly;
 
@@ -74,7 +74,7 @@ public class RepositoryTests(SqlServerFixture fixture) : EksenSqlServerTestBase(
         await repo.InsertAsync(entity, autoSave: true);
 
         // Act
-        await repo.DeleteAsync(entity, autoSave: true);
+        await repo.RemoveAsync(entity, autoSave: true);
 
         // Assert
         var result = await repo.FindAsync(entity.Id);

@@ -16,7 +16,10 @@ internal static class TestContextFactory
 
     public static OpenApiSchemaTransformerContext CreateContext(Type type)
     {
-        var options = new JsonSerializerOptions(JsonSerializerDefaults.Web);
+        var options = new JsonSerializerOptions(JsonSerializerDefaults.Web)
+        {
+            TypeInfoResolver = new DefaultJsonTypeInfoResolver()
+        };
         var typeInfo = options.GetTypeInfo(type);
 
         return new OpenApiSchemaTransformerContext
@@ -150,7 +153,7 @@ public class EnumStringSchemaTransformerTests : EksenUnitTestBase
 
         // Assert
         schema.Type.ShouldBe(JsonSchemaType.String);
-        schema.Enum.ShouldBeEmpty();
+        schema.Enum.ShouldBeNull();
     }
 }
 

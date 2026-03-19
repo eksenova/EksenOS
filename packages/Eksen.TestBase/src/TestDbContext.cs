@@ -15,5 +15,6 @@ public class TestDbContext(DbContextOptions<TestDbContext> options) : EksenDbCon
         base.OnModelCreating(modelBuilder);
 
         modelBuilder.ApplyConfiguration(new TestEntityTypeConfiguration());
+        modelBuilder.ApplyEksenSoftDeleteQueryFilter();
     }
 }
