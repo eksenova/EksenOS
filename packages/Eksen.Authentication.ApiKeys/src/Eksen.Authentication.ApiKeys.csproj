@@ -1,0 +1,17 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+	<Import Project="..\..\..\common.props" />
+
+	<ItemGroup>
+		<InternalsVisibleTo Include="Eksen.Authentication.ApiKeys.Tests" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<ProjectReference Include="..\..\Eksen.Core\src\Eksen.Core.csproj" />
+		<ProjectReference Include="..\..\Eksen.Entities\src\Eksen.Entities.csproj" />
+		<ProjectReference Include="..\..\Eksen.ErrorHandling\src\Eksen.ErrorHandling.csproj" />
+		<ProjectReference Include="..\..\Eksen.Ulid\src\Eksen.Ulid.csproj" />
+		<ProjectReference Include="..\..\Eksen.ValueObjects\src\Eksen.ValueObjects.csproj" />
+	</ItemGroup>
+
+</Project>

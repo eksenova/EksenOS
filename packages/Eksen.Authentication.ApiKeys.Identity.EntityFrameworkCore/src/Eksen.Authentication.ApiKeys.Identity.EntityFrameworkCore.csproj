@@ -1,0 +1,15 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+	<Import Project="..\..\..\common.props" />
+
+	<ItemGroup>
+		<InternalsVisibleTo Include="Eksen.Authentication.ApiKeys.Identity.EntityFrameworkCore.Tests" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<ProjectReference Include="..\..\Eksen.Core\src\Eksen.Core.csproj" />
+		<ProjectReference Include="..\..\Eksen.Authentication.ApiKeys.Identity\src\Eksen.Authentication.ApiKeys.Identity.csproj" />
+		<ProjectReference Include="..\..\Eksen.EntityFrameworkCore\src\Eksen.EntityFrameworkCore.csproj" />
+	</ItemGroup>
+
+</Project>

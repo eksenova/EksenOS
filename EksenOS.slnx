@@ -61,7 +61,20 @@
       Path="packages/Eksen.SmartEnums.AspNetCore/test/Eksen.SmartEnums.AspNetCore.Tests.csproj" />
     <Project Path="packages/Eksen.SmartEnums.OpenApi/test/Eksen.SmartEnums.OpenApi.Tests.csproj" />
     <Project Path="packages/Eksen.Emailing/test/Eksen.Emailing.Tests.csproj" />
+    <Project
+      Path="packages/Eksen.Authentication.ApiKeys/test/Eksen.Authentication.ApiKeys.Tests.csproj" />
+    <Project
+      Path="packages/Eksen.Authentication.ApiKeys.Identity/test/Eksen.Authentication.ApiKeys.Identity.Tests.csproj" />
   </Folder>
+  <Project Path="packages/Eksen.Authentication.ApiKeys/src/Eksen.Authentication.ApiKeys.csproj" />
+  <Project
+    Path="packages/Eksen.Authentication.ApiKeys.AspNetCore/src/Eksen.Authentication.ApiKeys.AspNetCore.csproj" />
+  <Project
+    Path="packages/Eksen.Authentication.ApiKeys.Identity/src/Eksen.Authentication.ApiKeys.Identity.csproj" />
+  <Project
+    Path="packages/Eksen.Authentication.ApiKeys.Identity.EntityFrameworkCore/src/Eksen.Authentication.ApiKeys.Identity.EntityFrameworkCore.csproj" />
+  <Project
+    Path="packages/Eksen.Authentication.ApiKeys.OpenApi/src/Eksen.Authentication.ApiKeys.OpenApi.csproj" />
   <Project Path="packages/Eksen.Auditing/src/Eksen.Auditing.csproj" />
   <Project Path="packages/Eksen.Auditing.AspNetCore/src/Eksen.Auditing.AspNetCore.csproj" />
   <Project
