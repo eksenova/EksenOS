@@ -47,8 +47,10 @@ public class JsonSmartEnumTypeInfoResolver(
             newChild.Set = child.Set != null
                 ? (obj, value) =>
                 {
-                    var code = (string)value!;
-                    var enumValue = parseMethod.Invoke(obj: null, [code]);
+                    var code = (string?)value;
+                    var enumValue = code == null
+                        ? null
+                        : parseMethod.Invoke(obj: null, [code]);
                     child.Set?.Invoke(obj, enumValue);
                 }
                 : null;
