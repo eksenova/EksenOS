@@ -426,4 +426,6 @@ FodyWeavers.xsd
 *.msp
 
 .idea/
+*.lscache
+
 nupkgs/
