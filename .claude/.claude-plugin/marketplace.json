@@ -1,0 +1,15 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-marketplace.json",
+  "name": "eksenos-marketplace",
+  "owner": {
+    "name": "EksenOS"
+  },
+  "description": "Skills and plugins for the EksenOS framework.",
+  "plugins": [
+    {
+      "name": "eksenos",
+      "source": "./",
+      "description": "Skills, conventions and helpers for building ASP.NET Core applications on the EksenOS framework."
+    }
+  ]
+}
