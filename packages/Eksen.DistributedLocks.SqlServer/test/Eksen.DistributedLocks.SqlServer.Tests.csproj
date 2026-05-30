@@ -4,10 +4,12 @@
 
 	<PropertyGroup>
 		<IsPackable>false</IsPackable>
+		<OutputType>Exe</OutputType>
 	</PropertyGroup>
 
 	<ItemGroup>
 		<ProjectReference Include="..\..\Eksen.TestBase\src\Eksen.TestBase.csproj" />
+		<ProjectReference Include="..\..\Eksen.TestBase.SqlServer\src\Eksen.TestBase.SqlServer.csproj" />
 		<ProjectReference Include="..\src\Eksen.DistributedLocks.SqlServer.csproj" />
 	</ItemGroup>
 
@@ -17,11 +19,15 @@
 
 	<ItemGroup>
 		<PackageReference Include="Microsoft.NET.Test.Sdk" Version="18.3.0" />
-		<PackageReference Include="Testcontainers.MsSql" Version="4.11.0" />
+		<PackageReference Include="xunit.v3" Version="3.2.2" />
 		<PackageReference Include="xunit.runner.visualstudio" Version="3.1.5">
 		  <PrivateAssets>all</PrivateAssets>
 		  <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
 		</PackageReference>
+	</ItemGroup>
+
+	<ItemGroup>
+		<None Include="xunit.runner.json" CopyToOutputDirectory="PreserveNewest" />
 	</ItemGroup>
 
 </Project>

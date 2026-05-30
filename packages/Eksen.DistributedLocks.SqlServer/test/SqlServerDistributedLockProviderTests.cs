@@ -1,18 +1,17 @@
-using Eksen.TestBase;
+using Eksen.TestBase.SqlServer;
 using Microsoft.Extensions.Options;
 using Shouldly;
 
 namespace Eksen.DistributedLocks.SqlServer.Tests;
 
-[Collection(SqlServerCollection.Name)]
-public class SqlServerDistributedLockProviderTests(SqlServerFixture fixture) : EksenUnitTestBase
+public class SqlServerDistributedLockProviderTests(SqlServerWorkerPool pool) : SqlServerTestBase(pool)
 {
     private IDistributedLockProvider CreateProvider(
         TimeSpan? defaultTimeout = null)
     {
         var sqlOptions = Options.Create(new SqlServerDistributedLockOptions
         {
-            ConnectionString = fixture.ConnectionString
+            ConnectionString = ConnectionString
         });
 
         var lockOptions = Options.Create(new EksenDistributedLockOptions
