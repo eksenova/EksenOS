@@ -73,6 +73,36 @@ Equivalently, configure it via an assembly attribute:
 Put each integration test class in its own collection (or leave classes uncollected, which gives
 each class its own implicit collection) so they run in parallel and contend for the pool.
 
+## Sharing the pool with an outside host (e.g. `WebApplicationFactory`)
+
+A consumer that is not a `EksenSqlServerTestBase<TDbContext>` — such as a `WebApplicationFactory`
+host driving end-to-end tests — can share the same assembly worker pool by leasing a connection
+directly. Request the pool in the host's constructor and lease in set-up:
+
+```csharp
+public sealed class MyWebTestBase(SqlServerWorkerPool pool) : IAsyncLifetime
+{
+    private SqlServerConnectionLease? _lease;
+
+    public async ValueTask InitializeAsync()
+    {
+        _lease = await pool.LeaseConnectionAsync();
+        // point the host's DbContext at _lease.ConnectionString
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        if (_lease is not null)
+        {
+            await _lease.DisposeAsync();
+        }
+    }
+}
+```
+
+Because both the integration base and the host draw from the one `[assembly: AssemblyFixture]`
+pool, they contend for the same bounded set of containers instead of standing up their own.
+
 ## Configuration
 
 | Environment variable   | Default | Notes                                                                                       |

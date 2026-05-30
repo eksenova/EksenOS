@@ -83,6 +83,19 @@ public sealed class SqlServerWorkerPool : IAsyncLifetime
     }
 
     /// <summary>
+    /// Acquires an idle worker and hands it back as a disposable <see cref="SqlServerConnectionLease"/>.
+    /// This is the public seam for outside consumers (for example a <c>WebApplicationFactory</c> host)
+    /// to share this assembly's bounded worker pool: lease a connection in set-up, point the host's
+    /// <c>DbContext</c> at <see cref="SqlServerConnectionLease.ConnectionString"/>, and dispose the lease
+    /// in tear-down to return the worker to the pool.
+    /// </summary>
+    public async Task<SqlServerConnectionLease> LeaseConnectionAsync(CancellationToken cancellationToken = default)
+    {
+        var worker = await AcquireAsync(cancellationToken);
+        return new SqlServerConnectionLease(this, worker);
+    }
+
+    /// <summary>
     /// Returns a worker to the pool so an idle test can pick it up.
     /// </summary>
     internal ValueTask ReleaseAsync(SqlServerWorker worker)
