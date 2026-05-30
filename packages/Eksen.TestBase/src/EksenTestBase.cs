@@ -17,7 +17,7 @@ public abstract class EksenServiceTestBase : IAsyncLifetime
 {
     public IServiceProvider ServiceProvider { get; private set; } = null!;
 
-    public virtual async Task InitializeAsync()
+    public virtual async ValueTask InitializeAsync()
     {
         var services = new ServiceCollection();
 
@@ -48,8 +48,8 @@ public abstract class EksenServiceTestBase : IAsyncLifetime
         return Task.CompletedTask;
     }
 
-    public virtual Task DisposeAsync()
+    public virtual ValueTask DisposeAsync()
     {
-        return Task.CompletedTask;
+        return ValueTask.CompletedTask;
     }
 }

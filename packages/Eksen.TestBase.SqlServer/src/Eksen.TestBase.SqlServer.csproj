@@ -1,0 +1,14 @@
+<Project Sdk="Microsoft.NET.Sdk">
+	<Import Project="..\..\..\common.props" />
+	<PropertyGroup>
+		<IsPackable>true</IsPackable>
+	</PropertyGroup>
+	<ItemGroup>
+		<ProjectReference Include="..\..\Eksen.TestBase\src\Eksen.TestBase.csproj" />
+		<ProjectReference Include="..\..\Eksen.EntityFrameworkCore.SqlServer\src\Eksen.EntityFrameworkCore.SqlServer.csproj" />
+	</ItemGroup>
+	<ItemGroup>
+		<PackageReference Include="Microsoft.Data.SqlClient" Version="7.0.0" />
+		<PackageReference Include="Testcontainers.MsSql" Version="4.11.0" />
+	</ItemGroup>
+</Project>

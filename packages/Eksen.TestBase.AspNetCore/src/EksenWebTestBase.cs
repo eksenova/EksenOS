@@ -40,7 +40,7 @@ public abstract class EksenWebTestBase<TProgram, TDbContext> : IAsyncLifetime
     {
     }
 
-    public virtual async Task InitializeAsync()
+    public virtual async ValueTask InitializeAsync()
     {
         var connectionString = await GetConnectionStringAsync();
 
@@ -70,7 +70,7 @@ public abstract class EksenWebTestBase<TProgram, TDbContext> : IAsyncLifetime
         Client = _factory.CreateClient();
     }
 
-    public virtual async Task DisposeAsync()
+    public virtual async ValueTask DisposeAsync()
     {
         Client.Dispose();
 
