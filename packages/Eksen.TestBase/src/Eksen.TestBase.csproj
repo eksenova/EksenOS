@@ -2,6 +2,7 @@
 	<Import Project="..\..\..\common.props" />
 	<PropertyGroup>
 		<IsPackable>true</IsPackable>
+		<IsTestProject>false</IsTestProject>
 	</PropertyGroup>
 	<ItemGroup>
 		<ProjectReference Include="..\..\Eksen.Core\src\Eksen.Core.csproj" />
