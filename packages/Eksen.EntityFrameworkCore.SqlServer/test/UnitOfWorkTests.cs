@@ -1,11 +1,12 @@
 ﻿using Eksen.TestBase;
+using Eksen.TestBase.SqlServer;
 using Eksen.UnitOfWork;
 using Microsoft.Extensions.DependencyInjection;
 using Shouldly;
 
 namespace Eksen.EntityFrameworkCore.SqlServer.Tests;
 
-public class UnitOfWorkTests(SqlServerFixture fixture) : EksenSqlServerTestBase(fixture)
+public class UnitOfWorkTests(SqlServerWorkerPool pool) : TestDbContextSqlServerTestBase(pool)
 {
     [Fact]
     public async Task Transactional_UnitOfWork_Should_Commit()

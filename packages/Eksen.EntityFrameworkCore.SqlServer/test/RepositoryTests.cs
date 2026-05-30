@@ -1,10 +1,11 @@
 ﻿using Eksen.TestBase;
+using Eksen.TestBase.SqlServer;
 using Microsoft.Extensions.DependencyInjection;
 using Shouldly;
 
 namespace Eksen.EntityFrameworkCore.SqlServer.Tests;
 
-public class RepositoryTests(SqlServerFixture fixture) : EksenSqlServerTestBase(fixture)
+public class RepositoryTests(SqlServerWorkerPool pool) : TestDbContextSqlServerTestBase(pool)
 {
     [Fact]
     public async Task InsertAsync_Should_Persist_Entity()

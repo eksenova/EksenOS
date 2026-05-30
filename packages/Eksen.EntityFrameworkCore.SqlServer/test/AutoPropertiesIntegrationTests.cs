@@ -1,11 +1,12 @@
 using Eksen.TestBase;
+using Eksen.TestBase.SqlServer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Shouldly;
 
 namespace Eksen.EntityFrameworkCore.SqlServer.Tests;
 
-public class AutoPropertiesIntegrationTests(SqlServerFixture fixture) : EksenSqlServerTestBase(fixture)
+public class AutoPropertiesIntegrationTests(SqlServerWorkerPool pool) : TestDbContextSqlServerTestBase(pool)
 {
     [Fact]
     public async Task SoftDelete_Should_Mark_Entity_As_Deleted_Instead_Of_Removing()
