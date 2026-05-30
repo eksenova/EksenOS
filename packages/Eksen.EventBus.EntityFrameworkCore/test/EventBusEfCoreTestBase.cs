@@ -8,7 +8,7 @@ public abstract class EventBusEfCoreTestBase : IAsyncLifetime
     private SqliteConnection _connection = null!;
     protected EventBusDbContext DbContext { get; private set; } = null!;
 
-    public async Task InitializeAsync()
+    public async ValueTask InitializeAsync()
     {
         _connection = new SqliteConnection("DataSource=:memory:");
         await _connection.OpenAsync();
@@ -21,7 +21,7 @@ public abstract class EventBusEfCoreTestBase : IAsyncLifetime
         await DbContext.Database.EnsureCreatedAsync();
     }
 
-    public async Task DisposeAsync()
+    public async ValueTask DisposeAsync()
     {
         await DbContext.DisposeAsync();
         await _connection.DisposeAsync();

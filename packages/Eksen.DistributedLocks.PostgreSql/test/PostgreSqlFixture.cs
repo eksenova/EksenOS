@@ -15,7 +15,7 @@ public sealed class PostgreSqlFixture : IAsyncLifetime
 
     public string ConnectionString { get; private set; } = null!;
 
-    public async Task InitializeAsync()
+    public async ValueTask InitializeAsync()
     {
         _container = new PostgreSqlBuilder(image: "postgres:17-alpine")
             .Build();
@@ -24,7 +24,7 @@ public sealed class PostgreSqlFixture : IAsyncLifetime
         ConnectionString = _container.GetConnectionString();
     }
 
-    public async Task DisposeAsync()
+    public async ValueTask DisposeAsync()
     {
         await _container.DisposeAsync();
     }
