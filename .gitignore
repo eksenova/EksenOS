@@ -429,3 +429,5 @@ FodyWeavers.xsd
 *.lscache
 
 nupkgs/
+
+.claude/agent-memory
