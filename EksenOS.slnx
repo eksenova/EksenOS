@@ -13,6 +13,7 @@
     <Project
       Path="packages/Eksen.Auditing.EntityFrameworkCore/test/Eksen.Auditing.EntityFrameworkCore.Tests.csproj" />
     <Project Path="packages/Eksen.EntityFrameworkCore.SqlServer/test/Eksen.EntityFrameworkCore.SqlServer.Tests.csproj" />
+    <Project Path="packages/Eksen.EntityFrameworkCore.Sqlite/test/Eksen.EntityFrameworkCore.Sqlite.Tests.csproj" />
     <Project Path="packages/Eksen.EventBus/test/Eksen.EventBus.Tests.csproj" />
     <Project Path="packages/Eksen.EventBus.InMemory/test/Eksen.EventBus.InMemory.Tests.csproj" />
     <Project Path="packages/Eksen.EventBus.RabbitMq/test/Eksen.EventBus.RabbitMq.Tests.csproj" />
@@ -36,6 +37,7 @@
     <Project Path="packages/Eksen.UnitOfWork/test/Eksen.UnitOfWork.Tests.csproj" />
     <Project Path="packages/Eksen.Localization/test/Eksen.Localization.Tests.csproj" />
     <Project Path="packages/Eksen.OpenApi/test/Eksen.OpenApi.Tests.csproj" />
+    <Project Path="packages/Eksen.Scalar/test/Eksen.Scalar.Tests.csproj" />
     <Project Path="packages/Eksen.EntityFrameworkCore/test/Eksen.EntityFrameworkCore.Tests.csproj" />
     <Project Path="packages/Eksen.ErrorHandling/test/Eksen.ErrorHandling.Tests.csproj" />
     <Project
@@ -61,6 +63,7 @@
       Path="packages/Eksen.SmartEnums.AspNetCore/test/Eksen.SmartEnums.AspNetCore.Tests.csproj" />
     <Project Path="packages/Eksen.SmartEnums.OpenApi/test/Eksen.SmartEnums.OpenApi.Tests.csproj" />
     <Project Path="packages/Eksen.Emailing/test/Eksen.Emailing.Tests.csproj" />
+    <Project Path="packages/Eksen.Emailing.Gmail/test/Eksen.Emailing.Gmail.Tests.csproj" />
     <Project
       Path="packages/Eksen.Authentication.ApiKeys/test/Eksen.Authentication.ApiKeys.Tests.csproj" />
     <Project
@@ -88,7 +91,9 @@
     Path="packages/Eksen.DistributedLocks.SqlServer/src/Eksen.DistributedLocks.SqlServer.csproj" />
   <Project Path="packages/Eksen.DistributedTransactions/src/Eksen.DistributedTransactions.csproj" />
   <Project Path="packages/Eksen.Emailing/src/Eksen.Emailing.csproj" />
+  <Project Path="packages/Eksen.Emailing.Gmail/src/Eksen.Emailing.Gmail.csproj" />
   <Project Path="packages/Eksen.Entities/src/Eksen.Entities.csproj" />
+  <Project Path="packages/Eksen.EntityFrameworkCore.Sqlite/src/Eksen.EntityFrameworkCore.Sqlite.csproj" />
   <Project Path="packages/Eksen.EntityFrameworkCore.SqlServer/src/Eksen.EntityFrameworkCore.SqlServer.csproj" />
   <Project Path="packages/Eksen.EntityFrameworkCore/src/Eksen.EntityFrameworkCore.csproj" />
   <Project Path="packages/Eksen.ErrorHandling.AspNetCore/src/Eksen.ErrorHandling.AspNetCore.csproj" />
@@ -98,6 +103,7 @@
   <Project Path="packages/Eksen.Identity/src/Eksen.Identity.csproj" />
   <Project Path="packages/Eksen.Localization/src/Eksen.Localization.csproj" />
   <Project Path="packages/Eksen.OpenApi/src/Eksen.OpenApi.csproj" />
+  <Project Path="packages/Eksen.Scalar/src/Eksen.Scalar.csproj" />
   <Project Path="packages/Eksen.Permissions.AspNetCore/src/Eksen.Permissions.AspNetCore.csproj" />
   <Project Path="packages/Eksen.Permissions.EntityFrameworkCore/src/Eksen.Permissions.EntityFrameworkCore.csproj" />
   <Project Path="packages/Eksen.Permissions/src/Eksen.Permissions.csproj" />

@@ -1,0 +1,30 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+	<Import Project="..\..\..\common.props" />
+
+	<ItemGroup>
+		<InternalsVisibleTo Include="Eksen.Scalar.Tests" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<FrameworkReference Include="Microsoft.AspNetCore.App" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<ProjectReference Include="..\..\Eksen.OpenApi\src\Eksen.OpenApi.csproj" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<PackageReference Include="Scalar.AspNetCore" Version="2.14.4" />
+		<PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="10.0.5" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<EmbeddedResource Include="Resources\autofill.js" LogicalName="Eksen.Scalar.Resources.autofill.js" />
+		<EmbeddedResource Include="Resources\token-body.js" LogicalName="Eksen.Scalar.Resources.token-body.js" />
+		<EmbeddedResource Include="Resources\logo.js" LogicalName="Eksen.Scalar.Resources.logo.js" />
+		<EmbeddedResource Include="Resources\impersonation.js" LogicalName="Eksen.Scalar.Resources.impersonation.js" />
+		<EmbeddedResource Include="Resources\internal-auth.js" LogicalName="Eksen.Scalar.Resources.internal-auth.js" />
+	</ItemGroup>
+
+</Project>
