@@ -73,6 +73,7 @@ public abstract record Enumeration<TSelf> : IEnumeration, IComparable<TSelf> whe
             .GetFields(BindingFlags.Public
                        | BindingFlags.Static
                        | BindingFlags.DeclaredOnly)
+            .Where(f => f.FieldType.IsAssignableTo(typeof(TSelf)))
             .Select(f => f.GetValue(obj: null))
             .Cast<TSelf>()
             .ToList();
