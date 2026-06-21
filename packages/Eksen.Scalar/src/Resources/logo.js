@@ -32,6 +32,16 @@
     '[class*="search"]',
   ];
 
+  const SCROLL_CONTAINER_SELECTORS = [
+    '.t-doc__body',
+    '.scalar-content',
+    '.references-rendered',
+    '.section-container',
+    '.scalar-app-layout',
+    '.scalar-app',
+    'main',
+  ];
+
   function ensureStyles() {
     if (document.getElementById('eks-scalar-logo-style')) return;
     const style = document.createElement('style');
@@ -128,23 +138,29 @@
     }
   }
 
-  let collapseDone = false;
+  const autoCollapsedKeys = new Set();
+
+  function collapseKeyFor(btn) {
+    return (
+      btn.getAttribute('aria-controls') ||
+      btn.getAttribute('data-section-id') ||
+      btn.getAttribute('id') ||
+      (btn.getAttribute('aria-label') || btn.textContent || '').trim()
+    );
+  }
 
   function collapseSidebarCategories(sidebar) {
-    if (!COLLAPSE || collapseDone) return;
+    if (!COLLAPSE) return;
     const expanded = sidebar.querySelectorAll('[aria-expanded="true"]');
-    if (expanded.length === 0) return;
-    let clicked = 0;
     for (const btn of expanded) {
       const label = (btn.getAttribute('aria-label') || btn.textContent || '').trim();
       if (/search/i.test(label)) continue;
+      const key = collapseKeyFor(btn);
+      if (autoCollapsedKeys.has(key)) continue;
+      autoCollapsedKeys.add(key);
       try {
         btn.click();
-        clicked++;
       } catch (_) {}
-    }
-    if (clicked > 0) {
-      collapseDone = true;
     }
   }
 
@@ -186,6 +202,113 @@
       footer.title = FOOTER_TITLE.replace(/\{year\}/g, year);
     }
     document.body.appendChild(footer);
+  }
+
+  // --- First-open scroll: land on Introduction (top), not Scalar's auto-scroll to #models. ---
+
+  let userInteracted = false;
+  let pinStarted = false;
+  let introFocused = false;
+  let firstOpenIsDeepLink = false;
+
+  function trackUserInteraction() {
+    const mark = () => {
+      userInteracted = true;
+    };
+    ['wheel', 'touchstart', 'pointerdown', 'keydown'].forEach((ev) =>
+      window.addEventListener(ev, mark, { passive: true, capture: true }));
+  }
+
+  function isModelsHash(hash) {
+    if (!hash || hash === '#') return false;
+    let id = hash.replace(/^#/, '');
+    try {
+      id = decodeURIComponent(id);
+    } catch (_) {}
+    // Scalar's models section ("#models") and individual schema anchors ("#model/Name").
+    return /^models?(\/|$)/i.test(id);
+  }
+
+  function forceTop() {
+    try {
+      window.scrollTo(0, 0);
+    } catch (_) {}
+    for (const sel of SCROLL_CONTAINER_SELECTORS) {
+      try {
+        document.querySelectorAll(sel).forEach((el) => {
+          if (el && el.scrollTop) el.scrollTop = 0;
+        });
+      } catch (_) {}
+    }
+  }
+
+  function findIntroductionLink(sidebar) {
+    const links = sidebar.querySelectorAll('a[href^="#"], a[href*="#"]');
+    for (const a of links) {
+      const text = (a.textContent || '').trim();
+      if (/^introduction$/i.test(text)) return a;
+    }
+    // Fallback: the first navigable, non-models entry is the top of the document.
+    for (const a of links) {
+      const href = a.getAttribute('href') || '';
+      const hash = href.indexOf('#') >= 0 ? href.slice(href.indexOf('#')) : '';
+      if (hash && !isModelsHash(hash)) return a;
+    }
+    return null;
+  }
+
+  // Pin the view to the top for a short settling window, countering Scalar's own asynchronous
+  // scroll to the models section. Aborts the moment the user scrolls or interacts.
+  function startTopPin() {
+    if (pinStarted) return;
+    pinStarted = true;
+
+    const hash = location.hash;
+    if (hash && hash !== '#' && !isModelsHash(hash)) {
+      // A genuine deep link (e.g. an operation anchor) — honour it instead of forcing the top.
+      firstOpenIsDeepLink = true;
+      return;
+    }
+
+    if (isModelsHash(hash)) {
+      try {
+        history.replaceState(null, '', location.pathname + location.search);
+      } catch (_) {}
+    }
+
+    let attempts = 0;
+    const maxAttempts = 16; // ~2s of settling
+    const tick = () => {
+      if (userInteracted) return;
+      forceTop();
+      attempts++;
+      if (attempts < maxAttempts) setTimeout(tick, 120);
+    };
+    tick();
+  }
+
+  // Mark the Introduction entry active in the sidebar by navigating to it once it is rendered.
+  function focusIntroduction(sidebar) {
+    if (introFocused || firstOpenIsDeepLink || userInteracted) return;
+    const introLink = findIntroductionLink(sidebar);
+    if (!introLink) return;
+    introFocused = true;
+    try {
+      introLink.click();
+    } catch (_) {}
+  }
+
+  function onHashChange() {
+    // Before the user does anything, treat any models anchor as Scalar's own auto-navigation and
+    // neutralise it; afterwards, honour every navigation (including a deliberate jump to Models).
+    if (!userInteracted && isModelsHash(location.hash)) {
+      try {
+        history.replaceState(null, '', location.pathname + location.search);
+      } catch (_) {}
+      forceTop();
+      return;
+    }
+    rescrollToHash();
   }
 
   function rescrollToHash() {
@@ -235,13 +358,17 @@
     ensureMcpHideStyles();
     hideMcpIn(document);
     ensureFooter();
-    rescrollToHash();
-    window.addEventListener('hashchange', rescrollToHash);
+
+    trackUserInteraction();
+    startTopPin();
+    if (firstOpenIsDeepLink) rescrollToHash();
+    window.addEventListener('hashchange', onHashChange);
 
     let injected = inject();
-    if (injected) {
-      const sidebar = findSidebar();
-      if (sidebar) collapseSidebarCategories(sidebar);
+    const initialSidebar = findSidebar();
+    if (initialSidebar) {
+      collapseSidebarCategories(initialSidebar);
+      focusIntroduction(initialSidebar);
     }
 
     const observer = new MutationObserver((mutations) => {
@@ -261,9 +388,10 @@
         injected = true;
       }
 
-      if (!collapseDone) {
-        const sidebar = findSidebar();
-        if (sidebar) collapseSidebarCategories(sidebar);
+      const sidebar = findSidebar();
+      if (sidebar) {
+        collapseSidebarCategories(sidebar);
+        if (!introFocused) focusIntroduction(sidebar);
       }
     });
 
