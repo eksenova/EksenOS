@@ -18,7 +18,7 @@ public static class SqlServerTestEnvironment
     /// <summary>
     /// Upper bound on the number of concurrent SQL Server containers, regardless of the requested value.
     /// </summary>
-    public const int MaxWorkersHardCap = 5;
+    public const int MaxWorkersHardCap = 10;
 
     /// <summary>
     /// Default CPU set. SQL Server 2025 asserts on an odd logical-CPU count, so the default pins an even set.

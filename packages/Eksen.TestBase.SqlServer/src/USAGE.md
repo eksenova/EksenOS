@@ -107,7 +107,7 @@ pool, they contend for the same bounded set of containers instead of standing up
 
 | Environment variable   | Default | Notes                                                                                       |
 | ---------------------- | ------- | ------------------------------------------------------------------------------------------- |
-| `EKSEN_SQL_MAX_WORKERS` | 5       | Pool size. Hard-capped at 5 (`Math.Min`).                                                    |
+| `EKSEN_SQL_MAX_WORKERS` | 10      | Pool size. Hard-capped at 10 (`Math.Min`).                                                   |
 | `EKSEN_SQL_CPUSET`      | `0-3`   | Logical CPU set pinned on each container. SQL Server 2025 asserts on an odd CPU count, so keep this an even set. |
 
 Keep `maxParallelThreads` (or `CollectionBehavior.MaxParallelThreads`) less than or equal to
