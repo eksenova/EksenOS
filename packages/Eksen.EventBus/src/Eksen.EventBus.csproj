@@ -7,5 +7,6 @@
   <ItemGroup>
     <ProjectReference Include="..\..\Eksen.Core\src\Eksen.Core.csproj" />
     <ProjectReference Include="..\..\Eksen.UnitOfWork\src\Eksen.UnitOfWork.csproj" />
+    <ProjectReference Include="..\..\Eksen.Ulid\src\Eksen.Ulid.csproj" />
   </ItemGroup>
 </Project>
