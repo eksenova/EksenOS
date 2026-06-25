@@ -45,6 +45,7 @@ public sealed record OrderStatus : Enumeration<OrderStatus>
     public static readonly OrderStatus Refunded   = new(displayName: "Refunded", isTerminal: true);
 
     public string DisplayName { get; }
+
     public bool IsTerminal { get; }
 
     private OrderStatus(string displayName, bool isTerminal = false, [CallerMemberName] string? code = null)
@@ -97,7 +98,9 @@ public sealed record PaymentStatus : Enumeration<PaymentStatus>
     }
 
     public static PaymentStatus? FromGatewayCode(int gatewayCode)
-        => GetValues().FirstOrDefault(x => x.GatewayCode == gatewayCode);
+    {
+        return GetValues().FirstOrDefault(x => x.GatewayCode == gatewayCode);
+    }
 }
 ```
 
@@ -159,15 +162,21 @@ Pin the contract, not the internals:
 ```csharp
 [Fact]
 public void Parse_Is_Case_Insensitive()
-    => OrderStatus.Parse("delivered").ShouldBe(OrderStatus.Delivered);
+{
+    OrderStatus.Parse("delivered").ShouldBe(OrderStatus.Delivered);
+}
 
 [Fact]
 public void Parse_Throws_For_Unknown_Code()
-    => Should.Throw<EksenException>(() => OrderStatus.Parse("Returned"));
+{
+    Should.Throw<EksenException>(() => OrderStatus.Parse("Returned"));
+}
 
 [Fact]
 public void GetValues_Returns_All_Declared()
-    => Enumeration<OrderStatus>.GetValues().Count.ShouldBe(7);
+{
+    Enumeration<OrderStatus>.GetValues().Count.ShouldBe(7);
+}
 ```
 
 Assert codes (and any extra data like `DisplayName`/`GatewayCode`), `Parse` round-trips, and that unknown codes throw — codes are persisted/serialized, so a code change is a breaking change.
