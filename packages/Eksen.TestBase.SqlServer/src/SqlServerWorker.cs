@@ -6,7 +6,9 @@ namespace Eksen.TestBase.SqlServer;
 /// <summary>
 /// A single reusable SQL Server container together with a dedicated test database.
 /// A worker is created once, then reused across many tests: each test that acquires the
-/// worker gets a freshly cleaned (schema-less) database via <see cref="CleanAsync"/>.
+/// worker gets a database whose data has been wiped via <see cref="CleanAsync"/> while the
+/// schema is left intact, so the provider's <c>EnsureCreated</c> builds the schema only on
+/// the first acquisition and is a cheap no-op thereafter.
 /// </summary>
 /// <remarks>
 /// SQL Server 2025 asserts on start-up when it is given an odd number of logical processors
@@ -55,8 +57,12 @@ internal sealed class SqlServerWorker
     }
 
     /// <summary>
-    /// Drops every foreign key and then every user table so the next test starts from an
-    /// empty schema. The provider's <c>EnsureCreated</c> rebuilds the schema afterwards.
+    /// Wipes all data so the next test starts from empty tables while leaving the schema in place.
+    /// Every foreign key is dropped (SQL Server refuses to <c>TRUNCATE</c> a table referenced by a
+    /// foreign key even when the constraint is disabled), every user table except the EF migrations
+    /// history is truncated, and the foreign keys are then recreated exactly as they were. Because
+    /// the tables survive, the provider's <c>EnsureCreated</c> builds the schema only on the first
+    /// acquisition of a worker and is a cheap no-op on every clean thereafter.
     /// </summary>
     internal async Task CleanAsync(CancellationToken cancellationToken = default)
     {
@@ -65,21 +71,52 @@ internal sealed class SqlServerWorker
 
         await using var command = new SqlCommand(
             cmdText: """
-                     -- Drop every foreign-key constraint first to avoid dependency errors
-                     DECLARE @fkSql NVARCHAR(MAX) = N'';
-                     SELECT @fkSql += N'ALTER TABLE ' + QUOTENAME(s.name) + N'.' + QUOTENAME(t.name)
-                         + N' DROP CONSTRAINT ' + QUOTENAME(f.name) + N';'
-                     FROM sys.foreign_keys f
-                     INNER JOIN sys.tables t ON f.parent_object_id = t.object_id
-                     INNER JOIN sys.schemas s ON t.schema_id = s.schema_id;
-                     EXEC sp_executesql @fkSql;
+                     SET NOCOUNT ON;
 
-                     -- Then drop every user table
-                     DECLARE @tblSql NVARCHAR(MAX) = N'';
-                     SELECT @tblSql += N'DROP TABLE ' + QUOTENAME(s.name) + N'.' + QUOTENAME(t.name) + N';'
-                     FROM sys.tables t
+                     -- Capture the DDL to drop and to restore every foreign key up front: the restore
+                     -- text has to be read from the catalogue before the constraints are dropped.
+                     DECLARE @dropForeignKeys NVARCHAR(MAX) = N'';
+                     SELECT @dropForeignKeys += N'ALTER TABLE ' + QUOTENAME(s.name) + N'.' + QUOTENAME(t.name)
+                         + N' DROP CONSTRAINT ' + QUOTENAME(fk.name) + N';'
+                     FROM sys.foreign_keys fk
+                     INNER JOIN sys.tables t ON fk.parent_object_id = t.object_id
                      INNER JOIN sys.schemas s ON t.schema_id = s.schema_id;
-                     EXEC sp_executesql @tblSql;
+
+                     DECLARE @restoreForeignKeys NVARCHAR(MAX) = N'';
+                     SELECT @restoreForeignKeys += N'ALTER TABLE ' + QUOTENAME(ps.name) + N'.' + QUOTENAME(pt.name)
+                         + N' ADD CONSTRAINT ' + QUOTENAME(fk.name) + N' FOREIGN KEY ('
+                         + (SELECT STRING_AGG(QUOTENAME(pc.name), N',') WITHIN GROUP (ORDER BY fkc.constraint_column_id)
+                            FROM sys.foreign_key_columns fkc
+                            INNER JOIN sys.columns pc ON pc.object_id = fkc.parent_object_id AND pc.column_id = fkc.parent_column_id
+                            WHERE fkc.constraint_object_id = fk.object_id)
+                         + N') REFERENCES ' + QUOTENAME(rs.name) + N'.' + QUOTENAME(rt.name) + N' ('
+                         + (SELECT STRING_AGG(QUOTENAME(rc.name), N',') WITHIN GROUP (ORDER BY fkc.constraint_column_id)
+                            FROM sys.foreign_key_columns fkc
+                            INNER JOIN sys.columns rc ON rc.object_id = fkc.referenced_object_id AND rc.column_id = fkc.referenced_column_id
+                            WHERE fkc.constraint_object_id = fk.object_id)
+                         + N')'
+                         + CASE fk.delete_referential_action
+                             WHEN 1 THEN N' ON DELETE CASCADE' WHEN 2 THEN N' ON DELETE SET NULL' WHEN 3 THEN N' ON DELETE SET DEFAULT' ELSE N'' END
+                         + CASE fk.update_referential_action
+                             WHEN 1 THEN N' ON UPDATE CASCADE' WHEN 2 THEN N' ON UPDATE SET NULL' WHEN 3 THEN N' ON UPDATE SET DEFAULT' ELSE N'' END
+                         + N';'
+                     FROM sys.foreign_keys fk
+                     INNER JOIN sys.tables pt ON fk.parent_object_id = pt.object_id
+                     INNER JOIN sys.schemas ps ON pt.schema_id = ps.schema_id
+                     INNER JOIN sys.tables rt ON fk.referenced_object_id = rt.object_id
+                     INNER JOIN sys.schemas rs ON rt.schema_id = rs.schema_id;
+
+                     -- Truncate every user table except the EF migrations history so the recorded
+                     -- schema version survives the clean.
+                     DECLARE @truncateTables NVARCHAR(MAX) = N'';
+                     SELECT @truncateTables += N'TRUNCATE TABLE ' + QUOTENAME(s.name) + N'.' + QUOTENAME(t.name) + N';'
+                     FROM sys.tables t
+                     INNER JOIN sys.schemas s ON t.schema_id = s.schema_id
+                     WHERE t.name <> N'__EFMigrationsHistory' AND t.is_ms_shipped = 0;
+
+                     EXEC sp_executesql @dropForeignKeys;
+                     EXEC sp_executesql @truncateTables;
+                     EXEC sp_executesql @restoreForeignKeys;
                      """, connection);
 
         await command.ExecuteNonQueryAsync(cancellationToken);
