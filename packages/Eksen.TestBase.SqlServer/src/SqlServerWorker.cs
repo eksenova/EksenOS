@@ -1,3 +1,6 @@
+using DotNet.Testcontainers.Builders;
+using DotNet.Testcontainers.Configurations;
+using DotNet.Testcontainers.Containers;
 using Microsoft.Data.SqlClient;
 using Testcontainers.MsSql;
 
@@ -34,26 +37,63 @@ internal sealed class SqlServerWorker
     {
         var cpuSet = SqlServerTestEnvironment.CpuSet;
 
-        var container = new MsSqlBuilder(image: "mcr.microsoft.com/mssql/server:2025-latest")
+        // The engine's readiness is verified host-side (see WaitUntilReadyAsync) rather than through the
+        // module's default strategy, which execs sqlcmd inside the container. That tool is absent from the
+        // arm64 Azure SQL Edge image, so the container is only waited on until it is running and the real
+        // login-readiness probe is done from the host — a strategy that works across every supported image.
+        var container = new MsSqlBuilder()
+            .WithImage(SqlServerTestEnvironment.Image)
             .WithPassword(SaPassword)
             .WithCreateParameterModifier(parameters => parameters.HostConfig.CpusetCpus = cpuSet)
+            .WithWaitStrategy(Wait.ForUnixContainer().AddCustomWaitStrategy(new ContainerRunningWaitStrategy()))
             .Build();
 
         await container.StartAsync(cancellationToken);
 
-        await using (var connection = new SqlConnection(container.GetConnectionString()))
+        var adminConnectionString = container.GetConnectionString();
+        await WaitUntilReadyAsync(adminConnectionString, cancellationToken);
+
+        await using (var connection = new SqlConnection(adminConnectionString))
         {
             await connection.OpenAsync(cancellationToken);
             await using var command = new SqlCommand($"CREATE DATABASE [{DatabaseName}]", connection);
             await command.ExecuteNonQueryAsync(cancellationToken);
         }
 
-        var builder = new SqlConnectionStringBuilder(container.GetConnectionString())
+        var builder = new SqlConnectionStringBuilder(adminConnectionString)
         {
             InitialCatalog = DatabaseName
         };
 
         return new SqlServerWorker(container, builder.ConnectionString);
+    }
+
+    /// <summary>
+    /// Polls the server with a real connection until it accepts logins and answers a trivial query. The
+    /// listening port opens before the engine is ready for logins, so a successful <c>SELECT 1</c> is the
+    /// signal that the container is usable.
+    /// </summary>
+    private static async Task WaitUntilReadyAsync(string connectionString, CancellationToken cancellationToken)
+    {
+        var deadline = DateTime.UtcNow.AddMinutes(3);
+
+        while (true)
+        {
+            try
+            {
+                await using var connection = new SqlConnection(connectionString);
+                await connection.OpenAsync(cancellationToken);
+
+                await using var command = new SqlCommand(cmdText: "SELECT 1", connection);
+                await command.ExecuteScalarAsync(cancellationToken);
+
+                return;
+            }
+            catch (SqlException) when (DateTime.UtcNow < deadline)
+            {
+                await Task.Delay(TimeSpan.FromSeconds(2), cancellationToken);
+            }
+        }
     }
 
     /// <summary>
@@ -125,5 +165,18 @@ internal sealed class SqlServerWorker
     internal ValueTask DisposeContainerAsync()
     {
         return Container.DisposeAsync();
+    }
+
+    /// <summary>
+    /// A no-op wait strategy that defers to the container merely being started. Login readiness is then
+    /// confirmed host-side by <see cref="WaitUntilReadyAsync"/>, avoiding the module's default in-container
+    /// sqlcmd probe (absent from the Azure SQL Edge image).
+    /// </summary>
+    private sealed class ContainerRunningWaitStrategy : IWaitUntil
+    {
+        public Task<bool> UntilAsync(IContainer container)
+        {
+            return Task.FromResult(true);
+        }
     }
 }
