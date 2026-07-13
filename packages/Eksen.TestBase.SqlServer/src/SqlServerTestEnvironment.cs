@@ -40,7 +40,9 @@ public static class SqlServerTestEnvironment
     public const int MaxWorkersHardCap = 10;
 
     /// <summary>
-    /// Default CPU set. SQL Server 2025 asserts on an odd logical-CPU count, so the default pins an even set.
+    /// Default CPU set for the SQL Server images. SQL Server 2025 asserts on an odd logical-CPU count,
+    /// so the default pins an even set. Azure SQL Edge has no such check and runs unpinned by default,
+    /// letting the containers use every core the Docker VM offers.
     /// </summary>
     public const string DefaultCpuSet = "0-3";
 
@@ -61,14 +63,23 @@ public static class SqlServerTestEnvironment
     }
 
     /// <summary>
-    /// The logical CPU set pinned on each container. Falls back to <see cref="DefaultCpuSet"/> when unset.
+    /// The logical CPU set pinned on each container, or <see langword="null"/> to leave the container
+    /// unpinned. An explicit <see cref="CpuSetVariable"/> always wins; otherwise SQL Server images get
+    /// <see cref="DefaultCpuSet"/> (the engine's even-CPU NUMA check) and Azure SQL Edge runs unpinned.
     /// </summary>
-    public static string CpuSet
+    public static string? CpuSet
     {
         get
         {
             var configured = Environment.GetEnvironmentVariable(CpuSetVariable);
-            return string.IsNullOrWhiteSpace(configured) ? DefaultCpuSet : configured;
+            if (!string.IsNullOrWhiteSpace(configured))
+            {
+                return configured;
+            }
+
+            return Image.Contains(value: "azure-sql-edge", StringComparison.OrdinalIgnoreCase)
+                ? null
+                : DefaultCpuSet;
         }
     }
 

@@ -18,6 +18,12 @@ namespace Eksen.TestBase.AspNetCore;
 /// and configure the EF Core provider for that database via <see cref="ConfigureDbContext"/>.
 /// Additional web host customization can be done by overriding <see cref="ConfigureWebHost"/>.
 /// </para>
+/// <para>
+/// By default every test instance builds and owns its factory. Subclasses that share one booted host
+/// across many tests instead override <see cref="InitializeAsync"/>, build the shared factory once via
+/// <see cref="BuildFactory"/>, attach it per test with <see cref="AttachFactory"/>, and return
+/// <see langword="false"/> from <see cref="OwnsFactory"/> so disposal leaves the shared host running.
+/// </para>
 /// </summary>
 public abstract class EksenWebTestBase<TProgram, TDbContext> : IAsyncLifetime
     where TProgram : class
@@ -25,10 +31,16 @@ public abstract class EksenWebTestBase<TProgram, TDbContext> : IAsyncLifetime
 {
     private WebApplicationFactory<TProgram>? _factory;
 
-    public HttpClient Client { get; private set; } = null!;
+    public HttpClient Client { get; protected set; } = null!;
 
     protected WebApplicationFactory<TProgram> Factory =>
         _factory ?? throw new InvalidOperationException("WebApplicationFactory has not been initialized yet.");
+
+    /// <summary>
+    /// Whether this test instance owns <see cref="Factory"/> and disposes it in
+    /// <see cref="DisposeAsync"/>. Subclasses sharing one host across tests return <see langword="false"/>.
+    /// </summary>
+    protected virtual bool OwnsFactory => true;
 
     protected abstract Task<string> GetConnectionStringAsync();
 
@@ -48,7 +60,28 @@ public abstract class EksenWebTestBase<TProgram, TDbContext> : IAsyncLifetime
         // executed during host startup find the schema already in place.
         await EnsureDatabaseCreatedAsync(connectionString);
 
-        _factory = new WebApplicationFactory<TProgram>()
+        _factory = BuildFactory(connectionString);
+        Client = _factory.CreateClient();
+    }
+
+    /// <summary>
+    /// Attaches an already-built factory to this test instance instead of building one, for subclasses
+    /// that share a single booted host across many tests.
+    /// </summary>
+    protected void AttachFactory(WebApplicationFactory<TProgram> factory)
+    {
+        _factory = factory;
+    }
+
+    /// <summary>
+    /// Builds the test host factory against <paramref name="connectionString"/>: the application's own
+    /// <typeparamref name="TDbContext"/> registrations are stripped and re-registered through the Eksen
+    /// builder pointing at the test database, then <see cref="ConfigureWebHost"/> applies the subclass's
+    /// customizations.
+    /// </summary>
+    protected WebApplicationFactory<TProgram> BuildFactory(string connectionString)
+    {
+        return new WebApplicationFactory<TProgram>()
             .WithWebHostBuilder(builder =>
             {
                 builder.ConfigureServices(services =>
@@ -66,15 +99,13 @@ public abstract class EksenWebTestBase<TProgram, TDbContext> : IAsyncLifetime
 
                 ConfigureWebHost(builder);
             });
-
-        Client = _factory.CreateClient();
     }
 
     public virtual async ValueTask DisposeAsync()
     {
         Client.Dispose();
 
-        if (_factory is not null)
+        if (_factory is not null && OwnsFactory)
         {
             await _factory.DisposeAsync();
         }
