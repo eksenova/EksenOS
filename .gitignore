@@ -431,3 +431,11 @@ FodyWeavers.xsd
 nupkgs/
 
 .claude/agent-memory
+
+# graphify: track root graph outputs, ignore per-machine state, temp files and nested build dirs
+src/**/graphify-out/
+graphify-out/cache/
+graphify-out/.graphify_*
+!graphify-out/.graphify_labels.json
+graphify-out/.needs_update
+graphify-out/cost.json
