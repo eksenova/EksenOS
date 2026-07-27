@@ -4,5 +4,5 @@
   "displayName": "EksenOS",
   "description": "Skills, conventions and helpers for building ASP.NET Core applications on the EksenOS framework.",
   "version": "0.1.0",
-  "skills": "./skills"
+  "skills": "../.claude/skills"
 }
