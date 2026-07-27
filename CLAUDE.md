@@ -7,7 +7,7 @@ through `AddEksen` / `IEksenBuilder`. You assemble the packages you need into **
 slices** — one feature, modelled top to bottom.
 
 This file is the high-level map. The per-package how-to lives in the skills under
-`.claude/skills/` (one skill per capability family); the rules every slice follows are in
+`skills/` (one skill per capability family); the rules every slice follows are in
 `.claude/conventions/` and the **code-conventions** skill.
 
 ## A vertical slice
@@ -96,9 +96,10 @@ services.AddEksen(eksen => eksen
 ```
 src/eksenos/
 ├── packages/            # one folder per package: <Name>/src + <Name>/test
+├── skills/              # one skill per capability family
 ├── common.props         # shared build properties
 ├── EksenOS.slnx         # the solution
-└── .claude/             # Claude Code plugin marketplace
-    ├── conventions/     # running-example.md, code-style.md
-    └── skills/          # one skill per capability family
+├── .claude-plugin/      # plugin.json + marketplace.json
+└── .claude/
+    └── conventions/     # running-example.md, code-style.md
 ```
