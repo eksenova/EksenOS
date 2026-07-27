@@ -7,13 +7,10 @@ marketplace root itself.
 ## Layout
 
 ```
-.claude/
-├── .claude-plugin/
-│   ├── marketplace.json     # marketplace catalog (name, owner, plugins)
-│   └── plugin.json          # the eksenos plugin manifest
-├── conventions/
-│   └── running-example.md   # the e-commerce domain every skill must use
-├── skills/                  # one skill per migration phase (added later)
+.claude-plugin/
+├── marketplace.json     # marketplace catalog (name, owner, plugins)
+├── plugin.json          # the eksenos plugin manifest
+├── skills/              # one skill per migration phase (added later)
 └── README.md
 ```
 
@@ -22,7 +19,7 @@ marketplace root itself.
 Add the marketplace, then install the plugin:
 
 ```shell
-/plugin marketplace add <this-repo-clone-url>
+/plugin marketplace add eksenova/eksenos
 /plugin install eksenos@eksenos-marketplace
 ```
 
@@ -35,8 +32,8 @@ directory:
   "extraKnownMarketplaces": {
     "eksenos-marketplace": {
       "source": {
-        "source": "directory",
-        "path": "src/eksenos/.claude"
+        "source": "github",
+        "repo": "eksenova/eksenos"
       }
     }
   },
@@ -45,10 +42,3 @@ directory:
   }
 }
 ```
-
-After EksenOS publishes a tagged release, switch the source to `git`/`github` with a pinned
-`ref`.
-
-The running domain example used across every skill is locked in
-`./conventions/running-example.md`. Each migration phase contributes one skill under
-`./skills/`.
