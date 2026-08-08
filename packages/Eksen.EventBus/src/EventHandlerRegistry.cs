@@ -3,7 +3,7 @@ namespace Eksen.EventBus;
 public interface IEventHandlerRegistry
 {
     void Register<TEvent, THandler>()
-        where TEvent : class, IIntegrationEvent
+        where TEvent : class, IEvent
         where THandler : class, IEventHandler<TEvent>;
 
     void Register(Type eventType, Type handlerType);
@@ -11,7 +11,7 @@ public interface IEventHandlerRegistry
     IReadOnlyList<EventHandlerDescriptor> GetHandlers(string eventTypeName);
 
     IReadOnlyList<EventHandlerDescriptor> GetHandlers<TEvent>()
-        where TEvent : class, IIntegrationEvent;
+        where TEvent : class, IEvent;
 
     IReadOnlyCollection<string> GetAllEventTypes();
 
@@ -34,7 +34,7 @@ public class EventHandlerRegistry : IEventHandlerRegistry
     private readonly Dictionary<string, List<EventHandlerDescriptor>> _handlers = [];
 
     public void Register<TEvent, THandler>()
-        where TEvent : class, IIntegrationEvent
+        where TEvent : class, IEvent
         where THandler : class, IEventHandler<TEvent>
     {
         Register(typeof(TEvent), typeof(THandler));
@@ -70,7 +70,7 @@ public class EventHandlerRegistry : IEventHandlerRegistry
     }
 
     public IReadOnlyList<EventHandlerDescriptor> GetHandlers<TEvent>()
-        where TEvent : class, IIntegrationEvent
+        where TEvent : class, IEvent
     {
         return GetHandlers(EventNameResolver.GetEventName<TEvent>());
     }

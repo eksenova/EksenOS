@@ -1,6 +1,6 @@
 namespace Eksen.EventBus;
 
-public interface IIntegrationEvent
+public interface IEvent
 {
     Guid EventId { get; }
 

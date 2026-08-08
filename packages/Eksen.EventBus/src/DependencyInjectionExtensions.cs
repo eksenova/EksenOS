@@ -13,7 +13,7 @@ public interface IEksenEventBusBuilder
     IEksenBuilder EksenBuilder { get; }
 
     IEksenEventBusBuilder Subscribe<TEvent, THandler>()
-        where TEvent : class, IIntegrationEvent
+        where TEvent : class, IEvent
         where THandler : class, IEventHandler<TEvent>;
 
     IEksenEventBusBuilder SubscribeFromAssembly(Assembly assembly);
@@ -30,11 +30,10 @@ public class EksenEventBusBuilder(IEksenBuilder eksenBuilder) : IEksenEventBusBu
     internal EventHandlerRegistry Registry => _registry;
 
     public IEksenEventBusBuilder Subscribe<TEvent, THandler>()
-        where TEvent : class, IIntegrationEvent
+        where TEvent : class, IEvent
         where THandler : class, IEventHandler<TEvent>
     {
-        _registry.Register<TEvent, THandler>();
-        EksenBuilder.Services.TryAddScoped<THandler>();
+        RegisterHandler(typeof(TEvent), typeof(THandler));
         return this;
     }
 
@@ -48,11 +47,28 @@ public class EksenEventBusBuilder(IEksenBuilder eksenBuilder) : IEksenEventBusBu
 
         foreach (var pair in handlerTypes)
         {
-            _registry.Register(pair.EventType, pair.HandlerType);
-            EksenBuilder.Services.TryAddScoped(pair.HandlerType);
+            RegisterHandler(pair.EventType, pair.HandlerType);
         }
 
         return this;
+    }
+
+    private void RegisterHandler(Type eventType, Type handlerType)
+    {
+        var services = EksenBuilder.Services;
+
+        if (typeof(ILocalEvent).IsAssignableFrom(eventType))
+        {
+            services.TryAddEnumerable(
+                ServiceDescriptor.Scoped(
+                    typeof(ILocalEventHandler<>).MakeGenericType(eventType),
+                    handlerType));
+
+            return;
+        }
+
+        _registry.Register(eventType, handlerType);
+        services.TryAddScoped(handlerType);
     }
 
     public IEksenEventBusBuilder Configure(Action<EksenEventBusOptions> configureOptions)
@@ -72,6 +88,7 @@ public static class DependencyInjectionExtensions
 
         var eventBusBuilder = new EksenEventBusBuilder(builder);
 
+        services.TryAddScoped<ILocalEventDispatcher, LocalEventDispatcher>();
         services.TryAddSingleton<IEventSerializer, JsonEventSerializer>();
         services.TryAddSingleton<IEventRetryPipelineProvider, EventRetryPipelineProvider>();
         services.TryAddScoped<IEventProcessor, EventProcessor>();

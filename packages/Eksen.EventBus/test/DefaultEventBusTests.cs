@@ -22,10 +22,15 @@ public class DefaultEventBusTests : EksenUnitTestBase
         if (outboxStore != null)
             services.AddSingleton(outboxStore);
 
-        var scopeFactory = services.BuildServiceProvider()
-            .GetRequiredService<IServiceScopeFactory>();
+        var serviceProvider = services.BuildServiceProvider();
+        var scopeFactory = serviceProvider.GetRequiredService<IServiceScopeFactory>();
 
-        return new DefaultEventBus(_transport.Object, _serializer, opts, scopeFactory);
+        return new DefaultEventBus(
+            _transport.Object,
+            _serializer,
+            opts,
+            scopeFactory,
+            new LocalEventDispatcher(serviceProvider));
     }
 
     [Fact]
@@ -70,14 +75,15 @@ public class DefaultEventBusTests : EksenUnitTestBase
 
         var services = new ServiceCollection();
         services.AddSingleton(outboxStore.Object);
-        var scopeFactory = services.BuildServiceProvider()
-            .GetRequiredService<IServiceScopeFactory>();
+        var serviceProvider = services.BuildServiceProvider();
+        var scopeFactory = serviceProvider.GetRequiredService<IServiceScopeFactory>();
 
         var bus = new DefaultEventBus(
             _transport.Object,
             _serializer,
             Options.Create(options),
-            scopeFactory);
+            scopeFactory,
+            new LocalEventDispatcher(serviceProvider));
 
         var @event = new TestOrderCreatedEvent { OrderNumber = "ORD-1", Amount = 100m };
 
@@ -343,14 +349,15 @@ public class DefaultEventBusTests : EksenUnitTestBase
 
         var services = new ServiceCollection();
         services.AddSingleton(outboxStore.Object);
-        var scopeFactory = services.BuildServiceProvider()
-            .GetRequiredService<IServiceScopeFactory>();
+        var serviceProvider = services.BuildServiceProvider();
+        var scopeFactory = serviceProvider.GetRequiredService<IServiceScopeFactory>();
 
         var bus = new DefaultEventBus(
             _transport.Object,
             _serializer,
             Options.Create(options),
-            scopeFactory);
+            scopeFactory,
+            new LocalEventDispatcher(serviceProvider));
 
         var @event = new TestOrderCreatedEvent
         {

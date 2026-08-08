@@ -31,7 +31,7 @@ public class JsonEventSerializer : IEventSerializer
         return serializerOptions;
     }
 
-    public string Serialize<TEvent>(TEvent @event) where TEvent : class, IIntegrationEvent
+    public string Serialize<TEvent>(TEvent @event) where TEvent : class, IEvent
     {
         return JsonSerializer.Serialize(@event, @event.GetType(), SerializerOptions);
     }
@@ -41,7 +41,7 @@ public class JsonEventSerializer : IEventSerializer
         return JsonSerializer.Deserialize(payload, eventType, SerializerOptions);
     }
 
-    public TEvent? Deserialize<TEvent>(string payload) where TEvent : class, IIntegrationEvent
+    public TEvent? Deserialize<TEvent>(string payload) where TEvent : class, IEvent
     {
         return JsonSerializer.Deserialize<TEvent>(payload, SerializerOptions);
     }

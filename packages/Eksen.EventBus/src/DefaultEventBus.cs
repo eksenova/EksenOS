@@ -8,10 +8,11 @@ public class DefaultEventBus(
     IEventBusTransport transport,
     IEventSerializer serializer,
     IOptions<EksenEventBusOptions> eventBusOptionsAccessor,
-    IServiceScopeFactory scopeFactory) : IEventBus
+    IServiceScopeFactory scopeFactory,
+    ILocalEventDispatcher localEventDispatcher) : IEventBus
 {
     public Task PublishAsync<TEvent>(TEvent @event, CancellationToken cancellationToken = default)
-        where TEvent : class, IIntegrationEvent
+        where TEvent : class, IEvent
     {
         return PublishAsync(@event, options: null, cancellationToken);
     }
@@ -20,8 +21,14 @@ public class DefaultEventBus(
         TEvent @event,
         PublishOptions? options,
         CancellationToken cancellationToken = default)
-        where TEvent : class, IIntegrationEvent
+        where TEvent : class, IEvent
     {
+        if (@event is ILocalEvent localEvent)
+        {
+            await localEventDispatcher.DispatchAsync(localEvent, typeof(TEvent), cancellationToken);
+            return;
+        }
+
         var eventTypeName = EventNameResolver.GetEventName<TEvent>();
         var payload = serializer.Serialize(@event);
         var eventBusOptions = eventBusOptionsAccessor.Value;

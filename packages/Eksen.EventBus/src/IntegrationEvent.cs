@@ -1,6 +1,6 @@
 namespace Eksen.EventBus;
 
-public abstract class IntegrationEvent : IIntegrationEvent
+public abstract class IntegrationEvent : IEvent
 {
     public Guid EventId { get; init; } = Guid.NewGuid();
 

@@ -14,7 +14,7 @@ internal sealed class UnitOfWorkEventBus(
     private readonly Dictionary<Guid, ScopeEventContext> _scopeContexts = [];
 
     public Task PublishAsync<TEvent>(TEvent @event, CancellationToken cancellationToken = default)
-        where TEvent : class, IIntegrationEvent
+        where TEvent : class, IEvent
     {
         return PublishAsync(@event, options: null, cancellationToken);
     }
@@ -23,10 +23,25 @@ internal sealed class UnitOfWorkEventBus(
         TEvent @event,
         PublishOptions? options,
         CancellationToken cancellationToken = default)
-        where TEvent : class, IIntegrationEvent
+        where TEvent : class, IEvent
     {
         var dispatchMode = options?.DispatchMode ?? EventDispatchMode.Immediate;
         var currentScope = unitOfWorkManager.Current;
+
+        if (@event is ILocalEvent localEvent)
+        {
+            if (dispatchMode == EventDispatchMode.AfterUnitOfWork && currentScope != null)
+            {
+                currentScope.AddPostCommitAction((sp, ct) =>
+                    sp.GetRequiredService<ILocalEventDispatcher>()
+                        .DispatchAsync(localEvent, typeof(TEvent), ct));
+
+                return;
+            }
+
+            await innerEventBus.PublishAsync(@event, options, cancellationToken);
+            return;
+        }
 
         if (dispatchMode == EventDispatchMode.AfterUnitOfWork && currentScope != null)
         {

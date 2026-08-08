@@ -11,7 +11,7 @@ public interface IEksenEventBusRabbitMqBuilder
     IEksenEventBusRabbitMqBuilder Configure(Action<RabbitMqEventBusOptions> configureOptions);
 
     IEksenEventBusRabbitMqBuilder MapEventToQueue<TEvent>(string queueName, string routingKey)
-        where TEvent : class, IIntegrationEvent;
+        where TEvent : class, IEvent;
 
     IEksenEventBusRabbitMqBuilder ConfigureQueue(string queueName, Action<QueueOptions> configureQueue);
 }
@@ -27,7 +27,7 @@ public class EksenEventBusRabbitMqBuilder(IEksenEventBusBuilder eventBusBuilder)
     }
 
     public IEksenEventBusRabbitMqBuilder MapEventToQueue<TEvent>(string queueName, string routingKey)
-        where TEvent : class, IIntegrationEvent
+        where TEvent : class, IEvent
     {
         var eventName = EventNameResolver.GetEventName<TEvent>();
         EventBusBuilder.EksenBuilder.Services.Configure<RabbitMqEventBusOptions>(o =>

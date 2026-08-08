@@ -4,7 +4,7 @@ public static class EventNameResolver
 {
     private static readonly Dictionary<Type, string> Cache = [];
 
-    public static string GetEventName<TEvent>() where TEvent : class, IIntegrationEvent
+    public static string GetEventName<TEvent>() where TEvent : class, IEvent
     {
         return GetEventName(typeof(TEvent));
     }

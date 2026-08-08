@@ -11,7 +11,7 @@ All examples use the marketplace's e-commerce running example (`Order`, `Custome
 
 ## Defining an event
 
-Derive from `IntegrationEvent` (which implements `IIntegrationEvent`). The base supplies `EventId`, `CreationTime`, `CorrelationId`, and `SourceApp`; you add the payload as `init`-only properties so the fact is immutable:
+Derive from `IntegrationEvent` (which implements `IEvent`). The base supplies `EventId`, `CreationTime`, `CorrelationId`, and `SourceApp`; you add the payload as `init`-only properties so the fact is immutable:
 
 ```csharp
 using Eksen.EventBus;
@@ -59,6 +59,47 @@ public sealed class CreateShipmentOnOrderPlaced(
 ```
 
 Multiple handlers may subscribe to the same event; each runs in its own scope and is tracked independently for idempotency and retry.
+
+## Local events
+
+An **integration event** always crosses a serialization boundary, so its payload must be JSON-shaped. When the reaction has to stay in the same process and needs the *real* object — a `Stream` you intend to forward, an open handle, a live aggregate instance, or a slot the listener writes back into — publish a **local event** instead.
+
+Derive from `LocalEvent` (which implements `ILocalEvent : IEvent`) and handle it with `ILocalEventHandler<TEvent>`:
+
+```csharp
+using Eksen.EventBus;
+
+public sealed class ShipmentLabelRequestedLocalEvent : LocalEvent
+{
+    public required Shipment Shipment { get; init; }
+
+    public Stream? Label { get; set; }
+}
+
+public sealed class RenderShipmentLabel(ILabelRenderer renderer)
+    : ILocalEventHandler<ShipmentLabelRequestedLocalEvent>
+{
+    public async Task HandleAsync(
+        ShipmentLabelRequestedLocalEvent @event,
+        CancellationToken cancellationToken = default)
+    {
+        @event.Label ??= await renderer.OpenAsync(@event.Shipment, cancellationToken);
+    }
+}
+```
+
+`ILocalEventHandler<TEvent>` extends `IEventHandler<TEvent>`, so a handler reads the same as any other. What changes is delivery:
+
+- **No serialization.** The handler receives the very instance that was published, so reference-typed members survive and a handler may write back through a settable property.
+- **Same scope.** Local handlers run in the publisher's scope, not a fresh one, so the ambient unit of work, current user, and tenant are the caller's.
+- **Never leaves the process.** Local events bypass the outbox, the transport, the inbox, and dead-lettering entirely — none of those apply to an in-memory call.
+- **Multiple listeners.** Every registered `ILocalEventHandler<TEvent>` is invoked in registration order, awaited one after another. With no listener registered, publishing is a no-op.
+
+Because there is no retry or dead-letter safety net, a throwing local handler faults the publisher's call. Keep them fast and side-effect-light, and use an integration event when the work must survive a crash.
+
+`EventDispatchMode.AfterUnitOfWork` still applies: the instance is held and the handlers run as a post-commit action rather than being written to the outbox.
+
+Registration is the same `Subscribe`/`SubscribeFromAssembly` call as any other handler — the builder detects `ILocalEvent` and registers the handler as `ILocalEventHandler<TEvent>` so every listener resolves, keeping it out of the transport's handler registry.
 
 ## Registration
 
