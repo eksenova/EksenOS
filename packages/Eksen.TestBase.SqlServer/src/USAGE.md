@@ -105,11 +105,23 @@ pool, they contend for the same bounded set of containers instead of standing up
 
 ## Configuration
 
-| Environment variable   | Default | Notes                                                                                       |
-| ---------------------- | ------- | ------------------------------------------------------------------------------------------- |
-| `EKSEN_SQL_MAX_WORKERS` | 10      | Pool size. Hard-capped at 10 (`Math.Min`).                                                   |
-| `EKSEN_SQL_CPUSET`      | `0-3`   | Logical CPU set pinned on each container. SQL Server 2025 asserts on an odd CPU count, so keep this an even set. |
+| Environment variable                | Default | Notes                                                                                                           |
+| ----------------------------------- | ------- | --------------------------------------------------------------------------------------------------------------- |
+| `EKSEN_SQL_MAX_WORKERS`             | 10      | Pool size, in **databases**. Hard-capped at 10 (`Math.Min`).                                                      |
+| `EKSEN_SQL_DATABASES_PER_INSTANCE`  | 4       | Databases hosted per container. Container count is `ceil(MaxWorkers / DatabasesPerInstance)`.                     |
+| `EKSEN_SQL_CONTAINER_MEMORY_MB`     | unset   | When set, caps each container's memory (Docker) and the engine's own budget (`MSSQL_MEMORY_LIMIT_MB`, 256 MB less). |
+| `EKSEN_SQL_CPUSET`                  | `0-3`   | Logical CPU set pinned on each container. SQL Server 2025 asserts on an odd CPU count, so keep this an even set.   |
 
 Keep `maxParallelThreads` (or `CollectionBehavior.MaxParallelThreads`) less than or equal to
 `EKSEN_SQL_MAX_WORKERS`; threads beyond the worker count simply block in `AcquireAsync` until a
 worker is released.
+
+### Workers are databases, not containers
+
+A worker is one **database**; a container hosts `EKSEN_SQL_DATABASES_PER_INSTANCE` of them. Parallel
+throughput is therefore bounded by the database count while memory is paid per *engine*, so a pool of
+10 workers costs 3 containers rather than 10. Databases on one engine are fully isolated for data —
+nothing crosses a catalogue boundary and no test can observe another test's rows — but they do share
+that engine's buffer pool, scheduler and `tempdb`. The trade is throughput, never correctness.
+
+Set `EKSEN_SQL_DATABASES_PER_INSTANCE=1` to restore the old one-container-per-worker behaviour.

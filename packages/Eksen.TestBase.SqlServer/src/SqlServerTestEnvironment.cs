@@ -17,6 +17,12 @@ public static class SqlServerTestEnvironment
     /// </summary>
     public const string CpuSetVariable = "EKSEN_SQL_CPUSET";
 
+    public const string DatabasesPerInstanceVariable = "EKSEN_SQL_DATABASES_PER_INSTANCE";
+
+    public const string ContainerMemoryVariable = "EKSEN_SQL_CONTAINER_MEMORY_MB";
+
+    public const int DefaultDatabasesPerInstance = 4;
+
     /// <summary>
     /// Environment variable overriding the container image used for the SQL Server worker.
     /// </summary>
@@ -59,6 +65,31 @@ public static class SqlServerTestEnvironment
                     : MaxWorkersHardCap;
 
             return Math.Min(requested, MaxWorkersHardCap);
+        }
+    }
+
+    public static int DatabasesPerInstance
+    {
+        get
+        {
+            var requested =
+                int.TryParse(Environment.GetEnvironmentVariable(DatabasesPerInstanceVariable), out var value)
+                && value > 0
+                    ? value
+                    : DefaultDatabasesPerInstance;
+
+            return Math.Clamp(requested, min: 1, MaxWorkers);
+        }
+    }
+
+    public static int? ContainerMemoryMegabytes
+    {
+        get
+        {
+            return int.TryParse(Environment.GetEnvironmentVariable(ContainerMemoryVariable), out var value)
+                   && value > 0
+                ? value
+                : null;
         }
     }
 

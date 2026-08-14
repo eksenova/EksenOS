@@ -1,132 +1,21 @@
-using DotNet.Testcontainers.Builders;
-using DotNet.Testcontainers.Configurations;
-using DotNet.Testcontainers.Containers;
 using Microsoft.Data.SqlClient;
-using Testcontainers.MsSql;
 
 namespace Eksen.TestBase.SqlServer;
 
-/// <summary>
-/// A single reusable SQL Server container together with a dedicated test database.
-/// A worker is created once, then reused across many tests: each test that acquires the
-/// worker gets a database whose data has been wiped via <see cref="CleanAsync"/> while the
-/// schema is left intact, so the provider's <c>EnsureCreated</c> builds the schema only on
-/// the first acquisition and is a cheap no-op thereafter.
-/// </summary>
-/// <remarks>
-/// SQL Server 2025 asserts on start-up when it is given an odd number of logical processors
-/// (a NUMA topology check), so containers running that engine pin an even CPU set through
-/// <see cref="SqlServerTestEnvironment.CpuSet"/>.
-/// </remarks>
 internal sealed class SqlServerWorker
 {
-    private const string DatabaseName = "EksenTestDb";
-    private const string SaPassword = "123*!%AbC";
-
-    private SqlServerWorker(MsSqlContainer container, string connectionString)
+    internal SqlServerWorker(SqlServerInstance instance, string connectionString)
     {
-        Container = container;
+        Instance = instance;
         ConnectionString = connectionString;
     }
 
-    internal MsSqlContainer Container { get; }
+    internal SqlServerInstance Instance { get; }
 
     internal string ConnectionString { get; }
 
-    /// <summary>
-    /// Whether the database still holds data from the previous test and must be wiped before the
-    /// next one. A freshly created worker starts clean, a release-time sanitizer clears the flag,
-    /// and a plain release sets it so the next acquisition wipes on the way in.
-    /// </summary>
     internal bool RequiresCleaning { get; set; }
 
-    internal static async Task<SqlServerWorker> CreateAsync(CancellationToken cancellationToken = default)
-    {
-        var cpuSet = SqlServerTestEnvironment.CpuSet;
-
-        // The engine's readiness is verified host-side (see WaitUntilReadyAsync) rather than through the
-        // module's default strategy, which execs sqlcmd inside the container. That tool is absent from the
-        // arm64 Azure SQL Edge image, so the container is only waited on until it is running and the real
-        // login-readiness probe is done from the host — a strategy that works across every supported image.
-        var builder = new MsSqlBuilder()
-            .WithImage(SqlServerTestEnvironment.Image)
-            .WithPassword(SaPassword)
-            .WithWaitStrategy(Wait.ForUnixContainer().AddCustomWaitStrategy(new ContainerRunningWaitStrategy()));
-
-        if (!string.IsNullOrWhiteSpace(cpuSet))
-        {
-            builder = builder.WithCreateParameterModifier(parameters => parameters.HostConfig.CpusetCpus = cpuSet);
-        }
-
-        var container = builder.Build();
-
-        await container.StartAsync(cancellationToken);
-
-        var adminConnectionString = container.GetConnectionString();
-        await WaitUntilReadyAsync(adminConnectionString, cancellationToken);
-
-        await using (var connection = new SqlConnection(adminConnectionString))
-        {
-            await connection.OpenAsync(cancellationToken);
-
-            // Delayed durability trades the per-commit log flush for throughput. Losing the tail of the
-            // log on a crash is irrelevant for a throwaway test database, and per-test data isolation is
-            // unaffected: commits remain fully consistent and visible to every connection.
-            await using var command = new SqlCommand(
-                $"""
-                 CREATE DATABASE [{DatabaseName}];
-                 ALTER DATABASE [{DatabaseName}] SET DELAYED_DURABILITY = FORCED;
-                 """,
-                connection);
-            await command.ExecuteNonQueryAsync(cancellationToken);
-        }
-
-        var connectionStringBuilder = new SqlConnectionStringBuilder(adminConnectionString)
-        {
-            InitialCatalog = DatabaseName
-        };
-
-        return new SqlServerWorker(container, connectionStringBuilder.ConnectionString);
-    }
-
-    /// <summary>
-    /// Polls the server with a real connection until it accepts logins and answers a trivial query. The
-    /// listening port opens before the engine is ready for logins, so a successful <c>SELECT 1</c> is the
-    /// signal that the container is usable.
-    /// </summary>
-    private static async Task WaitUntilReadyAsync(string connectionString, CancellationToken cancellationToken)
-    {
-        var deadline = DateTime.UtcNow.AddMinutes(3);
-
-        while (true)
-        {
-            try
-            {
-                await using var connection = new SqlConnection(connectionString);
-                await connection.OpenAsync(cancellationToken);
-
-                await using var command = new SqlCommand(cmdText: "SELECT 1", connection);
-                await command.ExecuteScalarAsync(cancellationToken);
-
-                return;
-            }
-            catch (SqlException) when (DateTime.UtcNow < deadline)
-            {
-                await Task.Delay(TimeSpan.FromSeconds(2), cancellationToken);
-            }
-        }
-    }
-
-    /// <summary>
-    /// Wipes all data so the next test starts from empty tables while leaving the schema in place.
-    /// Only tables that actually hold rows are touched: the truncate set is resolved from
-    /// <c>sys.dm_db_partition_stats</c>, the foreign keys that reference a table in that set are dropped
-    /// (SQL Server refuses to <c>TRUNCATE</c> a table referenced by a foreign key even when the constraint
-    /// is disabled) and recreated exactly as they were afterwards. A typical test writes to a small
-    /// fraction of the schema, so this is far cheaper than wiping every table. Because the tables survive,
-    /// the provider's <c>EnsureCreated</c> builds the schema only on the first acquisition of a worker and
-    /// is a cheap no-op on every clean thereafter.
-    /// </summary>
     internal async Task CleanAsync(CancellationToken cancellationToken = default)
     {
         await using var connection = new SqlConnection(ConnectionString);
@@ -152,9 +41,6 @@ internal sealed class SqlServerWorker
                      IF NOT EXISTS (SELECT 1 FROM @nonEmptyTables)
                          RETURN;
 
-                     -- Capture the DDL to drop and to restore every foreign key that references a table
-                     -- about to be truncated: the restore text has to be read from the catalogue before
-                     -- the constraints are dropped.
                      DECLARE @dropForeignKeys NVARCHAR(MAX) = N'';
                      SELECT @dropForeignKeys += N'ALTER TABLE ' + QUOTENAME(s.name) + N'.' + QUOTENAME(t.name)
                          + N' DROP CONSTRAINT ' + QUOTENAME(fk.name) + N';'
@@ -200,23 +86,5 @@ internal sealed class SqlServerWorker
                      """, connection);
 
         await command.ExecuteNonQueryAsync(cancellationToken);
-    }
-
-    internal ValueTask DisposeContainerAsync()
-    {
-        return Container.DisposeAsync();
-    }
-
-    /// <summary>
-    /// A no-op wait strategy that defers to the container merely being started. Login readiness is then
-    /// confirmed host-side by <see cref="WaitUntilReadyAsync"/>, avoiding the module's default in-container
-    /// sqlcmd probe (absent from the Azure SQL Edge image).
-    /// </summary>
-    private sealed class ContainerRunningWaitStrategy : IWaitUntil
-    {
-        public Task<bool> UntilAsync(IContainer container)
-        {
-            return Task.FromResult(true);
-        }
     }
 }
