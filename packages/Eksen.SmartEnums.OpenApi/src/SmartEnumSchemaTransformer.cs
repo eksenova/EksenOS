@@ -94,9 +94,6 @@ public sealed class SmartEnumSchemaTransformer : IOpenApiSchemaTransformer
             elementSchema.Type |= JsonSchemaType.Null;
         }
 
-        elementSchema.Enum ??= new List<JsonNode>();
-        elementSchema.Enum.Clear();
-
         var method = elementType.GetMethod(nameof(Enumeration<>.GetValues),
             BindingFlags.Public | BindingFlags.Static | BindingFlags.FlattenHierarchy)!;
         var allValuesEnumerable = (IEnumerable)method.Invoke(obj: null, Array.Empty<object>())!;
@@ -104,18 +101,43 @@ public sealed class SmartEnumSchemaTransformer : IOpenApiSchemaTransformer
             .GetProperty(nameof(Enumeration<>.Code), BindingFlags.Instance | BindingFlags.Public)!
             .GetGetMethod()!;
 
+        var codes = new List<string>();
         var enumerator = allValuesEnumerable.GetEnumerator();
         try
         {
             while (enumerator.MoveNext())
             {
-                var code = codePropertyGetter.Invoke(enumerator.Current, []);
-                elementSchema.Enum.Add(JsonValue.Create(code)!);
+                codes.Add((string)codePropertyGetter.Invoke(enumerator.Current, [])!);
             }
         }
         finally
         {
             (enumerator as IDisposable)?.Dispose();
         }
+
+        if (IsNarrowedTo(elementSchema.Enum, codes))
+        {
+            return;
+        }
+
+        elementSchema.Enum ??= new List<JsonNode>();
+        elementSchema.Enum.Clear();
+
+        foreach (var code in codes)
+        {
+            elementSchema.Enum.Add(JsonValue.Create(code)!);
+        }
+    }
+
+    private static bool IsNarrowedTo(IList<JsonNode>? existing, ICollection<string> codes)
+    {
+        if (existing == null || existing.Count == 0 || existing.Count >= codes.Count)
+        {
+            return false;
+        }
+
+        return existing.All(x => x is JsonValue value
+                                 && value.TryGetValue<string>(out var code)
+                                 && codes.Contains(code));
     }
 }

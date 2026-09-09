@@ -32,6 +32,11 @@ public class JsonSmartEnumTypeInfoResolver(
                 continue;
             }
 
+            if (child.Get == null && child.Set == null)
+            {
+                continue;
+            }
+
             var parseMethod = child.PropertyType.GetMethod(nameof(Enumeration<>.Parse),
                 BindingFlags.Static | BindingFlags.Public | BindingFlags.FlattenHierarchy)!;
 

@@ -104,4 +104,39 @@ public class SmartEnumSchemaTransformerTests : EksenUnitTestBase
         colorSchema.Type.ShouldNotBeNull();
         (colorSchema.Type!.Value & JsonSchemaType.String).ShouldBe(JsonSchemaType.String);
     }
+
+    [Fact]
+    public void ProcessSchema_Should_Keep_A_Narrowed_Discriminator_Enum()
+    {
+        // Arrange
+        var schema = new OpenApiSchema
+        {
+            Enum = new List<JsonNode> { JsonValue.Create(nameof(TestColor.Red))! }
+        };
+
+        // Act
+        SmartEnumSchemaTransformer.ProcessSchema(schema, typeof(TestColor));
+
+        // Assert
+        schema.Enum!.Count.ShouldBe(1);
+        schema.Enum[0]!.GetValue<string>().ShouldBe(nameof(TestColor.Red));
+    }
+
+    [Fact]
+    public void ProcessSchema_Should_Replace_An_Enum_Carrying_Unknown_Codes()
+    {
+        // Arrange
+        var schema = new OpenApiSchema
+        {
+            Enum = new List<JsonNode> { JsonValue.Create(value: "Yellow")! }
+        };
+
+        // Act
+        SmartEnumSchemaTransformer.ProcessSchema(schema, typeof(TestColor));
+
+        // Assert
+        schema.Enum!
+            .Select(x => x!.GetValue<string>())
+            .ShouldBe(TestColor.GetValues().Select(x => x.Code).ToList(), ignoreOrder: true);
+    }
 }
