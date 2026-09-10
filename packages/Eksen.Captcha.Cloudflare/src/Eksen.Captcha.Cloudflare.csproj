@@ -1,0 +1,14 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+	<Import Project="..\..\..\common.props" />
+
+	<ItemGroup>
+		<InternalsVisibleTo Include="Eksen.Captcha.Cloudflare.Tests" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<ProjectReference Include="..\..\Eksen.Captcha\src\Eksen.Captcha.csproj" />
+		<ProjectReference Include="..\..\Eksen.Cloudflare\src\Eksen.Cloudflare.csproj" />
+	</ItemGroup>
+
+</Project>

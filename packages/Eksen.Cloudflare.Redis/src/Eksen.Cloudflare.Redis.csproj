@@ -1,0 +1,17 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+	<Import Project="..\..\..\common.props" />
+
+	<ItemGroup>
+		<InternalsVisibleTo Include="Eksen.Cloudflare.Redis.Tests" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<PackageReference Include="StackExchange.Redis" Version="2.8.58" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<ProjectReference Include="..\..\Eksen.Cloudflare\src\Eksen.Cloudflare.csproj" />
+	</ItemGroup>
+
+</Project>
