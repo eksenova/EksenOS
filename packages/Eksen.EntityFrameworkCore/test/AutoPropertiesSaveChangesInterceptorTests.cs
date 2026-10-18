@@ -164,4 +164,40 @@ public class AutoPropertiesSaveChangesInterceptorTests : EksenUnitTestBase, IDis
         var loaded = await _softDeleteDbContext.TestEntities.IgnoreQueryFilters().FirstAsync(e => e.Id == entity.Id);
         loaded.IsDeleted.ShouldBeTrue();
     }
+
+    [Fact]
+    public async Task SavingChangesAsync_Should_Stamp_Times_From_The_Supplied_TimeProvider()
+    {
+        // Arrange
+        var instant = new DateTimeOffset(2031, 3, 14, 10, 30, 0, TimeSpan.Zero);
+        using var connection = new Microsoft.Data.Sqlite.SqliteConnection("DataSource=:memory:");
+        connection.Open();
+        var options = new DbContextOptionsBuilder<TimestampedDbContext>()
+            .UseSqlite(connection)
+            .AddInterceptors(new AutoPropertiesSaveChangesInterceptor(new FixedTimeProvider(instant)))
+            .Options;
+        await using var dbContext = new TimestampedDbContext(options);
+        await dbContext.Database.EnsureCreatedAsync();
+        var entity = new TimestampedEntity { Name = "Test" };
+
+        // Act
+        dbContext.TimestampedEntities.Add(entity);
+        await dbContext.SaveChangesAsync();
+        entity.LastModificationTime = null;
+        entity.Name = "Updated";
+        dbContext.Entry(entity).State = EntityState.Modified;
+        await dbContext.SaveChangesAsync();
+
+        // Assert
+        entity.CreationTime.ShouldBe(instant.UtcDateTime);
+        entity.LastModificationTime.ShouldBe(instant.UtcDateTime);
+    }
+
+    private sealed class FixedTimeProvider(DateTimeOffset instant) : TimeProvider
+    {
+        public override DateTimeOffset GetUtcNow()
+        {
+            return instant;
+        }
+    }
 }

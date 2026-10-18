@@ -5,8 +5,10 @@ using Microsoft.EntityFrameworkCore.Diagnostics;
 
 namespace Eksen.EntityFrameworkCore;
 
-public sealed class AutoPropertiesSaveChangesInterceptor : ISaveChangesInterceptor
+public sealed class AutoPropertiesSaveChangesInterceptor(TimeProvider? timeProvider = null) : ISaveChangesInterceptor
 {
+    private readonly TimeProvider _timeProvider = timeProvider ?? TimeProvider.System;
+
     public InterceptionResult<int> SavingChanges(DbContextEventData eventData, InterceptionResult<int> result)
     {
         var entries = eventData.Context?.ChangeTracker.Entries() ?? [];
@@ -84,7 +86,7 @@ public sealed class AutoPropertiesSaveChangesInterceptor : ISaveChangesIntercept
                     if (entityType.IsAssignableTo(typeof(IHasModificationTime))
                         && ((IHasModificationTime)entry.Entity).LastModificationTime == null)
                     {
-                        entityType.GetProperty(name: "LastModificationTime")?.SetValue(entry.Entity, DateTime.UtcNow);
+                        entityType.GetProperty(name: "LastModificationTime")?.SetValue(entry.Entity, _timeProvider.GetUtcNow().UtcDateTime);
                     }
 
                     break;
@@ -94,7 +96,7 @@ public sealed class AutoPropertiesSaveChangesInterceptor : ISaveChangesIntercept
                 {
                     if (entityType.IsAssignableTo(typeof(IHasCreationTime)) && ((IHasCreationTime)entry.Entity).CreationTime == default)
                     {
-                        entityType.GetProperty(name: "CreationTime")?.SetValue(entry.Entity, DateTime.UtcNow);
+                        entityType.GetProperty(name: "CreationTime")?.SetValue(entry.Entity, _timeProvider.GetUtcNow().UtcDateTime);
                     }
 
                     break;

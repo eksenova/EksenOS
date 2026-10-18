@@ -29,7 +29,7 @@ public static class DependencyInjectionExtensions
             var unitOfWorkManager = serviceProvider.GetRequiredService<IUnitOfWorkManager>();
 
             dbContextOptionsBuilder.AddInterceptors(
-                new AutoPropertiesSaveChangesInterceptor(),
+                new AutoPropertiesSaveChangesInterceptor(serviceProvider.GetService<TimeProvider>()),
                 new DbContextTrackerCommandInterceptor(unitOfWorkManager, dbContextTracker),
                 new DbContextTrackerSaveChangesInterceptor(unitOfWorkManager, dbContextTracker));
 
