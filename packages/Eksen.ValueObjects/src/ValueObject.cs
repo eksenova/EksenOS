@@ -34,6 +34,13 @@ public interface IValueObjectParser<out TValueObject, in TUnderlyingValue>
         IFormatProvider? formatProvider = null);
 }
 
+public interface IOptionallyValidatedValueObjectParser<out TValueObject, in TUnderlyingValue>
+    : IValueObjectParser<TValueObject, TUnderlyingValue>
+    where TValueObject : IValueObject<TValueObject, TUnderlyingValue>
+{
+    public static abstract TValueObject Create(TUnderlyingValue value, bool validate);
+}
+
 public abstract record ValueObject<TSelf, TUnderlyingValue>
     : IValueObject<TSelf, TUnderlyingValue>
     where TSelf : ValueObject<TSelf, TUnderlyingValue>, IValueObject<TSelf, TUnderlyingValue>, IValueObjectParser<TSelf, TUnderlyingValue>
@@ -108,10 +115,16 @@ public abstract record ValueObject<TSelf, TUnderlyingValue>
         get { return Value; }
     }
 
-    protected ValueObject(TUnderlyingValue value)
+    protected ValueObject(TUnderlyingValue value) : this(value, validate: true)
+    {
+    }
+
+    protected ValueObject(TUnderlyingValue value, bool validate)
     {
         // ReSharper disable once VirtualMemberCallInConstructor
-        Value = Validate(value);
+        Value = validate
+            ? Validate(value)
+            : value;
     }
 
     public override string ToString()
@@ -200,7 +213,7 @@ public class JsonValueObjectTypeInfoResolver(
     }
 }
 
-public class JsonValueObjectConverter : JsonConverterFactory
+public class JsonValueObjectConverter(bool validate = true) : JsonConverterFactory
 {
     public override bool CanConvert(Type typeToConvert)
     {
@@ -215,7 +228,7 @@ public class JsonValueObjectConverter : JsonConverterFactory
         var converterType = typeof(JsonValueObjectConverter<,>)
             .MakeGenericType(type.GetGenericArguments());
 
-        return (JsonConverter)Activator.CreateInstance(converterType)!;
+        return (JsonConverter)Activator.CreateInstance(converterType, args: [validate])!;
     }
 }
 
@@ -224,6 +237,19 @@ public class JsonValueObjectConverter<TValueObject, TUnderlyingValue>
     where TValueObject : class, IValueObject<TValueObject, TUnderlyingValue>, IValueObjectParser<TValueObject, TUnderlyingValue>
 
 {
+    private static readonly Func<TUnderlyingValue, TValueObject>? CreateWithoutValidation = ResolveCreateWithoutValidation();
+
+    private readonly bool _validate;
+
+    public JsonValueObjectConverter() : this(validate: true)
+    {
+    }
+
+    public JsonValueObjectConverter(bool validate)
+    {
+        _validate = validate;
+    }
+
     public override bool CanConvert(Type typeToConvert)
     {
         return typeof(TValueObject) == typeToConvert;
@@ -243,7 +269,7 @@ public class JsonValueObjectConverter<TValueObject, TUnderlyingValue>
 
         var value = converter.Read(ref reader, typeToConvert, options);
         return value != null
-            ? TValueObject.Create(value)
+            ? Create(value)
             : null;
     }
 
@@ -260,6 +286,33 @@ public class JsonValueObjectConverter<TValueObject, TUnderlyingValue>
         }
 
         converter.Write(writer, value.Value, options);
+    }
+
+    private TValueObject Create(TUnderlyingValue value)
+    {
+        return !_validate && CreateWithoutValidation != null
+            ? CreateWithoutValidation(value)
+            : TValueObject.Create(value);
+    }
+
+    private static Func<TUnderlyingValue, TValueObject>? ResolveCreateWithoutValidation()
+    {
+        if (!typeof(TValueObject).IsAssignableTo(
+                typeof(IOptionallyValidatedValueObjectParser<TValueObject, TUnderlyingValue>)))
+        {
+            return null;
+        }
+
+        return typeof(JsonValueObjectConverter<TValueObject, TUnderlyingValue>)
+            .GetMethod(nameof(CreateUnvalidated), BindingFlags.NonPublic | BindingFlags.Static)!
+            .MakeGenericMethod(typeof(TValueObject))
+            .CreateDelegate<Func<TUnderlyingValue, TValueObject>>();
+    }
+
+    private static TValueObject CreateUnvalidated<TImplementation>(TUnderlyingValue value)
+        where TImplementation : IOptionallyValidatedValueObjectParser<TValueObject, TUnderlyingValue>
+    {
+        return TImplementation.Create(value, validate: false);
     }
 }
 

@@ -1,10 +1,12 @@
 namespace Eksen.ValueObjects.Companies;
 
-public sealed record TaxNumber : ValueObject<TaxNumber, string>, IValueObjectParser<TaxNumber, string>
+public sealed record TaxNumber : ValueObject<TaxNumber, string>, IOptionallyValidatedValueObjectParser<TaxNumber, string>
 {
     public const int MaxLength = 20;
 
-    private TaxNumber(string value) : base(value) { }
+    private TaxNumber(string value) : this(value, validate: true) { }
+
+    private TaxNumber(string value, bool validate) : base(value, validate) { }
 
     protected override string Validate(string value)
     {
@@ -31,6 +33,11 @@ public sealed record TaxNumber : ValueObject<TaxNumber, string>, IValueObjectPar
     public static TaxNumber Create(string value)
     {
         return Parse(value);
+    }
+
+    public static TaxNumber Create(string value, bool validate)
+    {
+        return new TaxNumber(value, validate);
     }
 
     public static TaxNumber Parse(string value, IFormatProvider? formatProvider = null)

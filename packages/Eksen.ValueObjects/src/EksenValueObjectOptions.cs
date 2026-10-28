@@ -98,7 +98,12 @@ public sealed record EksenValueObjectOptions
 
     public void ConfigureJsonOptions(JsonSerializerOptions options)
     {
-        var factory = new JsonValueObjectConverter();
+        ConfigureJsonOptions(options, validate: true);
+    }
+
+    public void ConfigureJsonOptions(JsonSerializerOptions options, bool validate)
+    {
+        var factory = new JsonValueObjectConverter(validate);
         var baseTypeResolver = options.TypeInfoResolver ?? new DefaultJsonTypeInfoResolver();
         options.TypeInfoResolver = new JsonValueObjectTypeInfoResolver(baseTypeResolver);
 

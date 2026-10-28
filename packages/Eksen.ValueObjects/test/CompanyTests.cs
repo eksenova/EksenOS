@@ -1,3 +1,5 @@
+using System.Text.Json;
+using System.Text.Json.Serialization.Metadata;
 using Eksen.ErrorHandling;
 using Eksen.TestBase;
 using Eksen.ValueObjects.Companies;
@@ -126,6 +128,60 @@ public class TaxNumberTests : EksenUnitTestBase
     {
         // Arrange & Act
         var taxNumber = TaxNumber.Create("  1234567890  ");
+
+        // Assert
+        taxNumber.Value.ShouldBe("1234567890");
+    }
+
+    [Fact]
+    public void Create_Without_Validation_Should_Keep_Value_As_Is()
+    {
+        // Arrange
+        var value = new string('1', TaxNumber.MaxLength + 1);
+
+        // Act
+        var taxNumber = TaxNumber.Create(value, validate: false);
+
+        // Assert
+        taxNumber.Value.ShouldBe(value);
+    }
+
+    [Fact]
+    public void Json_Converter_Without_Validation_Should_Keep_Value_As_Is()
+    {
+        // Arrange
+        var value = new string('1', TaxNumber.MaxLength + 1);
+        var options = new JsonSerializerOptions();
+        options.Converters.Add(new JsonValueObjectConverter(validate: false));
+        options.Converters.Add(JsonMetadataServices.StringConverter);
+
+        // Act
+        var taxNumber = JsonSerializer.Deserialize<TaxNumber>($"\"{value}\"", options);
+
+        // Assert
+        taxNumber.ShouldNotBeNull();
+        taxNumber.Value.ShouldBe(value);
+    }
+
+    [Fact]
+    public void Json_Converter_With_Validation_Should_Reject_Overlong_Value()
+    {
+        // Arrange
+        var value = new string('1', TaxNumber.MaxLength + 1);
+        var options = new JsonSerializerOptions();
+        options.Converters.Add(new JsonValueObjectConverter());
+        options.Converters.Add(JsonMetadataServices.StringConverter);
+
+        // Act & Assert
+        var exception = Should.Throw<EksenException>(() => JsonSerializer.Deserialize<TaxNumber>($"\"{value}\"", options));
+        exception.Descriptor.ShouldBe(CompanyErrors.TaxNumberOverflow);
+    }
+
+    [Fact]
+    public void Create_With_Validation_Should_Trim_Whitespace()
+    {
+        // Arrange & Act
+        var taxNumber = TaxNumber.Create("  1234567890  ", validate: true);
 
         // Assert
         taxNumber.Value.ShouldBe("1234567890");
