@@ -38,9 +38,44 @@ public class PermissionCheckerTests : EksenUnitTestBase
         _authContext.Setup(a => a.User).Returns(mockUser.Object);
     }
 
+    [Theory]
+    [InlineData(false, true, false)]
+    [InlineData(true, false, false)]
+    [InlineData(true, true, true)]
+    public async Task HasPermissionsAsyncAppliesCurrentUserStateGates(
+        bool userActive, bool tenantActive, bool passwordChangeRequired)
+    {
+        var permission = PermissionName.Create("Orders.Create");
+        var otherPermission = PermissionName.Create("Orders.Update");
+        var user = new FakeUser
+        {
+            IsActive = userActive,
+            IsPasswordChangeRequired = passwordChangeRequired,
+            Tenant = new FakeTenant { IsActive = tenantActive }
+        };
+        SetupAuthUser(user.Id);
+        _permissionCache.Setup(cache => cache.GetPermissionDefinitionsAsync(It.IsAny<CancellationToken>()))
+            .ReturnsAsync([new PermissionDefinition(permission), new PermissionDefinition(otherPermission)]);
+        _permissionCache.Setup(cache => cache.GetPermissionsForCurrentUserAsync(It.IsAny<CancellationToken>()))
+            .ReturnsAsync([permission.Value, otherPermission.Value]);
+        _userRepository.Setup(repository => repository.FindByIdAsync(user.Id,
+                It.IsAny<EksenUserIncludeOptions<FakeUser, FakeTenant>>(),
+                It.IsAny<DefaultQueryOptions>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(user);
+
+        (await _sut.HasPermissionsAsync([permission, otherPermission])).ShouldBeFalse();
+        (await _sut.HasPermissionAsync(permission)).ShouldBeFalse();
+    }
+
     [Fact]
     public async Task HasPermissionsAsync_Should_Return_True_When_All_Permissions_Granted()
     {
+        var user = new FakeUser { IsActive = true };
+        SetupAuthUser(user.Id);
+        _userRepository.Setup(repository => repository.FindByIdAsync(user.Id,
+                It.IsAny<EksenUserIncludeOptions<FakeUser, FakeTenant>>(),
+                It.IsAny<DefaultQueryOptions>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(user);
         // Arrange
         var permissions = new[] { PermissionName.Create("Orders.Create"), PermissionName.Create("Orders.Update") };
         var definitions = new List<PermissionDefinition>

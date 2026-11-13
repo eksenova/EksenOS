@@ -1,13 +1,25 @@
 ﻿using Eksen.Identity;
 using Eksen.Identity.Users;
+using System.Diagnostics.Metrics;
+using Eksen.Telemetry;
 
 namespace Eksen.Permissions.Caching;
 
 public abstract class BasePermissionCache(
     IAuthContext authContext,
-    Lazy<IPermissionStore> permissionStore)
+    Lazy<IPermissionStore> permissionStore,
+    IMeterFactory? meterFactory)
     : IPermissionCache
 {
+    private readonly PermissionsTelemetry _telemetry = PermissionsTelemetry.For(meterFactory);
+
+    protected BasePermissionCache(
+        IAuthContext authContext,
+        Lazy<IPermissionStore> permissionStore)
+        : this(authContext, permissionStore, meterFactory: null)
+    {
+    }
+
     public const int CacheHours = 7 * 24;
 
     public abstract ValueTask InvalidateForUserAsync(
@@ -36,12 +48,15 @@ public abstract class BasePermissionCache(
 
         var cachedPermissions = await ReadCacheAsync<PermissionsDefinitionsCache>(key);
 
+        _telemetry.RecordCacheRequest(cachedPermissions != null, PermissionsTelemetry.DefinitionsKeyKind);
         if (cachedPermissions != null)
         {
             return cachedPermissions.Permissions;
         }
 
-        var permissions = await permissionStore.Value.GetPermissionDefinitionsAsync();
+        var permissions = await LoadFromStoreAsync(
+            PermissionsTelemetry.DefinitionsKeyKind,
+            () => permissionStore.Value.GetPermissionDefinitionsAsync());
         permissions.Sort((x, y) => string.Compare(x.Name.Value, y.Name.Value, StringComparison.Ordinal));
 
         cachedPermissions = new PermissionsDefinitionsCache
@@ -68,12 +83,16 @@ public abstract class BasePermissionCache(
             cacheKey,
             cancellationToken);
 
-        if (cachedPermissions is { Permissions.Count: > 0 })
+        var hit = cachedPermissions is { Permissions.Count: > 0 };
+        _telemetry.RecordCacheRequest(hit, PermissionsTelemetry.UserKeyKind);
+        if (hit)
         {
-            return cachedPermissions.Permissions;
+            return cachedPermissions!.Permissions;
         }
 
-        var permissions = await permissionStore.Value.GetUserPermissionsAsync(userId);
+        var permissions = await LoadFromStoreAsync(
+            PermissionsTelemetry.UserKeyKind,
+            () => permissionStore.Value.GetUserPermissionsAsync(userId));
         var permissionNames = permissions.Select(x => x.Name.Value).ToList();
         permissionNames.Sort((x, y) => string.Compare(x, y, StringComparison.Ordinal));
 
@@ -88,6 +107,35 @@ public abstract class BasePermissionCache(
         }, cancellationToken);
 
         return permissionNames;
+    }
+
+    /// <summary>
+    /// Counts an invalidation in <c>eksen.permissions.cache.invalidations</c>. <paramref name="keyKind"/> is
+    /// <c>definitions</c> or <c>user</c>.
+    /// </summary>
+    protected void RecordInvalidation(string keyKind, long count = 1)
+    {
+        _telemetry.RecordInvalidation(keyKind, count);
+    }
+
+    protected const string DefinitionsKeyKind = PermissionsTelemetry.DefinitionsKeyKind;
+
+    protected const string UserKeyKind = PermissionsTelemetry.UserKeyKind;
+
+    private async Task<List<PermissionDefinition>> LoadFromStoreAsync(
+        string keyKind,
+        Func<Task<List<PermissionDefinition>>> load)
+    {
+        using var activity = _telemetry.StartStoreLoad(keyKind);
+        try
+        {
+            return await load();
+        }
+        catch (Exception exception)
+        {
+            activity.RecordException(exception);
+            throw;
+        }
     }
 
     public abstract ValueTask InvalidateForUserIdsAsync(

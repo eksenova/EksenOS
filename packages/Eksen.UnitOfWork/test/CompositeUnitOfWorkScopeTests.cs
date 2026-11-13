@@ -17,6 +17,24 @@ public class CompositeUnitOfWorkScopeTests : EksenUnitTestBase
     }
 
     [Fact]
+    public async Task DisposalFailureStillDisposesRemainingProvidersAndPopsScope()
+    {
+        var manager = CreateManager();
+        var scope = manager.BeginScope();
+        var failing = new Mock<IUnitOfWorkProviderScope>();
+        failing.Setup(x => x.DisposeAsync()).Returns(() => ValueTask.FromException(new InvalidOperationException("cleanup")));
+        var remaining = new Mock<IUnitOfWorkProviderScope>();
+        remaining.Setup(x => x.DisposeAsync()).Returns(ValueTask.CompletedTask);
+        scope.AddProviderScope(failing.Object);
+        scope.AddProviderScope(remaining.Object);
+
+        await Should.ThrowAsync<AggregateException>(async () => await scope.DisposeAsync());
+        remaining.Verify(x => x.DisposeAsync(), Times.Once);
+        manager.Current.ShouldBeNull();
+        await scope.DisposeAsync();
+    }
+
+    [Fact]
     public void ScopeId_Should_Be_Unique()
     {
         // Arrange

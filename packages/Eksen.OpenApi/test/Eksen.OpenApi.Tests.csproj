@@ -5,9 +5,11 @@
 	<PropertyGroup>
 		<IsPackable>false</IsPackable>
 		<OutputType>Exe</OutputType>
+		<InterceptorsNamespaces>$(InterceptorsNamespaces);Microsoft.AspNetCore.OpenApi.Generated</InterceptorsNamespaces>
 	</PropertyGroup>
 
 	<ItemGroup>
+		<FrameworkReference Include="Microsoft.AspNetCore.App" />
 		<ProjectReference Include="..\..\Eksen.TestBase\src\Eksen.TestBase.csproj" />
 		<ProjectReference Include="..\src\Eksen.OpenApi.csproj" />
 	</ItemGroup>

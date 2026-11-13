@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 	<Import Project="..\..\..\common.props" />
 
 	<ItemGroup>
@@ -11,5 +11,6 @@
 
 	<ItemGroup>
 		<PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="10.0.5" />
+        <PackageReference Include="Microsoft.OpenApi" Version="2.7.5" />
 	</ItemGroup>
 </Project>

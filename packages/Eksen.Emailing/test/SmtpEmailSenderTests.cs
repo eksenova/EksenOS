@@ -9,6 +9,22 @@ namespace Eksen.Emailing.Tests;
 
 public class SmtpEmailSenderTests : EksenUnitTestBase
 {
+    [Fact]
+    public async Task SendEmailAsync_Should_Preserve_Explicit_Message_Identity_And_Html()
+    {
+        await using var server = new Eksen.Emailing.Tests.Fakes.LocalSmtpServer();
+        var configuration = CreateDefaultSmtpConfiguration() with { Host = "127.0.0.1", Port = server.Port, EnableTls = false };
+        var sender = CreateSut(configuration);
+        await sender.SendEmailAsync(new SendEmailParameters
+        {
+            Subject = "Local fixture",
+            To = [new EmailInstance { ToAddress = EmailAddress.Create("recipient@example.test"), Content = "<p>Owned SMTP fixture</p>", ContentType = EmailContentType.Html, MessageId = "<stable-fixture@example.test>" }]
+        }, TestContext.Current.CancellationToken);
+        var message = server.Messages.Single();
+        message.Contains("Message-ID: <stable-fixture@example.test>", StringComparison.OrdinalIgnoreCase).ShouldBeTrue();
+        message.Contains("text/html", StringComparison.OrdinalIgnoreCase).ShouldBeTrue();
+    }
+
     private static SmtpConfiguration CreateDefaultSmtpConfiguration()
     {
         return new SmtpConfiguration

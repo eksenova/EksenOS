@@ -1,4 +1,4 @@
-﻿using Eksen.Entities;
+using Eksen.Entities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.ChangeTracking;
 using Microsoft.EntityFrameworkCore.Diagnostics;
@@ -84,7 +84,8 @@ public sealed class AutoPropertiesSaveChangesInterceptor(TimeProvider? timeProvi
                 case EntityState.Modified:
                 {
                     if (entityType.IsAssignableTo(typeof(IHasModificationTime))
-                        && ((IHasModificationTime)entry.Entity).LastModificationTime == null)
+                        && (((IHasModificationTime)entry.Entity).LastModificationTime == null
+                            || !entry.Property(nameof(IHasModificationTime.LastModificationTime)).IsModified))
                     {
                         entityType.GetProperty(name: "LastModificationTime")?.SetValue(entry.Entity, _timeProvider.GetUtcNow().UtcDateTime);
                     }

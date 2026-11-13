@@ -48,9 +48,10 @@
     style.id = 'eks-scalar-logo-style';
     style.textContent =
       '#' + LOGO_ID + '{display:flex;align-items:center;justify-content:flex-start;' +
-      'padding:22px 18px 18px 22px;margin:0;' +
-      'border-bottom:1px solid var(--scalar-border-color,transparent);}' +
-      '#' + LOGO_ID + ' img{display:block;max-width:220px;max-height:68px;width:auto;height:auto;object-fit:contain;' +
+      'padding:var(--eks-brand-padding,22px 18px 18px 22px);margin:0;min-height:var(--eks-brand-height,auto);box-sizing:border-box;' +
+      'background:var(--eks-brand-background,transparent);' +
+      'border-bottom:1px solid var(--eks-brand-border,var(--scalar-border-color,transparent));}' +
+      '#' + LOGO_ID + ' img{display:block;max-width:220px;max-height:var(--eks-brand-logo-height,68px);width:auto;height:auto;object-fit:contain;' +
       '-webkit-user-drag:none;user-select:none;pointer-events:none;}';
     document.head.appendChild(style);
   }

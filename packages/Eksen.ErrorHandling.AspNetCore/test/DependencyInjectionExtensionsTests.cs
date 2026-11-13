@@ -12,10 +12,11 @@ public class DependencyInjectionExtensionsTests : EksenUnitTestBase
     {
         // Arrange
         var services = new ServiceCollection();
+        services.AddLogging();
 
         services.AddEksen(eksen =>
         {
-            eksen.AddErrorHandling(builder =>
+            eksen.AddLocalization().AddErrorHandling(builder =>
             {
                 builder.AddAspNetCoreSupport();
             });
@@ -27,6 +28,8 @@ public class DependencyInjectionExtensionsTests : EksenUnitTestBase
 
         // Assert
         descriptor.ShouldNotBeNull();
-        descriptor.ImplementationType.ShouldBe(typeof(EksenExceptionHandler));
+        descriptor.Lifetime.ShouldBe(ServiceLifetime.Singleton);
+        using var provider = services.BuildServiceProvider(new ServiceProviderOptions { ValidateScopes = true, ValidateOnBuild = true });
+        provider.GetServices<IExceptionHandler>().Single().ShouldBeOfType<EksenExceptionHandler>();
     }
 }

@@ -1,8 +1,10 @@
-﻿using Eksen.Identity.Roles;
+using System.Diagnostics.Metrics;
+using Eksen.Identity.Roles;
 using Eksen.Identity.Tenants;
 using Eksen.Identity.Users;
 using Eksen.Permissions;
 using Eksen.Permissions.Caching;
+using Eksen.Telemetry;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 
 #pragma warning disable IDE0130
@@ -29,9 +31,14 @@ public static class DependencyInjectionExtensions
 
         var services = builder.Services;
 
+        services.AddMetrics();
+        services.TryAddSingleton(provider => PermissionsTelemetry.For(provider.GetService<IMeterFactory>()));
+        services.TryAddScoped(provider => new Lazy<IPermissionStore>(provider.GetRequiredService<IPermissionStore>));
         services.TryAddScoped<IPermissionCache, DistributedPermissionCache>();
         services.TryAddScoped<IPermissionStore, PermissionStore<TUser, TRole, TTenant>>();
         services.TryAddScoped<IPermissionChecker, PermissionChecker<TUser, TTenant>>();
+        services.AddEksenTelemetrySource(EksenTelemetry.Permissions);
+        services.AddEksenTelemetryMeter(EksenTelemetry.Permissions);
 
         if (configureAction != null)
         {

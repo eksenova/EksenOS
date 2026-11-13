@@ -1,4 +1,7 @@
 using Eksen.Scalar.Plugins;
+using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Routing;
 using Scalar.AspNetCore;
 
 namespace Eksen.Scalar;
@@ -85,8 +88,9 @@ public static class EksenScalarExtensions
     }
 
     /// <summary>
-    /// Adds the tenant impersonation plugin that lets host users exchange their bearer token for a
-    /// tenant-scoped token and have it injected into subsequent API calls.
+    /// Adds the impersonation plugin. It appears only for callers the subjects endpoint accepts, and either
+    /// exchanges the caller's token for a subject-scoped one or sends the subject id in a header on API calls
+    /// (see <see cref="ScalarImpersonationOptions.Mode"/>).
     /// </summary>
     public static ScalarOptions WithEksenImpersonationPlugin(
         this ScalarOptions scalar,
@@ -97,26 +101,160 @@ public static class EksenScalarExtensions
         var options = new ScalarImpersonationOptions();
         configure?.Invoke(options);
 
+        InjectDock(scalar);
         EksenScalarScriptBuilder.Inject(
             scalar,
             resourceFileName: "impersonation.js",
             configGlobalName: "__eksenScalarImpersonationConfig",
             config: new
             {
+                mode = options.Mode == ScalarImpersonationMode.Header ? "header" : "token",
+                subjectsEndpoint = options.SubjectsEndpoint,
+                searchParameter = options.SearchParameter,
+                itemsPath = options.ItemsPath,
+                idField = options.IdField,
+                nameField = options.NameField,
+                detailField = options.DetailField,
+                headerName = options.HeaderName,
+                apiPathPrefixes = options.ApiPathPrefixes,
                 tokenEndpoint = options.TokenEndpoint,
-                tenantsEndpoint = options.TenantsEndpoint,
                 grantType = options.GrantType,
+                subjectParameter = options.SubjectParameter,
                 clientId = options.ClientId,
                 hostClaim = options.HostClaim,
-                impersonatingClaim = options.ImpersonatingClaim
+                impersonatingClaim = options.ImpersonatingClaim,
+                text = options.Text
             });
 
         return scalar;
     }
 
     /// <summary>
-    /// Adds the internal-auth wall plugin that gates the page behind an in-page sign-in card only
-    /// host users can pass. Map the internal Scalar reference (route, title, documents) separately.
+    /// Adds the docs sign-in wall: the reader signs in with OpenID Connect (authorization code with PKCE) before
+    /// the gated document is requested, and the token is sent with the document request and same-origin API
+    /// calls. Map the popup landing page with <see cref="MapEksenScalarOAuthCallback"/> and enforce access on the
+    /// document endpoint itself; the wall only obtains and presents the token.
+    /// </summary>
+    public static ScalarOptions WithEksenDocsAuthPlugin(
+        this ScalarOptions scalar,
+        Action<ScalarDocsAuthOptions> configure)
+    {
+        ArgumentNullException.ThrowIfNull(scalar);
+        ArgumentNullException.ThrowIfNull(configure);
+
+        var options = new ScalarDocsAuthOptions
+        {
+            AuthorizeEndpoint = string.Empty,
+            TokenEndpoint = string.Empty,
+            ClientId = string.Empty
+        };
+        configure(options);
+
+        ArgumentException.ThrowIfNullOrWhiteSpace(options.AuthorizeEndpoint, nameof(options.AuthorizeEndpoint));
+        ArgumentException.ThrowIfNullOrWhiteSpace(options.TokenEndpoint, nameof(options.TokenEndpoint));
+        ArgumentException.ThrowIfNullOrWhiteSpace(options.ClientId, nameof(options.ClientId));
+
+        InjectDock(scalar);
+        EksenScalarScriptBuilder.Inject(
+            scalar,
+            resourceFileName: "docs-auth.js",
+            configGlobalName: "__eksenScalarDocsAuthConfig",
+            config: new
+            {
+                authorizeUrl = options.AuthorizeEndpoint,
+                tokenUrl = options.TokenEndpoint,
+                endSessionUrl = options.EndSessionEndpoint,
+                clientId = options.ClientId,
+                scope = options.Scope,
+                callbackPath = options.CallbackPath,
+                channel = OAuthChannel,
+                documentPathPrefix = options.DocumentPathPrefix,
+                apiPathPrefixes = options.ApiPathPrefixes,
+                storageKey = options.StorageKey,
+                requiredClaim = options.RequiredClaim is null
+                    ? null
+                    : new { name = options.RequiredClaim.Name, values = options.RequiredClaim.Values },
+                title = options.Title,
+                subtitle = options.Subtitle,
+                eyebrow = options.Eyebrow,
+                logoUrl = options.LogoUrl,
+                logoAltText = options.LogoAltText,
+                text = options.Text
+            });
+
+        return scalar;
+    }
+
+    /// <summary>
+    /// Applies brand tokens: Scalar's built-in theme is switched off and replaced with CSS generated from
+    /// <see cref="ScalarThemeOptions"/>. Without a dark palette the reference is pinned to light mode.
+    /// </summary>
+    public static ScalarOptions WithEksenTheme(
+        this ScalarOptions scalar,
+        Action<ScalarThemeOptions> configure)
+    {
+        ArgumentNullException.ThrowIfNull(scalar);
+        ArgumentNullException.ThrowIfNull(configure);
+
+        var options = new ScalarThemeOptions();
+        configure(options);
+
+        scalar.Theme = ScalarTheme.None;
+        scalar.DefaultFonts = options.FontFaces.Count == 0 && options.BodyFont is null;
+        scalar.CustomCss = (scalar.CustomCss is null ? string.Empty : scalar.CustomCss + "\n") + ScalarThemeCss.Build(options);
+
+        if (options.Dark is null)
+        {
+            scalar.ForceThemeMode = ThemeMode.Light;
+            scalar.HideDarkModeToggle = true;
+        }
+
+        return scalar;
+    }
+
+    /// <summary>
+    /// The default path of the docs sign-in popup's landing page.
+    /// </summary>
+    public const string DefaultOAuthCallbackPath = "/scalar-auth/callback";
+
+    internal const string OAuthChannel = "eksen-docs-oauth";
+
+    /// <summary>
+    /// Maps the landing page the provider redirects the docs sign-in popup to. It hands the authorization code
+    /// back to the reference page and closes itself. Register its absolute URL as a redirect URI of the client.
+    /// </summary>
+    public static IEndpointConventionBuilder MapEksenScalarOAuthCallback(
+        this IEndpointRouteBuilder endpoints,
+        string pattern = DefaultOAuthCallbackPath)
+    {
+        ArgumentNullException.ThrowIfNull(endpoints);
+
+        return endpoints.MapGet(pattern, (HttpContext context) =>
+            {
+                context.Response.Headers.CacheControl = "no-store";
+                context.Response.Headers["Referrer-Policy"] = "no-referrer";
+                return Results.Content(ScalarPluginResources.Read("oauth-callback.html"), "text/html; charset=utf-8");
+            })
+            .ExcludeFromDescription()
+            .AllowAnonymous();
+    }
+
+    private static void InjectDock(ScalarOptions scalar)
+    {
+        if (scalar.HeadContent?.Contains(DockMarker, StringComparison.Ordinal) == true)
+        {
+            return;
+        }
+
+        EksenScalarScriptBuilder.Inject(scalar, resourceFileName: "dock.js");
+    }
+
+    private const string DockMarker = "window.__eksenScalarDock";
+
+    /// <summary>
+    /// Adds the internal-auth wall plugin that gates the page behind an in-page e-mail and password card
+    /// (resource-owner password grant) only host users can pass. Prefer <see cref="WithEksenDocsAuthPlugin"/>
+    /// for providers that sign users in with the authorization-code flow, such as Keycloak.
     /// </summary>
     public static ScalarOptions WithEksenInternalAuthPlugin(
         this ScalarOptions scalar,

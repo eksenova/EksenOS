@@ -64,7 +64,11 @@ public class UnitOfWorkManager(IServiceProvider serviceProvider) : IUnitOfWorkMa
     {
         var rootScope = new CompositeUnitOfWorkScope(
             this,
-            serviceProvider);
+            serviceProvider)
+        {
+            IsTransactional = isTransactional
+        };
+        rootScope.StartTelemetry();
 
         foreach (var provider in _providers)
         {

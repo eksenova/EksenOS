@@ -2,6 +2,7 @@
 using Eksen.Repositories;
 using Eksen.ValueObjects.Entities;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Infrastructure;
 
 namespace Eksen.EntityFrameworkCore;
 
@@ -327,6 +328,16 @@ public abstract class EfCoreRepository<
 
     protected virtual async Task SaveChangesAsync(bool doSave, CancellationToken cancellationToken = default)
     {
+        var interceptors = _dbContext.GetService<IDbContextOptions>()
+            .FindExtension<CoreOptionsExtension>()?.Interceptors;
+        if (interceptors != null)
+        {
+            foreach (var interceptor in interceptors.OfType<DbContextTrackerSaveChangesInterceptor>())
+            {
+                interceptor.TrackDbContext(_dbContext);
+            }
+        }
+
         if (doSave)
         {
             await _dbContext.SaveChangesAsync(cancellationToken);

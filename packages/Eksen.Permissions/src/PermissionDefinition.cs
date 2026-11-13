@@ -1,4 +1,5 @@
-﻿using Eksen.Entities;
+using System.Text.Json.Serialization;
+using Eksen.Entities;
 using Eksen.Ulid;
 using Eksen.ValueObjects.Entities;
 using JetBrains.Annotations;
@@ -9,14 +10,19 @@ public sealed record PermissionDefinitionId(System.Ulid Value) : UlidEntityId<Pe
 
 public sealed class PermissionDefinition : IEntity<PermissionDefinitionId, System.Ulid>, ISoftDelete
 {
+    [JsonInclude]
     public PermissionDefinitionId Id { get; [UsedImplicitly] private set; }
  
+    [JsonInclude]
     public bool IsDeleted { get; [UsedImplicitly] private set; }
 
+    [JsonInclude]
     public bool IsDisabled { get; [UsedImplicitly] private set; }
 
+    [JsonInclude]
     public PermissionName Name { get; [UsedImplicitly] private set; }
 
+    [JsonConstructor]
     private PermissionDefinition()
     {
         Id = PermissionDefinitionId.Empty;

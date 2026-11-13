@@ -1,5 +1,6 @@
 ﻿using Eksen.UnitOfWork;
 using Microsoft.EntityFrameworkCore.Diagnostics;
+using Microsoft.EntityFrameworkCore;
 
 namespace Eksen.EntityFrameworkCore;
 
@@ -10,28 +11,45 @@ public class DbContextTrackerSaveChangesInterceptor(
 {
     public override InterceptionResult<int> SavingChanges(DbContextEventData eventData, InterceptionResult<int> result)
     {
-        var scope = unitOfWorkManager.Current;
-
-        if (eventData.Context != null && scope != null)
+        if (eventData.Context != null)
         {
-            dbContextTracker.TrackDbContext(scope, eventData.Context);
+            TrackDbContext(eventData.Context);
+            foreach (var providerScope in GetProviderScopes())
+            {
+                providerScope.EnsureTransaction(eventData.Context);
+            }
         }
 
         return base.SavingChanges(eventData, result);
     }
 
-    public override ValueTask<InterceptionResult<int>> SavingChangesAsync(
+    public override async ValueTask<InterceptionResult<int>> SavingChangesAsync(
         DbContextEventData eventData,
         InterceptionResult<int> result,
         CancellationToken cancellationToken = new())
     {
-        var scope = unitOfWorkManager.Current;
-
-        if (eventData.Context != null && scope != null)
+        if (eventData.Context != null)
         {
-            dbContextTracker.TrackDbContext(scope, eventData.Context);
+            TrackDbContext(eventData.Context);
+            foreach (var providerScope in GetProviderScopes())
+            {
+                await providerScope.EnsureTransactionAsync(eventData.Context, cancellationToken);
+            }
         }
 
-        return base.SavingChangesAsync(eventData, result, cancellationToken);
+        return await base.SavingChangesAsync(eventData, result, cancellationToken);
+    }
+
+    internal void TrackDbContext(DbContext context)
+    {
+        if (unitOfWorkManager.Current is { } scope)
+        {
+            dbContextTracker.TrackDbContext(scope, context);
+        }
+    }
+
+    private IEnumerable<EfCoreUnitOfWorkScope> GetProviderScopes()
+    {
+        return unitOfWorkManager.Current?.ProviderScopes.OfType<EfCoreUnitOfWorkScope>() ?? [];
     }
 }

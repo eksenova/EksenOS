@@ -5,6 +5,7 @@
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\Eksen.Core\src\Eksen.Core.csproj" />
+    <ProjectReference Include="..\..\Eksen.Telemetry\src\Eksen.Telemetry.csproj" />
     <ProjectReference Include="..\..\Eksen.Templating\src\Eksen.Templating.csproj" />
     <ProjectReference Include="..\..\Eksen.ValueObjects\src\Eksen.ValueObjects.csproj" />
   </ItemGroup>

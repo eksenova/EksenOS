@@ -65,7 +65,7 @@ public sealed class AuditingMiddleware(
         scope.AuditLog.SetSourcePort(sourcePort > 0
             ? sourcePort
             : null);
-        scope.AuditLog.SetCorrelationId(httpContext.TraceIdentifier);
+        scope.AuditLog.SetCorrelationId(ResolveCorrelationId(httpContext));
 
         var httpRequest = new AuditLogHttpRequest(
             scope.AuditLog.Id,
@@ -81,6 +81,18 @@ public sealed class AuditingMiddleware(
             request.ContentType);
 
         scope.AuditLog.SetHttpRequest(httpRequest);
+    }
+
+    /// <summary>
+    /// The W3C trace id of the request span, so an audit row can be looked up in the trace backend; the request's
+    /// <see cref="HttpContext.TraceIdentifier"/> when there is no W3C activity.
+    /// </summary>
+    internal static string ResolveCorrelationId(HttpContext httpContext)
+    {
+        var activity = Activity.Current;
+        return activity is { IdFormat: ActivityIdFormat.W3C } && activity.TraceId != default
+            ? activity.TraceId.ToHexString()
+            : httpContext.TraceIdentifier;
     }
 
     private static async Task CaptureRequestPayloadAsync(HttpContext httpContext, IAuditLogScope scope)

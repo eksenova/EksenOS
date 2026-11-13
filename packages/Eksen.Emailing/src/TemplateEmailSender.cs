@@ -1,4 +1,6 @@
-﻿using Eksen.Templating.Html;
+﻿using System.Diagnostics;
+using Eksen.Telemetry;
+using Eksen.Templating.Html;
 
 namespace Eksen.Emailing;
 
@@ -23,11 +25,27 @@ internal sealed class TemplateEmailSender(
 
             var templateKey = $"Emails/{templateParameters.TemplateKey}";
 
-            var body = await templateHtmlRenderer.RenderTemplateAsync(
-                templateKey,
-                model,
-                cancellationToken: cancellationToken
-            );
+            string body;
+            using (var activity = EmailingTelemetry.ActivitySource.StartActivity(
+                       "email template render",
+                       ActivityKind.Internal,
+                       parentContext: default,
+                       tags: [new KeyValuePair<string, object?>("eksen.email.template", templateParameters.TemplateKey)]))
+            {
+                try
+                {
+                    body = await templateHtmlRenderer.RenderTemplateAsync(
+                        templateKey,
+                        model,
+                        cancellationToken: cancellationToken
+                    );
+                }
+                catch (Exception exception)
+                {
+                    activity.RecordException(exception);
+                    throw;
+                }
+            }
 
             var subject = templateParameters.Subject;
             if (string.IsNullOrWhiteSpace(subject))

@@ -1,0 +1,15 @@
+<Project Sdk="Microsoft.NET.Sdk">
+	<Import Project="..\..\..\common.props" />
+	<ItemGroup>
+		<FrameworkReference Include="Microsoft.AspNetCore.App" />
+	</ItemGroup>
+	<ItemGroup>
+		<PackageReference Include="OpenTelemetry.Instrumentation.AspNetCore" Version="1.21.0" />
+	</ItemGroup>
+	<ItemGroup>
+		<ProjectReference Include="..\..\Eksen.Telemetry.OpenTelemetry\src\Eksen.Telemetry.OpenTelemetry.csproj" />
+	</ItemGroup>
+	<ItemGroup>
+		<InternalsVisibleTo Include="Eksen.Telemetry.OpenTelemetry.AspNetCore.Tests" />
+	</ItemGroup>
+</Project>

@@ -1,5 +1,7 @@
+using System.Diagnostics.Metrics;
 using Eksen.DistributedLocks;
 using Eksen.DistributedLocks.PostgreSql;
+using Eksen.Telemetry;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 
 #pragma warning disable IDE0130
@@ -22,7 +24,10 @@ public static class DependencyInjectionExtensions
                 .ValidateDataAnnotations()
                 .ValidateOnStart();
 
+            services.AddMetrics();
+            services.TryAddSingleton(provider => DistributedLocksTelemetry.For(provider.GetService<IMeterFactory>()));
             services.TryAddSingleton<IDistributedLockProvider, PostgreSqlDistributedLockProvider>();
+            services.AddEksenTelemetryMeter(EksenTelemetry.DistributedLocks);
 
             return builder;
         }

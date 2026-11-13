@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using System.Text;
 using Eksen.Auditing.Entities;
 using Eksen.Identity;
@@ -179,6 +180,27 @@ public class AuditingMiddlewareTests : EksenUnitTestBase
 
         // Assert
         auditLog.CorrelationId.ShouldBe("trace-abc-123");
+    }
+
+    [Fact]
+    public async Task InvokeAsync_Should_Set_CorrelationId_From_The_Request_Trace_Id()
+    {
+        // Arrange
+        var auditLog = new AuditLog(null, null, null, null, null);
+        var scope = new AuditLogScope(auditLog);
+
+        _auditLogManager.Setup(m => m.BeginScope()).Returns(scope);
+
+        var middleware = CreateMiddleware(_ => Task.CompletedTask);
+        var httpContext = CreateHttpContext();
+        httpContext.TraceIdentifier = "connection-id:00000001";
+        using var request = new Activity("request").SetIdFormat(ActivityIdFormat.W3C).Start();
+
+        // Act
+        await middleware.InvokeAsync(httpContext, _auditLogManager.Object, _authContext.Object);
+
+        // Assert
+        auditLog.CorrelationId.ShouldBe(request.TraceId.ToHexString());
     }
 
     [Fact]

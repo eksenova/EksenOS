@@ -2,5 +2,9 @@
   <Import Project="..\..\..\common.props" />
   <ItemGroup>
     <ProjectReference Include="..\..\Eksen.Core\src\Eksen.Core.csproj" />
+    <ProjectReference Include="..\..\Eksen.Telemetry\src\Eksen.Telemetry.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <InternalsVisibleTo Include="Eksen.UnitOfWork.Tests" />
   </ItemGroup>
 </Project>

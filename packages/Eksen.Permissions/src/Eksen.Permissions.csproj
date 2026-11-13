@@ -7,6 +7,10 @@
 		<ProjectReference Include="..\..\Eksen.Core\src\Eksen.Core.csproj" />
 		<ProjectReference Include="..\..\Eksen.Identity\src\Eksen.Identity.csproj" />
 		<ProjectReference Include="..\..\Eksen.Repositories\src\Eksen.Repositories.csproj" />
+		<ProjectReference Include="..\..\Eksen.Telemetry\src\Eksen.Telemetry.csproj" />
 		<ProjectReference Include="..\..\Eksen.Ulid\src\Eksen.Ulid.csproj" />
+	</ItemGroup>
+	<ItemGroup>
+		<InternalsVisibleTo Include="Eksen.Permissions.Tests" />
 	</ItemGroup>
 </Project>

@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Signing in</title>
+<style>
+  body{margin:0;min-height:100vh;display:flex;align-items:center;justify-content:center;
+    font:16px/1.5 system-ui,-apple-system,sans-serif;color:#212121;background:#f5f5f5}
+  p{margin:0;padding:16px}
+</style>
+</head>
+<body>
+<p id="status" role="status">Completing sign-in…</p>
+<script>
+(function () {
+  var params = new URLSearchParams(window.location.search);
+  var message = {
+    type: 'eksen-docs-oauth',
+    code: params.get('code'),
+    state: params.get('state'),
+    error: params.get('error'),
+    errorDescription: params.get('error_description')
+  };
+  // Drop the code from the address bar and history as soon as it has been read.
+  try { window.history.replaceState(null, '', window.location.pathname); } catch (_) {}
+  var delivered = false;
+  try {
+    if (window.opener && !window.opener.closed) {
+      window.opener.postMessage(message, window.location.origin);
+      delivered = true;
+    }
+  } catch (_) {}
+  try {
+    var channel = new BroadcastChannel('eksen-docs-oauth');
+    channel.postMessage(message);
+    channel.close();
+    delivered = true;
+  } catch (_) {}
+  if (delivered) {
+    window.setTimeout(function () { window.close(); }, 200);
+  }
+  window.setTimeout(function () {
+    document.getElementById('status').textContent = 'Signed in. You can close this window.';
+  }, 800);
+})();
+</script>
+</body>
+</html>

@@ -9,6 +9,7 @@
 	<ItemGroup>
 		<ProjectReference Include="..\..\Eksen.ErrorHandling\src\Eksen.ErrorHandling.csproj" />
 		<ProjectReference Include="..\..\Eksen.Localization\src\Eksen.Localization.csproj" />
+		<ProjectReference Include="..\..\Eksen.Telemetry\src\Eksen.Telemetry.csproj" />
 	</ItemGroup>
 
 </Project>

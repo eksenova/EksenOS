@@ -7,12 +7,13 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<PackageReference Include="Npgsql" Version="10.0.2" />
+		<PackageReference Include="Npgsql" Version="10.0.3" />
 		<PackageReference Include="System.IO.Hashing" Version="10.0.5" />
 	</ItemGroup>
 
 	<ItemGroup>
 		<ProjectReference Include="..\..\Eksen.DistributedLocks\src\Eksen.DistributedLocks.csproj" />
+		<ProjectReference Include="..\..\Eksen.Telemetry\src\Eksen.Telemetry.csproj" />
 	</ItemGroup>
 
 </Project>

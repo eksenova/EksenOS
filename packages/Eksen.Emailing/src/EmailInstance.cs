@@ -12,6 +12,8 @@ public sealed record EmailInstance
 
     public string? Subject { get; set; }
 
+    public string? MessageId { get; set; }
+
     public string? FromName { get; set; }
 
     public EmailAddress? FromAddress { get; set; }

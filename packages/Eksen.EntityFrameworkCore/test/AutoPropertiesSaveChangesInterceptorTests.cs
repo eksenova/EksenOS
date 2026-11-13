@@ -29,6 +29,7 @@ internal class TimestampedDbContext(DbContextOptions<TimestampedDbContext> optio
 
 public class AutoPropertiesSaveChangesInterceptorTests : EksenUnitTestBase, IDisposable
 {
+    private readonly FixedTimeProvider _clock = new(new DateTimeOffset(2031, 1, 1, 0, 0, 0, TimeSpan.Zero));
     private readonly TestDbContext _softDeleteDbContext;
     private readonly TimestampedDbContext _timestampDbContext;
     private readonly Microsoft.Data.Sqlite.SqliteConnection _softDeleteConnection;
@@ -49,7 +50,7 @@ public class AutoPropertiesSaveChangesInterceptorTests : EksenUnitTestBase, IDis
         _timestampConnection.Open();
         var timestampOptions = new DbContextOptionsBuilder<TimestampedDbContext>()
             .UseSqlite(_timestampConnection)
-            .AddInterceptors(new AutoPropertiesSaveChangesInterceptor())
+            .AddInterceptors(new AutoPropertiesSaveChangesInterceptor(_clock))
             .Options;
         _timestampDbContext = new TimestampedDbContext(timestampOptions);
         _timestampDbContext.Database.EnsureCreated();
@@ -61,6 +62,23 @@ public class AutoPropertiesSaveChangesInterceptorTests : EksenUnitTestBase, IDis
         _softDeleteConnection.Dispose();
         _timestampDbContext.Dispose();
         _timestampConnection.Dispose();
+    }
+
+    [Fact]
+    public async Task RepeatedTrackedUpdatesRefreshLastModificationTime()
+    {
+        var entity = new TimestampedEntity { Name = "initial" };
+        _timestampDbContext.Add(entity);
+        await _timestampDbContext.SaveChangesAsync();
+        entity.Name = "first";
+        await _timestampDbContext.SaveChangesAsync();
+        var first = entity.LastModificationTime;
+        _clock.UtcNow = _clock.UtcNow.AddMinutes(1);
+        entity.Name = "second";
+        await _timestampDbContext.SaveChangesAsync();
+        entity.LastModificationTime!.Value.ShouldBeGreaterThan(first!.Value);
+        var persisted = await _timestampDbContext.TimestampedEntities.AsNoTracking().SingleAsync();
+        persisted.LastModificationTime.ShouldBe(_clock.UtcNow.UtcDateTime);
     }
 
     [Fact]
@@ -195,9 +213,11 @@ public class AutoPropertiesSaveChangesInterceptorTests : EksenUnitTestBase, IDis
 
     private sealed class FixedTimeProvider(DateTimeOffset instant) : TimeProvider
     {
+        public DateTimeOffset UtcNow { get; set; } = instant;
+
         public override DateTimeOffset GetUtcNow()
         {
-            return instant;
+            return UtcNow;
         }
     }
 }

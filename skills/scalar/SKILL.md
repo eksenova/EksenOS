@@ -84,7 +84,7 @@ app.MapScalarApiReference("/scalar", scalar => scalar
     .WithEksenImpersonationPlugin(impersonation =>
     {
         impersonation.TokenEndpoint = "/connect/token";
-        impersonation.TenantsEndpoint = "/api/tenants?MaxResultCount=1000&Sorting=Name%20ASC";
+        impersonation.SubjectsEndpoint = "/api/tenants?MaxResultCount=1000&Sorting=Name%20ASC";
         impersonation.GrantType = "tenant_impersonation";
         impersonation.ClientId = "scalar";              // fallback if none derivable from the captured token
         impersonation.HostClaim = "is_host";            // JWT claim marking a host (non-tenant) token
@@ -92,7 +92,29 @@ app.MapScalarApiReference("/scalar", scalar => scalar
     }));
 ```
 
-The `HostClaim`/`ImpersonatingClaim` names must match the claims your token issuer emits — these come from the identity layer (see the **identity** skill). The plugin only enables impersonation for tokens carrying `HostClaim`.
+The `HostClaim`/`ImpersonatingClaim` names must match the claims your token issuer emits — these come from the identity layer (see the **identity** skill). The plugin only enables impersonation for tokens carrying `HostClaim`; set `HostClaim = null` to let the subjects endpoint alone decide.
+
+The control appears only after `SubjectsEndpoint` answers the caller's token with 200, so callers the server would refuse never see it. It renders in the shared session dock (bottom right; full width on phones) together with the docs sign-in chip.
+
+### Header mode: acting for an account
+
+Identity providers such as Keycloak have no custom grant for tenant-scoped tokens. With `Mode = ScalarImpersonationMode.Header` the caller keeps their own token and the plugin sends the chosen subject's id in a header on same-origin API calls; the server decides whether the caller may impersonate and scopes the request to that subject, for example acting as a member of a seller account:
+
+```csharp
+scalar.WithEksenImpersonationPlugin(impersonation =>
+{
+    impersonation.Mode = ScalarImpersonationMode.Header;
+    impersonation.HeaderName = "X-Impersonate-Merchant";
+    impersonation.SubjectsEndpoint = "/api/administration/impersonation/merchants";
+    impersonation.SearchParameter = "search";   // query the server as the reader types
+    impersonation.NameField = "name";
+    impersonation.DetailField = "slug";         // second line under each name
+    impersonation.HostClaim = null;
+    impersonation.Text["open"] = "Act for a merchant";
+});
+```
+
+`ItemsPath`, `IdField`, `NameField` and `DetailField` are dotted paths into the subjects response (an array or an object holding one). `Text` overrides any visible label.
 
 ## Internal-auth wall
 
@@ -112,6 +134,47 @@ app.MapScalarApiReference("/scalar/internal", scalar => scalar
 ```
 
 `ClientSecret` (default `null`, usually empty for public clients) and `DefaultUsername` (default `null`) let you pre-fill the sign-in form. The wall is a client-side convenience for hiding the document in the UI; enforce the real host-only authorization server-side via the **permissions** and **identity** skills.
+
+## Docs sign-in wall (OpenID Connect)
+
+`WithEksenDocsAuthPlugin` gates a document behind an OpenID Connect sign-in with the authorization-code flow and PKCE, in a popup, against any provider (Keycloak, Entra ID, OpenIddict). It sends the access token with the document request and with same-origin API calls that carry no `Authorization` header of their own, refreshes it, and returns to the wall with a message when the server answers the document with 401 or 403. The server decides who may read; the wall only obtains and presents the token. Prefer it over the password-grant `WithEksenInternalAuthPlugin` wherever the provider signs users in with the authorization-code flow.
+
+```csharp
+app.MapEksenScalarOAuthCallback();                  // the popup's landing page: /scalar-auth/callback
+app.MapScalarApiReference("/scalar-internal", scalar => scalar
+    .AddDocument("internal")
+    .WithEksenDocsAuthPlugin(auth =>
+    {
+        auth.AuthorizeEndpoint = "https://id.example.com/realms/shop/protocol/openid-connect/auth";
+        auth.TokenEndpoint = "https://id.example.com/realms/shop/protocol/openid-connect/token";
+        auth.EndSessionEndpoint = "https://id.example.com/realms/shop/protocol/openid-connect/logout";
+        auth.ClientId = "shop-api-docs";            // public client, PKCE S256
+        auth.DocumentPathPrefix = "/openapi/internal";
+        auth.Title = "Internal Order API";
+        auth.Subtitle = "Sign in with an operator account.";
+        auth.LogoUrl = "/docs-assets/wordmark.svg";
+    }));
+```
+
+Register the callback's absolute URL as a redirect URI of the client and the docs origin as a web origin (the token request is a cross-origin call from the page). `RequiredClaim` adds an optional client-side precheck such as `new("realm_access.roles", ["operator"])`. Tokens live in session storage under `StorageKey`.
+
+## Theme
+
+`WithEksenTheme` replaces Scalar's built-in theme with CSS generated from brand tokens: a light palette (and optionally a dark one), body, heading and code fonts with their `@font-face` files, the base radius, the one shadow allowed for floating panels, and the brand band behind the sidebar logo and the sign-in card's logo. Without a dark palette the reference is pinned to light mode and the toggle is hidden. The Eksen plugins read the same variables, so the dock, picker and sign-in card follow the brand.
+
+```csharp
+scalar.WithEksenTheme(theme =>
+{
+    theme.BodyFont = "\"Source Sans 3\", sans-serif";
+    theme.DisplayFont = "\"Barlow Semi Condensed\", sans-serif";
+    theme.FontFaces.Add(new ScalarFontFace("Source Sans 3", "/docs-assets/fonts/source-sans-3-400.woff2", 400));
+    theme.Radius = "6px";
+    theme.Light.Accent = "#5e35b1";
+    theme.BrandBackground = "#5e35b1";
+});
+```
+
+Theme values are validated: anything that could close a CSS declaration is rejected.
 
 ## Composition
 

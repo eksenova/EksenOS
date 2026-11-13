@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using Npgsql;
 
 namespace Eksen.DistributedLocks.PostgreSql;
@@ -5,8 +6,11 @@ namespace Eksen.DistributedLocks.PostgreSql;
 internal sealed class PostgreSqlDistributedLockHandle(
     string name,
     long key,
-    NpgsqlConnection connection) : IDistributedLockHandle
+    NpgsqlConnection connection,
+    DistributedLocksTelemetry? telemetry = null,
+    string? metricLockName = null) : IDistributedLockHandle
 {
+    private readonly long _acquiredAt = Stopwatch.GetTimestamp();
     private bool _isDisposed;
 
     public string Name { get; } = name;
@@ -27,6 +31,7 @@ internal sealed class PostgreSqlDistributedLockHandle(
         }
         finally
         {
+            telemetry?.RecordHold(metricLockName ?? Name, _acquiredAt);
             await connection.DisposeAsync();
         }
     }

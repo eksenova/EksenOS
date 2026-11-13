@@ -153,6 +153,28 @@ LegacyShipmentDto:
 
 An existing description is preserved; the deprecation note is appended on a new line.
 
+## Public and internal documents
+
+`UseEksenDocumentScope(OpenApiDocumentScope)` configures one document as public or internal and adds the document hygiene transformers in the right order:
+
+```csharp
+builder.Services.AddOpenApi("v1", options => options.UseEksenDocumentScope(OpenApiDocumentScope.Public));
+builder.Services.AddOpenApi("internal", options => options.UseEksenDocumentScope(OpenApiDocumentScope.Internal));
+```
+
+- **Internal endpoints.** `[InternalApi]` on a controller or action, or any `IInternalApiMetadata` in endpoint metadata (add it from an `IApplicationModelConvention` to classify by rule, for example by required permission), keeps the operation out of public documents. The internal document lists every endpoint.
+- **No orphan models.** `OrphanSchemaDocumentTransformer` removes component schemas no remaining operation reaches, so models used only by internal endpoints never appear in the public document. `[InternalApi]` on a contract type also drops it from polymorphic unions there.
+- **Tags.** `ControllerTagMetadataDocumentTransformer` turns `[Description]` on a controller into the tag description and `[DisplayName]` into `x-displayName`, sorts tags by display name, and `OrphanTagDocumentTransformer` drops tags nothing uses.
+- **Standard descriptions.** Configure `OpenApiStandardDescriptions` once for names that recur across the API (`skip`, `take`, `search`, `totalCount`, …); blank parameter and property descriptions are filled from it, and a description written on the member wins.
+
+```csharp
+builder.Services.Configure<OpenApiStandardDescriptions>(descriptions => descriptions
+    .Add("skip", "Number of matching items to skip before the first returned item.")
+    .Add("take", "Maximum number of items to return in this page."));
+```
+
+Gate the internal document on the server (a middleware or endpoint filter that checks the caller); the Scalar sign-in wall is only the client side of it.
+
 ## Pairing with sibling packages
 
 `Eksen.OpenApi` only shapes schemas. The rest of the API surface is documented by the packages that own those types:

@@ -1,0 +1,21 @@
+<Project Sdk="Microsoft.NET.Sdk">
+	<Import Project="..\..\..\common.props" />
+	<ItemGroup>
+		<PackageReference Include="Microsoft.Extensions.Logging.Console" Version="10.0.5" />
+		<PackageReference Include="Npgsql.OpenTelemetry" Version="10.0.3" />
+		<PackageReference Include="OpenTelemetry.Exporter.OpenTelemetryProtocol" Version="1.21.0" />
+		<PackageReference Include="OpenTelemetry.Extensions.Hosting" Version="1.21.0" />
+		<PackageReference Include="OpenTelemetry.Instrumentation.EntityFrameworkCore" Version="1.21.0-beta.1" />
+		<PackageReference Include="OpenTelemetry.Instrumentation.Http" Version="1.21.0" />
+		<PackageReference Include="OpenTelemetry.Instrumentation.Process" Version="1.21.0-rc.1" />
+		<PackageReference Include="OpenTelemetry.Instrumentation.Runtime" Version="1.21.0" />
+		<PackageReference Include="OpenTelemetry.Instrumentation.StackExchangeRedis" Version="1.21.0-beta.1" />
+		<PackageReference Include="OpenTelemetry.Resources.Container" Version="1.21.0-beta.1" />
+	</ItemGroup>
+	<ItemGroup>
+		<ProjectReference Include="..\..\Eksen.Telemetry\src\Eksen.Telemetry.csproj" />
+	</ItemGroup>
+	<ItemGroup>
+		<InternalsVisibleTo Include="Eksen.Telemetry.OpenTelemetry.Tests" />
+	</ItemGroup>
+</Project>

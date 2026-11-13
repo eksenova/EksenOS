@@ -1,4 +1,7 @@
-﻿using Eksen.Emailing;
+﻿using System.Diagnostics.Metrics;
+using Eksen.Emailing;
+using Eksen.Telemetry;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 
 #pragma warning disable IDE0130
 
@@ -18,6 +21,12 @@ public static class DependencyInjectionExtensions
                     options.AddAssembly(typeof(IEmailSender).Assembly);
                 });
             });
+
+            var services = builder.Services;
+            services.AddMetrics();
+            services.TryAddSingleton(provider => EmailingTelemetry.For(provider.GetService<IMeterFactory>()));
+            services.AddEksenTelemetrySource(EksenTelemetry.Emailing);
+            services.AddEksenTelemetryMeter(EksenTelemetry.Emailing);
 
             var emailBuilder = new EksenEmailingBuilder(builder);
 

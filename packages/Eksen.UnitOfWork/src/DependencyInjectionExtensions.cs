@@ -1,4 +1,7 @@
-﻿using Eksen.UnitOfWork;
+﻿using System.Diagnostics.Metrics;
+using Eksen.Telemetry;
+using Eksen.UnitOfWork;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 
 #pragma warning disable IDE0130
 
@@ -35,6 +38,10 @@ public static class DependencyInjectionExtensions
     {
         var services = builder.Services;
         services.AddScoped<IUnitOfWorkManager, UnitOfWorkManager>();
+        services.AddMetrics();
+        services.TryAddSingleton(provider => UnitOfWorkTelemetry.For(provider.GetService<IMeterFactory>()));
+        services.AddEksenTelemetrySource(EksenTelemetry.UnitOfWork);
+        services.AddEksenTelemetryMeter(EksenTelemetry.UnitOfWork);
 
         if (configureAction != null)
         {

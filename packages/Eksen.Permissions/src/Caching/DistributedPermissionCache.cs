@@ -1,5 +1,7 @@
-﻿using System.Text;
+using System.Text;
 using System.Text.Json;
+using Eksen.ValueObjects;
+using System.Diagnostics.Metrics;
 using Eksen.Identity;
 using Eksen.Identity.Users;
 using Microsoft.Extensions.Caching.Distributed;
@@ -9,10 +11,36 @@ namespace Eksen.Permissions.Caching;
 public class DistributedPermissionCache(
     IAuthContext authContext,
     Lazy<IPermissionStore> permissionStore,
-    IDistributedCache distributedCache
-) : BasePermissionCache(authContext, permissionStore)
+    IDistributedCache distributedCache,
+    IMeterFactory? meterFactory
+) : BasePermissionCache(authContext, permissionStore, meterFactory)
 {
+    public DistributedPermissionCache(
+        IAuthContext authContext,
+        Lazy<IPermissionStore> permissionStore,
+        IDistributedCache distributedCache)
+        : this(authContext, permissionStore, distributedCache, meterFactory: null)
+    {
+    }
+
     private readonly IAuthContext _authContext = authContext;
+    private static readonly JsonSerializerOptions CacheJsonOptions = CreateJsonOptions();
+
+    private static JsonSerializerOptions CreateJsonOptions()
+    {
+        var options = new JsonSerializerOptions(JsonSerializerDefaults.Web);
+        options.Converters.Add(JsonSerializerOptions.Default.GetConverter(typeof(string)));
+        options.Converters.Add(JsonSerializerOptions.Default.GetConverter(typeof(System.Ulid)));
+        options.Converters.Add(new JsonValueObjectConverter());
+        return options;
+    }
+
+    protected override string GetCacheKeyForPermissionDefinitions()
+        => "eksen:permissions:v2:definitions";
+
+    protected override string GetCacheKeyForUserPermissions(EksenUserId userId)
+        => $"eksen:permissions:v2:user:{userId.Value}";
+
 
     public override async ValueTask InvalidateForUserAsync(
         EksenUserId userId,
@@ -22,6 +50,7 @@ public class DistributedPermissionCache(
         await InvalidateForPermissionDefinitionsAsync(cancellationToken);
 
         await distributedCache.RemoveAsync(key);
+        RecordInvalidation(UserKeyKind);
     }
 
     protected override async Task WriteCacheAsync<T>(
@@ -31,7 +60,7 @@ public class DistributedPermissionCache(
         CancellationToken cancellationToken = default)
         where T : class
     {
-        var json = JsonSerializer.Serialize(value, JsonSerializerOptions.Web);
+        var json = JsonSerializer.Serialize(value, CacheJsonOptions);
         var bytes = Encoding.UTF8.GetBytes(json);
 
         await distributedCache.SetAsync(cacheKey, bytes, options, cancellationToken);
@@ -49,7 +78,7 @@ public class DistributedPermissionCache(
         }
 
         var json = Encoding.UTF8.GetString(bytes);
-        return JsonSerializer.Deserialize<T>(json, JsonSerializerOptions.Web);
+        return JsonSerializer.Deserialize<T>(json, CacheJsonOptions);
     }
 
     public override async ValueTask InvalidateForUserIdsAsync(
@@ -66,6 +95,8 @@ public class DistributedPermissionCache(
             var cacheKey = GetCacheKeyForUserPermissions(userId);
             await distributedCache.RemoveAsync(cacheKey, cancellationToken);
         }
+
+        RecordInvalidation(UserKeyKind, userIds.Count);
     }
 
     public override async ValueTask InvalidateForPermissionDefinitionsAsync(
@@ -73,6 +104,7 @@ public class DistributedPermissionCache(
     {
         var cacheKey = GetCacheKeyForPermissionDefinitions();
         await distributedCache.RemoveAsync(cacheKey, cancellationToken);
+        RecordInvalidation(DefinitionsKeyKind);
     }
 
     public override async ValueTask InvalidateForCurrentUserAsync(
@@ -88,5 +120,6 @@ public class DistributedPermissionCache(
         var key = GetCacheKeyForUserPermissions(userId);
 
         await distributedCache.RemoveAsync(key, cancellationToken);
+        RecordInvalidation(UserKeyKind);
     }
 }

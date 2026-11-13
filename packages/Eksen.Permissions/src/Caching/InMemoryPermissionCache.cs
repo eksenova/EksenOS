@@ -1,4 +1,5 @@
-﻿using Eksen.Identity;
+﻿using System.Diagnostics.Metrics;
+using Eksen.Identity;
 using Eksen.Identity.Users;
 using Microsoft.Extensions.Caching.Memory;
 
@@ -7,9 +8,18 @@ namespace Eksen.Permissions.Caching;
 public class InMemoryPermissionCache(
     IAuthContext authContext,
     Lazy<IPermissionStore> permissionStore,
-    IMemoryCache memoryCache
-) : BasePermissionCache(authContext, permissionStore)
+    IMemoryCache memoryCache,
+    IMeterFactory? meterFactory
+) : BasePermissionCache(authContext, permissionStore, meterFactory)
 {
+    public InMemoryPermissionCache(
+        IAuthContext authContext,
+        Lazy<IPermissionStore> permissionStore,
+        IMemoryCache memoryCache)
+        : this(authContext, permissionStore, memoryCache, meterFactory: null)
+    {
+    }
+
     private readonly IAuthContext _authContext = authContext;
 
     public override async ValueTask InvalidateForUserAsync(
@@ -21,6 +31,7 @@ public class InMemoryPermissionCache(
 
         cancellationToken.ThrowIfCancellationRequested();
         memoryCache.Remove(key);
+        RecordInvalidation(UserKeyKind);
     }
 
     protected override Task WriteCacheAsync<T>(
@@ -61,6 +72,7 @@ public class InMemoryPermissionCache(
             memoryCache.Remove(cacheKey);
         }
 
+        RecordInvalidation(UserKeyKind, userIds.Count);
         return ValueTask.CompletedTask;
     }
 
@@ -71,6 +83,7 @@ public class InMemoryPermissionCache(
         cancellationToken.ThrowIfCancellationRequested();
 
         memoryCache.Remove(cacheKey);
+        RecordInvalidation(DefinitionsKeyKind);
         return ValueTask.CompletedTask;
     }
 
@@ -88,5 +101,6 @@ public class InMemoryPermissionCache(
 
         cancellationToken.ThrowIfCancellationRequested();
         memoryCache.Remove(key);
+        RecordInvalidation(UserKeyKind);
     }
 }
