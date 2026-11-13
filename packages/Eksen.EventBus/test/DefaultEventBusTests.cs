@@ -34,6 +34,31 @@ public class DefaultEventBusTests : EksenUnitTestBase
     }
 
     [Fact]
+    public async Task RegisteredPublisherUsesCurrentScopedOutboxStore()
+    {
+        var createdStores = new List<Mock<IOutboxStore>>();
+        var services = new ServiceCollection();
+        services.AddOptions();
+        services.AddEksen(eksen => eksen.AddEventBus());
+        services.AddSingleton(_transport.Object);
+        services.AddScoped<IOutboxStore>(_ =>
+        {
+            var store = new Mock<IOutboxStore>();
+            store.Setup(x => x.SaveAsync(It.IsAny<OutboxMessage>(), It.IsAny<CancellationToken>()))
+                .Returns(Task.CompletedTask);
+            createdStores.Add(store);
+            return store.Object;
+        });
+        await using var provider = services.BuildServiceProvider();
+        await using var scope = provider.CreateAsyncScope();
+        scope.ServiceProvider.GetRequiredService<IOutboxStore>();
+        var publisher = scope.ServiceProvider.GetRequiredService<IEventBus>();
+        await publisher.PublishAsync(new TestOrderCreatedEvent());
+        createdStores.Count.ShouldBe(1);
+        createdStores[0].Verify(x => x.SaveAsync(It.IsAny<OutboxMessage>(), It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
     public async Task PublishAsync_Should_Use_Transport_When_Outbox_Disabled()
     {
         // Arrange
@@ -287,7 +312,7 @@ public class DefaultEventBusTests : EksenUnitTestBase
         // Act
         await bus.PublishAsync(@event, publishOptions);
 
-        // Assert
+        // Assert: the caller's headers are sent (in a copy that may also carry the trace context)
         _transport.Verify(
             t => t.PublishAsync(
                 It.IsAny<string>(),
@@ -296,9 +321,10 @@ public class DefaultEventBusTests : EksenUnitTestBase
                 It.IsAny<string?>(),
                 It.IsAny<string?>(),
                 It.IsAny<Guid>(),
-                headers,
+                It.Is<Dictionary<string, string>?>(sent => sent != null && sent["x-custom"] == "value"),
                 It.IsAny<CancellationToken>()),
             Times.Once);
+        headers.Keys.ShouldBe(["x-custom"]);
     }
 
     [Fact]

@@ -16,6 +16,48 @@ public class EfCoreInboxStore(EventBusDbContext dbContext) : IInboxStore
                 cancellationToken);
     }
 
+    public async Task<InboxMessage?> FindAsync(
+        Guid eventId, string handlerType, CancellationToken cancellationToken = default)
+    {
+        var entity = await dbContext.InboxMessages.AsNoTracking()
+            .SingleOrDefaultAsync(message => message.EventId == eventId && message.HandlerType == handlerType, cancellationToken);
+        return entity == null ? null : MapToInboxMessage(entity);
+    }
+
+    public async Task<int> DeleteProcessedAsync(
+        DateTime processedBefore,
+        int batchSize,
+        CancellationToken cancellationToken = default)
+    {
+        var ids = await dbContext.InboxMessages.AsNoTracking()
+            .Where(m => m.Status == (int)InboxMessageStatus.Processed && m.ProcessedTime < processedBefore)
+            .OrderBy(m => m.ProcessedTime)
+            .Select(m => m.Id)
+            .Take(batchSize)
+            .ToListAsync(cancellationToken);
+
+        if (ids.Count == 0)
+        {
+            return 0;
+        }
+
+        return await dbContext.InboxMessages
+            .Where(m => ids.Contains(m.Id))
+            .ExecuteDeleteAsync(cancellationToken);
+    }
+
+    public async Task<bool> TryMarkAsProcessingAsync(Guid messageId, CancellationToken cancellationToken = default)
+    {
+        var updated = await dbContext.InboxMessages
+            .Where(message => message.Id == messageId && message.Status != (int)InboxMessageStatus.Processed)
+            .ExecuteUpdateAsync(setters => setters
+                .SetProperty(message => message.Status, (int)InboxMessageStatus.Processing)
+                .SetProperty(message => message.LastError, (string?)null)
+                .SetProperty(message => message.ProcessedTime, (DateTime?)null)
+                .SetProperty(message => message.RetryCount, message => message.RetryCount + 1), cancellationToken);
+        return updated == 1;
+    }
+
     public async Task SaveAsync(InboxMessage message, CancellationToken cancellationToken = default)
     {
         var entity = new InboxMessageEntity

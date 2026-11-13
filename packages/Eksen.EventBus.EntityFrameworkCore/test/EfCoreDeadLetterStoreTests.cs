@@ -1,11 +1,14 @@
 using Eksen.EventBus.DeadLetter;
+using Moq;
 using Shouldly;
 
 namespace Eksen.EventBus.EntityFrameworkCore.Tests;
 
 public class EfCoreDeadLetterStoreTests : EventBusEfCoreTestBase
 {
-    private EfCoreDeadLetterStore CreateStore() => new(DbContext);
+    private readonly Mock<IEventRescheduler> _rescheduler = new();
+
+    private EfCoreDeadLetterStore CreateStore() => new(DbContext, _rescheduler.Object);
 
     private static DeadLetterMessage CreateMessage(DateTime? failedTime = null)
     {
@@ -118,6 +121,63 @@ public class EfCoreDeadLetterStoreTests : EventBusEfCoreTestBase
         var updated = await store.GetByIdAsync(msg.Id);
         updated!.IsRequeued.ShouldBeTrue();
         updated.RequeuedTime.ShouldNotBeNull();
+    }
+
+    [Fact]
+    public async Task RequeueAsync_Should_Redeliver_Once_To_The_Failed_Handler_Only()
+    {
+        // Arrange
+        var store = CreateStore();
+        var msg = CreateMessage();
+        await store.SaveAsync(msg);
+
+        // Act
+        await store.RequeueAsync(msg.Id);
+        await store.RequeueAsync(msg.Id);
+
+        // Assert
+        _rescheduler.Verify(
+            r => r.RescheduleAsync(
+                It.Is<EventRedelivery>(redelivery =>
+                    redelivery.HandlerTypeName == "TestHandler" &&
+                    redelivery.EventId == msg.OriginalMessageId &&
+                    redelivery.EventTypeName == "TestEvent" &&
+                    redelivery.Payload == "{}" &&
+                    redelivery.Attempt == 1),
+                TimeSpan.Zero,
+                It.IsAny<CancellationToken>()),
+            Times.Once);
+    }
+
+    [Fact]
+    public async Task RequeueAsync_Should_Stay_Unrequeued_When_Redelivery_Fails()
+    {
+        // Arrange
+        var store = CreateStore();
+        var msg = CreateMessage();
+        await store.SaveAsync(msg);
+        _rescheduler.Setup(r => r.RescheduleAsync(It.IsAny<EventRedelivery>(), It.IsAny<TimeSpan>(), It.IsAny<CancellationToken>()))
+            .ThrowsAsync(new InvalidOperationException("broker down"));
+
+        // Act
+        await Should.ThrowAsync<InvalidOperationException>(() => store.RequeueAsync(msg.Id));
+
+        // Assert
+        DbContext.ChangeTracker.Clear();
+        (await store.GetByIdAsync(msg.Id))!.IsRequeued.ShouldBeFalse();
+        (await store.GetCountAsync()).ShouldBe(1);
+    }
+
+    [Fact]
+    public async Task RequeueAsync_Should_Throw_Without_A_Rescheduler()
+    {
+        // Arrange
+        var store = new EfCoreDeadLetterStore(DbContext);
+        var msg = CreateMessage();
+        await store.SaveAsync(msg);
+
+        // Act & Assert
+        await Should.ThrowAsync<InvalidOperationException>(() => store.RequeueAsync(msg.Id));
     }
 
     [Fact]

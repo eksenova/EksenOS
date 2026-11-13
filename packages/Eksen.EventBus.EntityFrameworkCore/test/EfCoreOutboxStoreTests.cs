@@ -60,6 +60,32 @@ public class EfCoreOutboxStoreTests : EventBusEfCoreTestBase
     }
 
     [Fact]
+    public async Task Headers_Round_Trip_The_Trace_Context_Captured_At_Publish()
+    {
+        // Arrange
+        var store = CreateStore();
+        const string traceParent = "00-0af7651916cd43dd8448eb211c80319c-b7ad6b7169203331-01";
+        var msg = CreateMessage(headers: new Dictionary<string, string>
+        {
+            ["traceparent"] = traceParent,
+            ["tracestate"] = "vendor=value",
+            ["baggage"] = "tenant=t-1",
+            ["x-custom"] = "value"
+        });
+
+        // Act
+        await store.SaveAsync(msg, TestContext.Current.CancellationToken);
+        DbContext.ChangeTracker.Clear();
+        var pending = await store.GetPendingAsync(10, TestContext.Current.CancellationToken);
+
+        // Assert
+        var retrieved = pending.Single(message => message.Id == msg.Id);
+        retrieved.Headers.ShouldNotBeNull();
+        retrieved.Headers.ShouldBe(msg.Headers!, ignoreOrder: true);
+        retrieved.Headers["traceparent"].ShouldBe(traceParent);
+    }
+
+    [Fact]
     public async Task GetByIdAsync_Should_Return_Null_When_Not_Found()
     {
         // Arrange

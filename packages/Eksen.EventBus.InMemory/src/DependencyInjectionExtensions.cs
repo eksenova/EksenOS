@@ -15,6 +15,7 @@ public static class InMemoryDependencyInjectionExtensions
 
         services.AddSingleton<InMemoryEventBusTransport>();
         services.AddSingleton<IEventBusTransport>(sp => sp.GetRequiredService<InMemoryEventBusTransport>());
+        services.AddSingleton<IEventRescheduler>(sp => sp.GetRequiredService<InMemoryEventBusTransport>());
         services.AddSingleton<IOutboxStore, InMemoryOutboxStore>();
         services.AddSingleton<IInboxStore, InMemoryInboxStore>();
         services.AddSingleton<IDeadLetterStore, InMemoryDeadLetterStore>();

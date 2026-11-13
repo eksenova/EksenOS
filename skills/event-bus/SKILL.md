@@ -1,11 +1,11 @@
 ---
 name: event-bus
-description: The EksenOS way to publish integration events and handle them with IEventHandler<TEvent> — an outbox-backed IEventBus with InMemory and RabbitMQ transports, an EF Core outbox/inbox/dead-letter store, a built-in dashboard, and dead-letter alerts (Slack). Use when one part of the system must react to something that happened in another (an order was placed, a payment was captured) without a direct in-process call.
+description: The EksenOS way to publish integration events and handle them with IEventHandler<TEvent> — an outbox-backed IEventBus with InMemory and RabbitMQ transports, an EF Core outbox/inbox/dead-letter store, a Redis inbox for hosts without a database, delayed broker retries, dead-letter queues with replay, a built-in dashboard, and dead-letter alerts (Slack). Use when one part of the system must react to something that happened in another (an order was placed, a payment was captured) without a direct in-process call.
 ---
 
 # Event Bus (Eksen.EventBus)
 
-An **integration event** is an immutable fact that something happened — `OrderPlaced`, `PaymentCaptured`, `ShipmentDispatched`. You **publish** it through `IEventBus` and zero or more `IEventHandler<TEvent>` react, possibly in another app or process. The bus is **outbox-first**: a published event is written to an outbox in the same transaction as your domain change, then a background processor delivers it over a transport (InMemory for a single process, RabbitMQ across services). Failed handlers are retried with backoff and, if they keep failing, parked in a **dead-letter** store you can inspect via the dashboard or be alerted about.
+An **integration event** is an immutable fact that something happened — `OrderPlaced`, `PaymentCaptured`, `ShipmentDispatched`. You **publish** it through `IEventBus` and zero or more `IEventHandler<TEvent>` react, possibly in another app or process. The bus is **outbox-first**: a published event is written to an outbox in the same transaction as your domain change, then a background processor delivers it over a transport (InMemory for a single process, RabbitMQ across services). Failed handlers are retried in process, then redelivered through the broker with growing delays, and, if they keep failing, parked in a **dead-letter** store or queue you can inspect, replay, or be alerted about.
 
 All examples use the marketplace's e-commerce running example (`Order`, `Customer`, `Payment`, `Shipment`).
 
@@ -114,7 +114,7 @@ services.AddEksen(eksen => eksen
         .UseInMemory()));
 ```
 
-`AddEventBus` registers `IEventBus`, the JSON serializer, the retry pipeline, and two hosted services — `OutboxProcessorBackgroundService` (drains the outbox to the transport) and `EventBusListenerBackgroundService` (consumes from the transport and dispatches to handlers). `AppName` stamps every published event's `SourceApp` and identifies this app to transports.
+`AddEventBus` registers `IEventBus`, the JSON serializer, the retry pipeline, the singleton `IEventProcessor` (it opens its own scope per handler attempt, so a singleton transport can hold it), and three hosted services — `OutboxProcessorBackgroundService` (drains the outbox to the transport), `EventBusListenerBackgroundService` (consumes from the transport and dispatches to handlers) and `EventBusCleanupBackgroundService` (purges processed outbox and inbox rows). The outbox processor and the cleanup only touch stores that are registered, so a host without a database starts them as no-ops. `AppName` stamps every published event's `SourceApp`, names this app's consumer queues (`{AppName}.{HandlerType}`) and is what `PublishOptions.TargetApp` matches.
 
 ### Publishing
 
@@ -178,7 +178,27 @@ services.AddEksen(eksen => eksen
         .UseRabbitMq()));
 ```
 
-`UnitOfWorkEventBus` holds `AfterUnitOfWork` events until the `IUnitOfWorkScope` is completing, writes them to the outbox in a completing callback, then waits for the outbox rows to leave `Pending`/`Processing` in a post-commit action. Pair this with the **unit-of-work** skill so the transaction boundary actually exists; outside a unit of work the event publishes immediately. Tune the outbox with `OutboxOptions` (`IsEnabled`, `BatchSize`, `PollingInterval`).
+`UnitOfWorkEventBus` holds `AfterUnitOfWork` events until the `IUnitOfWorkScope` is completing, writes them to the outbox in a completing callback, then waits for the outbox rows to leave `Pending`/`Processing` in a post-commit action. Pair this with the **unit-of-work** skill so the transaction boundary actually exists; outside a unit of work the event publishes immediately. Tune the outbox with `OutboxOptions`.
+
+### Publishing the outbox
+
+Every host running the outbox processor polls the same table, so rows are **claimed with a lease** before they are published: `IOutboxStore.ClaimAsync(batchSize, leaseDuration)` marks the due rows `Processing` under a lease token and expiry. On PostgreSQL the claim is a single `UPDATE … WHERE Id IN (SELECT … FOR UPDATE SKIP LOCKED)`, so concurrent hosts take disjoint batches; on other providers it is a conditional update that re-checks each row is still due, so a row is leased to one host at a time. A row whose host died mid-batch becomes claimable again when its lease expires. The broker message id is the event's `IEvent.EventId` (stored on the row as `EventId`), so consumers deduplicate on the real event id, not on the outbox row.
+
+A failed publish releases the lease, increments `RetryCount` and makes the row due again at `NextAttemptTime` = now + exponential backoff with jitter; after `MaxPublishAttempts` the row is `Failed`.
+
+| `OutboxOptions` | Default | Meaning |
+|---|---|---|
+| `IsEnabled` | `true` | Write integration events to the outbox. Without a registered `IOutboxStore` the bus publishes straight to the transport and the processor does not run. |
+| `BatchSize` | `100` | Rows claimed per poll. |
+| `PollingInterval` | 5 s | Delay between polls. |
+| `LeaseDuration` | 1 min | How long a claim owns its rows. |
+| `MaxPublishAttempts` | `10` | Publish attempts before the row is marked `Failed`. |
+| `RetryInitialDelay` / `RetryBackoffMultiplier` / `RetryMaxDelay` | 5 s / 2 / 10 min | Backoff of failed publishes (+/- 20 % jitter). |
+| `ProcessedRetention` | 7 days | Published rows older than this are purged. |
+
+`CleanupOptions` (`IsEnabled` = true, `Interval` = 1 h, `BatchSize` = 1000) drives the purge of processed outbox rows older than `ProcessedRetention` and processed inbox rows older than `InboxOptions.IdempotencyWindow`.
+
+
 
 ## Persistence (EF Core)
 
@@ -188,11 +208,56 @@ services.AddEksen(eksen => eksen
 bus.UseEntityFrameworkCore(db => db.UseSqlServer(connectionString));
 ```
 
-`EventBusDbContext` exposes `OutboxMessages`, `InboxMessages`, and `DeadLetterMessages`; `OnModelCreating` applies the bundled entity configurations via `ApplyEventBusEntityConfigurations()`. Add it to your migrations so the three tables are created. Without an EF Core (or InMemory) store registered there is nowhere to persist the outbox, and an outbox-enabled bus has no backing store.
+`EventBusDbContext` exposes `OutboxMessages`, `InboxMessages`, and `DeadLetterMessages`; `OnModelCreating` applies the bundled entity configurations via `ApplyEventBusEntityConfigurations()`. Add it to your migrations so the three tables are created. The outbox table carries `EventId`, `NextAttemptTime`, `LeaseToken` and `LeaseExpiresAt` (indexed with `Status`), and both tables have a `(Status, ProcessedTime)` index for the purge; a database created before these columns needs a migration (backfill `EventId` from `Id` for existing rows). Without an EF Core (or InMemory) store registered there is nowhere to persist the outbox, and an outbox-enabled bus has no backing store.
 
 ## Inbox & idempotency
 
-When an `IInboxStore` is registered and `InboxOptions.IsEnabled` is true (the default), each `(EventId, HandlerType)` pair is recorded before the handler runs. If the same event is delivered again to the same handler, the processor sees it already exists and skips it — so handlers are effectively **exactly-once per handler**. On success the inbox row is marked processed; on failure it is marked failed. Make handlers idempotent anyway for the window between dispatch and the inbox write. `InboxOptions.IdempotencyWindow` (default 7 days) bounds how long records are retained.
+When an `IInboxStore` is registered and `InboxOptions.IsEnabled` is true (the default), every handler attempt first **claims** the `(EventId, HandlerType)` pair with `IInboxStore.TryClaimAsync`:
+
+- `Claimed` — run the handler, then `CompleteAsync` the claim.
+- `AlreadyProcessed` — the delivery is a duplicate; it is acknowledged without running the handler.
+- `InProgress` — another consumer holds the claim; the attempt fails with `InboxClaimConflictException` and is retried later (never acknowledged, so a crashed claimer cannot lose the event).
+
+With a unit of work (`IUnitOfWorkManager` registered) the claim, the handler's changes and the completion commit together, and a failure rolls all of them back. A store that does not enlist in the unit of work (`IInboxStore.EnlistsInUnitOfWork` = false: Redis, in-memory) is completed only after the commit, and on failure its claim is released with `ReleaseAsync` so a redelivery can claim it again. Without any unit of work the sequence is simply claim → handler → complete, or release on failure — the processor needs no database.
+
+`InboxOptions.IdempotencyWindow` (default 7 days) is how long a processed record is remembered: the cleanup service purges older processed EF rows, and the Redis inbox expires its processed marker after exactly this long.
+
+### Redis inbox (hosts without a database)
+
+`Eksen.EventBus.Redis` adds `UseRedisInbox`, an `IInboxStore` in Redis. It replaces any inbox registered before it:
+
+```csharp
+bus.UseRedisInbox(redis =>
+{
+    redis.Configuration = "redis:6379";   // or leave null to use a registered IConnectionMultiplexer
+    redis.KeyPrefix = "eksen:inbox";
+    redis.ProcessingTimeout = TimeSpan.FromMinutes(5);
+});
+```
+
+A claim is `SET {KeyPrefix}:{AppName}:h:{HandlerType}:{EventId} … NX PX {ProcessingTimeout}`; completing rewrites the key as processed with `IdempotencyWindow` as its expiry; releasing deletes it only if it is still the caller's claim. A consumer that dies mid-handler loses its claim after `ProcessingTimeout`, so keep it above the longest handler run including retries. Only a small JSON record is stored, not the payload.
+
+| `RedisInboxOptions` | Default | Meaning |
+|---|---|---|
+| `Configuration` | `null` | StackExchange.Redis configuration string; null uses the registered `IConnectionMultiplexer`. |
+| `KeyPrefix` | `eksen:inbox` | Prefix of every key. |
+| `ProcessingTimeout` | 5 min | Lifetime of an unfinished claim. |
+| `Database` | `-1` | Redis database number. |
+
+### A consumer-only host
+
+A host that only consumes needs no database, outbox, EF inbox or unit of work:
+
+```csharp
+services.AddEksen(eksen => eksen
+    .AddEventBus(bus => bus
+        .Configure(options => options.AppName = "shipping-notifier")
+        .Subscribe<OrderPlacedIntegrationEvent, NotifyCustomerOnOrderPlaced>()
+        .UseRabbitMq(rabbit => rabbit.Configure(o => o.HostName = "rabbitmq"))
+        .UseRedisInbox(redis => redis.Configuration = "redis:6379")));
+```
+
+The outbox processor sees no `IOutboxStore` and stops, the cleanup skips the missing stores, and a publish from this host goes straight to the transport. Failed deliveries use the broker's delayed redelivery and dead-letter queues (below).
 
 ## Transports
 
@@ -201,7 +266,7 @@ When an `IInboxStore` is registered and `InboxOptions.IsEnabled` is true (the de
 | InMemory | `.UseInMemory()` | A single process, tests, local development. Outbox/inbox/dead-letter are in-memory singletons. |
 | RabbitMQ | `.UseRabbitMq(rabbit => ...)` | Multiple apps/services exchanging events over a broker. |
 
-RabbitMQ is configured through `RabbitMqEventBusOptions` (host, credentials, `ExchangeName`, `ExchangeType` — `"topic"` by default — `DeadLetterExchangeName`, `PrefetchCount`, recovery settings). Map events to queues and tune queues on the builder:
+RabbitMQ is configured through `RabbitMqEventBusOptions` (host, credentials, `ExchangeName`, `ExchangeType` — `"topic"` by default — `DeadLetterExchangeName`, `PrefetchCount`, recovery settings, and the reliability switches below). Map events to queues and tune queues on the builder:
 
 ```csharp
 bus.UseRabbitMq(rabbit => rabbit
@@ -225,11 +290,48 @@ bus.UseRabbitMq(rabbit => rabbit
     }));
 ```
 
+### RabbitMQ topology and delivery
+
+- Every handler of an app consumes its own durable queue `{AppName}.{HandlerType}`, bound to the event's routing key (its name, or the `MapEventToQueue` key) **and** to `{AppName}.{routingKey}`.
+- A publish with `PublishOptions.TargetApp = "shipping"` uses routing key `shipping.{routingKey}`, which only the `shipping` app's queues bind — other apps never see it.
+- Publishes wait for **publisher confirms** (`PublisherConfirms`, default true) and are **mandatory** (`Mandatory`, default true): a nacked or unroutable message throws `PublishException`, so the outbox retries it instead of losing it. Messages are persistent; the message id is the `EventId`.
+- Each delivery runs only the handler of its queue, with the attempt number the broker carries.
+
+| `RabbitMqEventBusOptions` | Default | Meaning |
+|---|---|---|
+| `PublisherConfirms` | `true` | Await broker confirms for every publish. |
+| `Mandatory` | `true` | Return unroutable publishes as errors. |
+| `DeadLetterExchangeName` | `eksen.events.dlx` | Topic exchange dead letters pass through; null disables broker dead-lettering. |
+| `DeclareDeadLetterQueues` | `true` | Declare `{queue}.dlq` per handler queue, bound to the DLX with key `{queue}`. |
+| `DelayExchangeName` | `{ExchangeName}.delay` | Headers exchange of the delay tiers. |
+
 The wire name of an event is its CLR `FullName` (via `EventNameResolver`), so the **same event type must exist with the same namespace and name in both the publishing and consuming app** — share it through a contracts assembly.
 
 ## Retries & dead-lettering
 
-A handler that throws is retried by the pipeline using `RetryOptions` (`MaxRetryAttempts` = 3, exponential `InitialDelay`/`MaxDelay` with `BackoffMultiplier`). When retries are exhausted and `DeadLetterOptions.IsEnabled` is true, the message is written to the `IDeadLetterStore` as a `DeadLetterMessage` (original id, event/handler type, payload, `LastError`, `TotalRetryCount`, correlation/source). The store supports paging (`GetMessagesAsync`), `GetByIdAsync`, `GetCountAsync`, and `RequeueAsync` to retry a parked message. Let handler failures surface as real exceptions — raise domain failures via the **error-handling** skill rather than swallowing them, so a genuinely broken event reaches the dead-letter store instead of being silently dropped.
+A failing handler goes through three stages:
+
+1. **In-process retries** — the Polly pipeline retries the handler `RetryOptions.MaxRetryAttempts` times (default 3) with exponential backoff `InitialDelay * BackoffMultiplier^n` (1 s, x2, capped at `MaxDelay` = 30 s) and jitter.
+2. **Delayed broker redelivery** — if it still fails, the RabbitMQ transport acknowledges the delivery and republishes it to a delay tier: the headers exchange `{exchange}.delay` routes it by the `eksen-delay-tier` header to the durable queue `{exchange}.delay.{tier}` with a per-message `expiration` of the jittered backoff (`RedeliveryOptions`: `InitialDelay` 10 s, `BackoffMultiplier` 4, `MaxDelay` 15 min, `JitterFactor` 0.2). When it expires the tier queue dead-letters it through the default exchange with its routing key — the failing handler's queue name — so it returns **only to the queue that failed**, not to every subscriber. The message carries `x-eksen-attempt` (the delivery attempt), `x-eksen-first-failure-time` and `x-eksen-original-routing-key`. There are `DeadLetterOptions.MaxRetryAttemptsBeforeDeadLetter` (default 5) redeliveries, one tier each.
+3. **Dead letter** — on the final attempt, or straight away for a **poison** message (a payload that does not deserialize, no handler for its type, no event id: `PoisonMessageException`, never retried):
+   - with an `IDeadLetterStore` registered and `DeadLetterOptions.IsEnabled`, the message is saved there as a `DeadLetterMessage` (original event id, event and handler type, payload, `LastError`, `TotalRetryCount`, correlation/source) and the delivery is acknowledged;
+   - otherwise the broker DLQ `{queue}.dlq` is the destination: the transport publishes the message to the DLX with routing key `{queue}` and the headers `x-eksen-dead-letter-reason` (`poison`, `max_attempts_exceeded`, `failed`, `redelivery_failed`), `x-eksen-exception-type`, `x-eksen-exception-message`, `x-eksen-attempts`, `x-eksen-original-routing-key`, `x-eksen-first-failure-time`, `x-eksen-failed-time`, `x-eksen-queue` and `x-eksen-handler`. Messages the broker itself rejects or expires from a handler queue follow the queue's `x-dead-letter-routing-key` to the same DLQ. (A handler queue declared before per-queue dead-letter routing keeps its old arguments — RabbitMQ cannot change them in place; the transport logs a warning and explicit dead-lettering still reaches the DLQ. Recreate the queue to complete the switch.)
+
+`IEventRescheduler.RescheduleAsync(EventRedelivery redelivery, TimeSpan delay)` exposes the same mechanism: it redelivers an event to one handler queue of this app, immediately or through the tier whose range covers `delay`.
+
+### Replaying dead letters
+
+**Store.** `IDeadLetterStore` pages (`GetMessagesAsync(skip, take)`), reads (`GetByIdAsync`), counts the messages not yet requeued (`GetCountAsync`) and requeues: `RequeueAsync(id)` redelivers the dead letter **to the handler that failed it only** through `IEventRescheduler`, with a fresh retry budget, and marks it requeued (once; concurrent requeues redeliver once, and a failed redelivery leaves it unrequeued).
+
+**Broker DLQ.** `IDeadLetterQueueReplayer` (registered by `UseRabbitMq`) covers hosts without a store:
+
+```csharp
+IReadOnlyList<DeadLetterQueueInfo> queues = await replayer.GetQueuesAsync(ct);      // per handler queue: DLQ name, message count
+IReadOnlyList<DeadLetteredMessage> peek = await replayer.PeekAsync(queue, 20, ct); // read without removing, with the failure headers
+int moved = await replayer.ReplayAsync(queue, 100, ct);                            // move N back to the handler queue, fresh retry budget
+```
+
+Let handler failures surface as real exceptions — raise domain failures via the **error-handling** skill rather than swallowing them, so a genuinely broken event reaches the dead-letter destination instead of being silently dropped.
 
 ## Dashboard
 
@@ -278,7 +380,8 @@ For unit and integration tests, register `.UseInMemory()` so the whole pipeline 
 - [ ] Implement `IEventHandler<TEvent>`; inject scoped services and keep handlers idempotent.
 - [ ] Register via `AddEksen(...).AddEventBus(...)`, subscribe with `Subscribe<TEvent, THandler>()` / `SubscribeFromAssembly(...)`, set `AppName`.
 - [ ] Pick one transport: `.UseInMemory()` for one process/tests, `.UseRabbitMq(...)` across services (map events to queues; share the event type by `FullName`).
-- [ ] Persist the outbox/inbox/dead-letter with `.UseEntityFrameworkCore(...)` and add `EventBusDbContext` to migrations.
+- [ ] Persist the outbox/inbox/dead-letter with `.UseEntityFrameworkCore(...)` and add `EventBusDbContext` to migrations (including the lease and `EventId` columns of the outbox).
 - [ ] For transactional publish, `.UseUnitOfWork()` and publish with `EventDispatchMode.AfterUnitOfWork` inside a unit of work.
 - [ ] Mount `app.UseEksenEventBusDashboard()` with an auth mode set; add `.AddAlerts(...).UseSlack(...)` for dead-letter notifications.
-- [ ] Let handler failures throw so retries and dead-lettering engage; inspect or `RequeueAsync` parked messages.
+- [ ] Let handler failures throw so retries, delayed redeliveries and dead-lettering engage; inspect or `RequeueAsync` parked messages, or replay a broker DLQ with `IDeadLetterQueueReplayer`.
+- [ ] On a host without a database, use `.UseRedisInbox(...)` for idempotency; the broker DLQ is its dead-letter destination.

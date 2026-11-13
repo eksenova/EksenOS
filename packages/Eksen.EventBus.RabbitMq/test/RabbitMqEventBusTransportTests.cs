@@ -54,7 +54,7 @@ public class RabbitMqEventBusTransportTests : EksenUnitTestBase
             c => c.BasicPublishAsync(
                 "eksen.events",
                 "OrderCreated",
-                false,
+                true,
                 It.IsAny<BasicProperties>(),
                 It.IsAny<ReadOnlyMemory<byte>>(),
                 It.IsAny<CancellationToken>()),
@@ -103,7 +103,7 @@ public class RabbitMqEventBusTransportTests : EksenUnitTestBase
             c => c.BasicPublishAsync(
                 "eksen.events",
                 "order.created.v1",
-                false,
+                true,
                 It.IsAny<BasicProperties>(),
                 It.IsAny<ReadOnlyMemory<byte>>(),
                 It.IsAny<CancellationToken>()),
@@ -140,7 +140,7 @@ public class RabbitMqEventBusTransportTests : EksenUnitTestBase
             c => c.BasicPublishAsync(
                 "eksen.events",
                 "PaymentService.OrderCreated",
-                false,
+                true,
                 It.IsAny<BasicProperties>(),
                 It.IsAny<ReadOnlyMemory<byte>>(),
                 It.IsAny<CancellationToken>()),

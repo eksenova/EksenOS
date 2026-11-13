@@ -6,6 +6,72 @@ namespace Eksen.EventBus.InMemory;
 public class InMemoryOutboxStore : IOutboxStore
 {
     private readonly ConcurrentDictionary<Guid, OutboxMessage> _messages = new();
+    private readonly Lock _claimLock = new();
+
+    public Task<IReadOnlyList<OutboxMessage>> ClaimAsync(
+        int batchSize,
+        TimeSpan leaseDuration,
+        CancellationToken cancellationToken = default)
+    {
+        var now = DateTime.UtcNow;
+        var token = Guid.NewGuid();
+        lock (_claimLock)
+        {
+            var claimed = _messages.Values
+                .Where(m =>
+                    (m.Status == OutboxMessageStatus.Pending && (m.NextAttemptTime == null || m.NextAttemptTime <= now))
+                    || (m.Status == OutboxMessageStatus.Processing && (m.LeaseExpiresAt == null || m.LeaseExpiresAt <= now)))
+                .OrderBy(m => m.CreationTime)
+                .Take(batchSize)
+                .ToList();
+
+            foreach (var message in claimed)
+            {
+                message.Status = OutboxMessageStatus.Processing;
+                message.LeaseToken = token;
+                message.LeaseExpiresAt = now + leaseDuration;
+            }
+
+            return Task.FromResult<IReadOnlyList<OutboxMessage>>(claimed);
+        }
+    }
+
+    public Task ScheduleRetryAsync(
+        Guid messageId,
+        DateTime nextAttemptTime,
+        string error,
+        CancellationToken cancellationToken = default)
+    {
+        lock (_claimLock)
+        {
+            if (_messages.TryGetValue(messageId, out var message))
+            {
+                message.Status = OutboxMessageStatus.Pending;
+                message.RetryCount++;
+                message.LastError = error;
+                message.NextAttemptTime = nextAttemptTime;
+                message.LeaseToken = null;
+                message.LeaseExpiresAt = null;
+            }
+        }
+
+        return Task.CompletedTask;
+    }
+
+    public Task<int> DeleteProcessedAsync(
+        DateTime processedBefore,
+        int batchSize,
+        CancellationToken cancellationToken = default)
+    {
+        var expired = _messages.Values
+            .Where(m => m.Status == OutboxMessageStatus.Processed && m.ProcessedTime < processedBefore)
+            .Take(batchSize)
+            .Select(m => m.Id)
+            .ToList();
+
+        var deleted = expired.Count(id => _messages.TryRemove(id, out _));
+        return Task.FromResult(deleted);
+    }
 
     public Task SaveAsync(OutboxMessage message, CancellationToken cancellationToken = default)
     {
@@ -38,6 +104,8 @@ public class InMemoryOutboxStore : IOutboxStore
         {
             message.Status = OutboxMessageStatus.Processed;
             message.ProcessedTime = DateTime.UtcNow;
+            message.LeaseToken = null;
+            message.LeaseExpiresAt = null;
         }
 
         return Task.CompletedTask;
@@ -49,6 +117,8 @@ public class InMemoryOutboxStore : IOutboxStore
         {
             message.Status = OutboxMessageStatus.Failed;
             message.LastError = error;
+            message.LeaseToken = null;
+            message.LeaseExpiresAt = null;
         }
 
         return Task.CompletedTask;

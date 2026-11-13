@@ -1,8 +1,11 @@
+using System.Diagnostics.Metrics;
 using System.Reflection;
 using Eksen.Core;
 using Eksen.EventBus;
 using Eksen.EventBus.BackgroundServices;
 using Eksen.EventBus.Retry;
+using Eksen.EventBus.Telemetry;
+using Eksen.Telemetry;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 
 #pragma warning disable IDE0130
@@ -91,7 +94,8 @@ public static class DependencyInjectionExtensions
         services.TryAddScoped<ILocalEventDispatcher, LocalEventDispatcher>();
         services.TryAddSingleton<IEventSerializer, JsonEventSerializer>();
         services.TryAddSingleton<IEventRetryPipelineProvider, EventRetryPipelineProvider>();
-        services.TryAddScoped<IEventProcessor, EventProcessor>();
+        // The processor opens its own scope per handler attempt, so a singleton transport can hold it.
+        services.TryAddSingleton<IEventProcessor, EventProcessor>();
         services.TryAddScoped<IEventBus, DefaultEventBus>();
 
         configureAction?.Invoke(eventBusBuilder);
@@ -99,6 +103,14 @@ public static class DependencyInjectionExtensions
         services.AddSingleton<IEventHandlerRegistry>(eventBusBuilder.Registry);
         services.AddHostedService<OutboxProcessorBackgroundService>();
         services.AddHostedService<EventBusListenerBackgroundService>();
+        services.AddHostedService<EventBusCleanupBackgroundService>();
+
+        services.AddOptions();
+        services.AddMetrics();
+        services.TryAddSingleton(provider => EventBusTelemetry.For(provider.GetService<IMeterFactory>()));
+        services.AddEksenTelemetrySource(EksenTelemetry.EventBus);
+        services.AddEksenTelemetryMeter(EksenTelemetry.EventBus);
+        services.AddHostedService<EventBusStoreGauges>();
 
         return builder;
     }

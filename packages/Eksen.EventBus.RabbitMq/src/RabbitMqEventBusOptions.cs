@@ -20,7 +20,34 @@ public class RabbitMqEventBusOptions
 
     public bool ExchangeAutoDelete { get; set; }
 
-    public string DeadLetterExchangeName { get; set; } = "eksen.events.dlx";
+    /// <summary>
+    /// The topic exchange dead letters are routed through. Every handler queue <c>Q</c> gets a durable <c>Q.dlq</c>
+    /// bound to it with routing key <c>Q</c>. Null disables the broker dead-letter path.
+    /// </summary>
+    public string? DeadLetterExchangeName { get; set; } = "eksen.events.dlx";
+
+    /// <summary>
+    /// Declares a durable <c>{queue}.dlq</c> per handler queue and routes failed, expired and rejected messages of
+    /// that queue to it.
+    /// </summary>
+    public bool DeclareDeadLetterQueues { get; set; } = true;
+
+    /// <summary>
+    /// The headers exchange delayed redeliveries are published to; null means <c>{ExchangeName}.delay</c>. Its tier
+    /// queues are <c>{ExchangeName}.delay.{tier}</c>.
+    /// </summary>
+    public string? DelayExchangeName { get; set; }
+
+    /// <summary>
+    /// Waits for the broker to confirm every publish; a nacked or (with <see cref="Mandatory"/>) unroutable publish
+    /// throws, so the outbox retries it.
+    /// </summary>
+    public bool PublisherConfirms { get; set; } = true;
+
+    /// <summary>
+    /// Publishes with the mandatory flag: a message no queue is bound for is returned instead of silently dropped.
+    /// </summary>
+    public bool Mandatory { get; set; } = true;
 
     public ushort PrefetchCount { get; set; } = 10;
 

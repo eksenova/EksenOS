@@ -17,10 +17,14 @@ public class EventProcessorTests : EksenUnitTestBase
     private class TestHandler : IEventHandler<TestOrderCreatedEvent>
     {
         public bool WasCalled { get; private set; }
+        public string? OrderNumber { get; private set; }
+        public decimal Amount { get; private set; }
 
         public Task HandleAsync(TestOrderCreatedEvent @event, CancellationToken cancellationToken = default)
         {
             WasCalled = true;
+            OrderNumber = @event.OrderNumber;
+            Amount = @event.Amount;
             return Task.CompletedTask;
         }
     }
@@ -113,6 +117,8 @@ public class EventProcessorTests : EksenUnitTestBase
 
         // Assert
         handler.WasCalled.ShouldBeTrue();
+        handler.OrderNumber.ShouldBe("ORD-1");
+        handler.Amount.ShouldBe(100m);
     }
 
     [Fact]
@@ -122,10 +128,10 @@ public class EventProcessorTests : EksenUnitTestBase
         var handler = new TestHandler();
         var registry = CreateRegistry<TestHandler>();
 
-        var inboxStore = new Mock<IInboxStore>();
+        var inboxStore = new Mock<IInboxStore> { CallBase = true };
         inboxStore
-            .Setup(s => s.ExistsAsync(It.IsAny<Guid>(), It.IsAny<string>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(true);
+            .Setup(s => s.FindAsync(It.IsAny<Guid>(), It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new InboxMessage { Status = InboxMessageStatus.Processed });
 
         var services = new ServiceCollection();
         services.AddSingleton<TestHandler>(handler);
@@ -164,7 +170,8 @@ public class EventProcessorTests : EksenUnitTestBase
         var handler = new TestHandler();
         var registry = CreateRegistry<TestHandler>();
 
-        var inboxStore = new Mock<IInboxStore>();
+        // CallBase runs the store's default claim, which records the message through SaveAsync.
+        var inboxStore = new Mock<IInboxStore> { CallBase = true };
         inboxStore
             .Setup(s => s.ExistsAsync(It.IsAny<Guid>(), It.IsAny<string>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(false);
@@ -324,7 +331,8 @@ public class EventProcessorTests : EksenUnitTestBase
         var eventName = EventNameResolver.GetEventName<TestOrderCreatedEvent>();
 
         // Act
-        await processor.ProcessAsync(eventName, payload, null, null, @event.EventId);
+        await Should.ThrowAsync<Exception>(async () =>
+            await processor.ProcessAsync(eventName, payload, null, null, @event.EventId));
 
         // Assert
         deadLetterStore.Verify(

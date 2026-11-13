@@ -1,5 +1,6 @@
 using Eksen.EventBus;
 using Eksen.EventBus.RabbitMq;
+using Eksen.Telemetry;
 
 #pragma warning disable IDE0130
 namespace Microsoft.Extensions.DependencyInjection;
@@ -69,6 +70,10 @@ public static class RabbitMqDependencyInjectionExtensions
         services.AddSingleton<RabbitMqEventBusTransport>();
         services.AddSingleton<IEventBusTransport>(sp => sp.GetRequiredService<RabbitMqEventBusTransport>());
         services.AddSingleton<IEventRescheduler, RabbitMqEventRescheduler>();
+        services.AddSingleton<IDeadLetterQueueReplayer, RabbitMqDeadLetterQueueReplayer>();
+        services.AddMetrics();
+        services.AddEksenTelemetrySource(EksenTelemetry.EventBusRabbitMq);
+        services.AddEksenTelemetryMeter(EksenTelemetry.EventBusRabbitMq);
 
         if (configureAction != null)
         {

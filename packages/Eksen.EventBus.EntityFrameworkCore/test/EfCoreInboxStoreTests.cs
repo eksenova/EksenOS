@@ -28,6 +28,44 @@ public class EfCoreInboxStoreTests : EventBusEfCoreTestBase
     }
 
     [Fact]
+    public async Task FindAsyncUsesExactEventAndHandlerAcrossStatuses()
+    {
+        var store = CreateStore();
+        var target = CreateMessage(InboxMessageStatus.Failed);
+        await store.SaveAsync(target);
+        await store.SaveAsync(CreateMessage(InboxMessageStatus.Processing, creationTime: DateTime.UtcNow.AddDays(1)));
+        var restored = await store.FindAsync(target.EventId, target.HandlerType);
+        restored.ShouldNotBeNull();
+        restored.Id.ShouldBe(target.Id);
+        (await store.FindAsync(target.EventId, "different-handler")).ShouldBeNull();
+    }
+
+    [Fact]
+    public async Task ProcessingClaimRecoversFailedMessageAndClearsFailureState()
+    {
+        var store = CreateStore();
+        var message = CreateMessage(InboxMessageStatus.Failed);
+        message.LastError = "previous failure";
+        await store.SaveAsync(message);
+        (await store.TryMarkAsProcessingAsync(message.Id)).ShouldBeTrue();
+        var restored = await store.FindAsync(message.EventId, message.HandlerType);
+        restored!.Status.ShouldBe(InboxMessageStatus.Processing);
+        restored.RetryCount.ShouldBe(1);
+        restored.LastError.ShouldBeNull();
+        restored.ProcessedTime.ShouldBeNull();
+    }
+
+    [Fact]
+    public async Task ProcessingClaimCannotReopenProcessedMessage()
+    {
+        var store = CreateStore();
+        var message = CreateMessage(InboxMessageStatus.Processed);
+        await store.SaveAsync(message);
+        (await store.TryMarkAsProcessingAsync(message.Id)).ShouldBeFalse();
+        (await store.FindAsync(message.EventId, message.HandlerType))!.Status.ShouldBe(InboxMessageStatus.Processed);
+    }
+
+    [Fact]
     public async Task SaveAsync_Should_Persist_Message()
     {
         // Arrange

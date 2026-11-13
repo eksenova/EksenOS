@@ -4,6 +4,8 @@ public class OutboxMessageEntity
 {
     public Guid Id { get; set; }
 
+    public Guid EventId { get; set; }
+
     public string EventType { get; set; } = null!;
 
     public string Payload { get; set; } = null!;
@@ -25,4 +27,10 @@ public class OutboxMessageEntity
     public string? TargetApp { get; set; }
 
     public string? Headers { get; set; }
+
+    public DateTime? NextAttemptTime { get; set; }
+
+    public Guid? LeaseToken { get; set; }
+
+    public DateTime? LeaseExpiresAt { get; set; }
 }

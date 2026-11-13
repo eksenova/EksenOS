@@ -77,22 +77,15 @@ public static class DashboardEndpoints
 
     private static async Task<IResult> RequeueDeadLetterAsync(
         Guid id,
-        [FromServices] IDeadLetterStore deadLetterStore,
-        [FromServices] IEventBusTransport transport)
+        [FromServices] IDeadLetterStore deadLetterStore)
     {
         var message = await deadLetterStore.GetByIdAsync(id);
         if (message == null)
+        {
             return Results.NotFound();
+        }
 
-        await transport.PublishAsync(
-            message.EventType,
-            message.Payload,
-            message.CorrelationId,
-            message.SourceApp,
-            message.TargetApp,
-            message.OriginalMessageId,
-            headers: null);
-
+        // The store redelivers the dead letter to the handler that failed it, not to every subscriber.
         await deadLetterStore.RequeueAsync(id);
 
         return Results.Ok(new { requeued = true });

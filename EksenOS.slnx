@@ -17,6 +17,7 @@
     <Project Path="packages/Eksen.EventBus/test/Eksen.EventBus.Tests.csproj" />
     <Project Path="packages/Eksen.EventBus.InMemory/test/Eksen.EventBus.InMemory.Tests.csproj" />
     <Project Path="packages/Eksen.EventBus.RabbitMq/test/Eksen.EventBus.RabbitMq.Tests.csproj" />
+    <Project Path="packages/Eksen.EventBus.Redis/test/Eksen.EventBus.Redis.Tests.csproj" />
     <Project
       Path="packages/Eksen.EventBus.EntityFrameworkCore/test/Eksen.EventBus.EntityFrameworkCore.Tests.csproj" />
     <Project Path="packages/Eksen.EventBus.Dashboard/test/Eksen.EventBus.Dashboard.Tests.csproj" />
@@ -72,6 +73,10 @@
       Path="packages/Eksen.Authentication.ApiKeys/test/Eksen.Authentication.ApiKeys.Tests.csproj" />
     <Project
       Path="packages/Eksen.Authentication.ApiKeys.Identity/test/Eksen.Authentication.ApiKeys.Identity.Tests.csproj" />
+    <Project Path="packages/Eksen.Telemetry/test/Eksen.Telemetry.Tests.csproj" />
+    <Project Path="packages/Eksen.Telemetry.AspNetCore/test/Eksen.Telemetry.AspNetCore.Tests.csproj" />
+    <Project Path="packages/Eksen.Telemetry.OpenTelemetry/test/Eksen.Telemetry.OpenTelemetry.Tests.csproj" />
+    <Project Path="packages/Eksen.Telemetry.OpenTelemetry.AspNetCore/test/Eksen.Telemetry.OpenTelemetry.AspNetCore.Tests.csproj" />
   </Folder>
   <Project Path="packages/Eksen.Authentication.ApiKeys/src/Eksen.Authentication.ApiKeys.csproj" />
   <Project
@@ -120,6 +125,10 @@
   <Project Path="packages/Eksen.SmartEnums.OpenApi/src/Eksen.SmartEnums.OpenApi.csproj" />
   <Project Path="packages/Eksen.SmartEnums/src/Eksen.SmartEnums.csproj" />
   <Project Path="packages/Eksen.TestBase.SqlServer/src/Eksen.TestBase.SqlServer.csproj" />
+  <Project Path="packages/Eksen.Telemetry/src/Eksen.Telemetry.csproj" />
+  <Project Path="packages/Eksen.Telemetry.AspNetCore/src/Eksen.Telemetry.AspNetCore.csproj" />
+  <Project Path="packages/Eksen.Telemetry.OpenTelemetry/src/Eksen.Telemetry.OpenTelemetry.csproj" />
+  <Project Path="packages/Eksen.Telemetry.OpenTelemetry.AspNetCore/src/Eksen.Telemetry.OpenTelemetry.AspNetCore.csproj" />
   <Project Path="packages/Eksen.Templating/src/Eksen.Templating.csproj" />
   <Project Path="packages/Eksen.Ulid.AspNetCore/src/Eksen.Ulid.AspNetCore.csproj" />
   <Project Path="packages/Eksen.Ulid.OpenApi/src/Eksen.Ulid.OpenApi.csproj" />
@@ -131,6 +140,7 @@
   <Project Path="packages/Eksen.EventBus/src/Eksen.EventBus.csproj" />
   <Project Path="packages/Eksen.EventBus.InMemory/src/Eksen.EventBus.InMemory.csproj" />
   <Project Path="packages/Eksen.EventBus.RabbitMq/src/Eksen.EventBus.RabbitMq.csproj" />
+  <Project Path="packages/Eksen.EventBus.Redis/src/Eksen.EventBus.Redis.csproj" />
   <Project
     Path="packages/Eksen.EventBus.EntityFrameworkCore/src/Eksen.EventBus.EntityFrameworkCore.csproj" />
   <Project Path="packages/Eksen.EventBus.Dashboard/src/Eksen.EventBus.Dashboard.csproj" />

@@ -1,0 +1,12 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <Import Project="..\..\..\common.props" />
+  <ItemGroup>
+    <PackageReference Include="StackExchange.Redis" Version="2.7.27" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\Eksen.EventBus\src\Eksen.EventBus.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <InternalsVisibleTo Include="Eksen.EventBus.Redis.Tests" />
+  </ItemGroup>
+</Project>

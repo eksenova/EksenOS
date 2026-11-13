@@ -1,12 +1,19 @@
 using Eksen.EventBus.DeadLetter;
 using Eksen.TestBase;
+using Moq;
 using Shouldly;
 
 namespace Eksen.EventBus.InMemory.Tests;
 
 public class InMemoryDeadLetterStoreTests : EksenUnitTestBase
 {
-    private readonly InMemoryDeadLetterStore _store = new();
+    private readonly Mock<IEventRescheduler> _rescheduler = new();
+    private readonly InMemoryDeadLetterStore _store;
+
+    public InMemoryDeadLetterStoreTests()
+    {
+        _store = new InMemoryDeadLetterStore(_rescheduler.Object);
+    }
 
     private static DeadLetterMessage CreateMessage(DateTime? failedTime = null)
     {
@@ -109,6 +116,13 @@ public class InMemoryDeadLetterStoreTests : EksenUnitTestBase
         var updated = await _store.GetByIdAsync(msg.Id);
         updated!.IsRequeued.ShouldBeTrue();
         updated.RequeuedTime.ShouldNotBeNull();
+        _rescheduler.Verify(
+            r => r.RescheduleAsync(
+                It.Is<EventRedelivery>(redelivery => redelivery.HandlerTypeName == "TestHandler" && redelivery.EventId == msg.OriginalMessageId),
+                TimeSpan.Zero,
+                It.IsAny<CancellationToken>()),
+            Times.Once);
+        (await _store.GetCountAsync()).ShouldBe(0);
     }
 
     [Fact]

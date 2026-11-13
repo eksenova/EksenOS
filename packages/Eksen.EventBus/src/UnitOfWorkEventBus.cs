@@ -1,4 +1,6 @@
+using System.Diagnostics;
 using Eksen.EventBus.Outbox;
+using Eksen.EventBus.Telemetry;
 using Eksen.UnitOfWork;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
@@ -46,15 +48,20 @@ internal sealed class UnitOfWorkEventBus(
         if (dispatchMode == EventDispatchMode.AfterUnitOfWork && currentScope != null)
         {
             var opts = eventBusOptions.Value;
+            var eventTypeName = EventNameResolver.GetEventName<TEvent>();
+
+            // Capture the trace context at publish time; the flush runs in the unit of work's completing callback,
+            // where the caller's span may already have ended.
+            using var activity = DefaultEventBus.StartCreateActivity(eventTypeName, @event.EventId);
             var pending = new PendingEvent
             {
-                EventTypeName = EventNameResolver.GetEventName<TEvent>(),
+                EventTypeName = eventTypeName,
                 Payload = serializer.Serialize(@event),
                 CorrelationId = options?.CorrelationId ?? @event.CorrelationId,
                 SourceApp = @event.SourceApp ?? opts.AppName,
                 TargetApp = options?.TargetApp,
                 EventId = @event.EventId,
-                Headers = options?.Headers
+                Headers = EventBusActivitySource.WithTraceContext(activity ?? Activity.Current, options?.Headers)
             };
 
             var context = GetOrCreateScopeContext(currentScope);
@@ -80,9 +87,15 @@ internal sealed class UnitOfWorkEventBus(
             await FlushEventsToOutboxAsync(context, sp, ct);
         });
 
-        scope.AddPostCommitAction(async (sp, ct) =>
+        scope.AddCompletedCallback((_, _) =>
         {
-            await WaitForEventProcessingAsync(context, sp, ct);
+            _scopeContexts.Remove(scope.ScopeId);
+            return Task.CompletedTask;
+        });
+        scope.AddRollbackCallback((_, _) =>
+        {
+            _scopeContexts.Remove(scope.ScopeId);
+            return Task.CompletedTask;
         });
 
         return context;
@@ -105,6 +118,7 @@ internal sealed class UnitOfWorkEventBus(
             var outboxMessage = new OutboxMessage
             {
                 Id = Guid.NewGuid(),
+                EventId = pending.EventId,
                 EventType = pending.EventTypeName,
                 Payload = pending.Payload,
                 CreationTime = DateTime.UtcNow,
@@ -116,51 +130,11 @@ internal sealed class UnitOfWorkEventBus(
             };
 
             await outboxStore.SaveAsync(outboxMessage, cancellationToken);
-            context.OutboxMessageIds.Add(outboxMessage.Id);
-        }
-    }
-
-    private static async Task WaitForEventProcessingAsync(
-        ScopeEventContext context,
-        IServiceProvider serviceProvider,
-        CancellationToken cancellationToken)
-    {
-        if (context.OutboxMessageIds.Count == 0)
-        {
-            return;
-        }
-
-        var outboxStore = serviceProvider.GetRequiredService<IOutboxStore>();
-        var pollingInterval = TimeSpan.FromSeconds(1);
-
-        while (!cancellationToken.IsCancellationRequested)
-        {
-            var allResolved = true;
-
-            foreach (var messageId in context.OutboxMessageIds)
-            {
-                var message = await outboxStore.GetByIdAsync(messageId, cancellationToken);
-
-                if (message is { Status: OutboxMessageStatus.Pending or OutboxMessageStatus.Processing })
-                {
-                    allResolved = false;
-                    break;
-                }
-            }
-
-            if (allResolved)
-            {
-                return;
-            }
-
-            await Task.Delay(pollingInterval, cancellationToken);
         }
     }
 
     private sealed class ScopeEventContext
     {
         public List<PendingEvent> PendingEvents { get; } = [];
-
-        public List<Guid> OutboxMessageIds { get; } = [];
     }
 }

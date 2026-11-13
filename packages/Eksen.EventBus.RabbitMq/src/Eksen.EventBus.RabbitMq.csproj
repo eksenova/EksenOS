@@ -5,5 +5,9 @@
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\Eksen.EventBus\src\Eksen.EventBus.csproj" />
+    <ProjectReference Include="..\..\Eksen.Telemetry\src\Eksen.Telemetry.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <InternalsVisibleTo Include="Eksen.EventBus.RabbitMq.Tests" />
   </ItemGroup>
 </Project>

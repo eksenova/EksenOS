@@ -6,6 +6,74 @@ namespace Eksen.EventBus.InMemory;
 public class InMemoryInboxStore : IInboxStore
 {
     private readonly ConcurrentDictionary<Guid, InboxMessage> _messages = new();
+    private readonly Lock _claimLock = new();
+
+    public bool EnlistsInUnitOfWork
+    {
+        get { return false; }
+    }
+
+    public Task<InboxClaim> TryClaimAsync(InboxMessage message, CancellationToken cancellationToken = default)
+    {
+        lock (_claimLock)
+        {
+            var existing = _messages.Values
+                .FirstOrDefault(m => m.EventId == message.EventId && m.HandlerType == message.HandlerType);
+            if (existing == null)
+            {
+                _messages[message.Id] = message;
+                return Task.FromResult(new InboxClaim(InboxClaimStatus.Claimed, message));
+            }
+
+            switch (existing.Status)
+            {
+                case InboxMessageStatus.Processed:
+                {
+                    return Task.FromResult(new InboxClaim(InboxClaimStatus.AlreadyProcessed, existing));
+                }
+                case InboxMessageStatus.Processing:
+                {
+                    return Task.FromResult(new InboxClaim(InboxClaimStatus.InProgress, existing));
+                }
+            }
+
+            existing.Status = InboxMessageStatus.Processing;
+            existing.LastError = null;
+            existing.RetryCount++;
+            return Task.FromResult(new InboxClaim(InboxClaimStatus.Claimed, existing));
+        }
+    }
+
+    public Task<bool> TryMarkAsProcessingAsync(Guid messageId, CancellationToken cancellationToken = default)
+    {
+        lock (_claimLock)
+        {
+            if (!_messages.TryGetValue(messageId, out var message) || message.Status == InboxMessageStatus.Processed)
+            {
+                return Task.FromResult(false);
+            }
+
+            message.Status = InboxMessageStatus.Processing;
+            message.LastError = null;
+            message.RetryCount++;
+            return Task.FromResult(true);
+        }
+    }
+
+    public Task<int> DeleteProcessedAsync(
+        DateTime processedBefore,
+        int batchSize,
+        CancellationToken cancellationToken = default)
+    {
+        var expired = _messages.Values
+            .Where(m => m.Status == InboxMessageStatus.Processed && m.ProcessedTime < processedBefore)
+            .Take(batchSize)
+            .Select(m => m.Id)
+            .ToList();
+
+        var deleted = expired.Count(id => _messages.TryRemove(id, out _));
+        return Task.FromResult(deleted);
+    }
 
     public Task<bool> ExistsAsync(
         Guid eventId,

@@ -1,8 +1,10 @@
+using System.Collections.Concurrent;
+
 namespace Eksen.EventBus;
 
 public static class EventNameResolver
 {
-    private static readonly Dictionary<Type, string> Cache = [];
+    private static readonly ConcurrentDictionary<Type, string> Cache = new();
 
     public static string GetEventName<TEvent>() where TEvent : class, IEvent
     {
@@ -11,11 +13,6 @@ public static class EventNameResolver
 
     public static string GetEventName(Type eventType)
     {
-        if (Cache.TryGetValue(eventType, out var name))
-            return name;
-
-        name = eventType.FullName ?? eventType.Name;
-        Cache[eventType] = name;
-        return name;
+        return Cache.GetOrAdd(eventType, static type => type.FullName ?? type.Name);
     }
 }

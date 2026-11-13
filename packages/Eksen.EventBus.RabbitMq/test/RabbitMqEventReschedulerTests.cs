@@ -10,122 +10,100 @@ namespace Eksen.EventBus.RabbitMq.Tests;
 public class RabbitMqEventReschedulerTests : EksenUnitTestBase
 {
     [Fact]
-    public async Task RescheduleAsync_Should_Publish_Directly_When_Delay_Is_Zero()
+    public async Task RescheduleAsync_Without_Delay_Publishes_To_The_Handler_Queue_Only()
     {
-        // Arrange
-        var connectionManager = new Mock<IRabbitMqConnectionManager>();
+        var (rescheduler, channel) = Create();
+        string? exchange = null;
+        string? routingKey = null;
+        channel.Setup(c => c.BasicPublishAsync(
+                It.IsAny<string>(), It.IsAny<string>(), It.IsAny<bool>(), It.IsAny<BasicProperties>(),
+                It.IsAny<ReadOnlyMemory<byte>>(), It.IsAny<CancellationToken>()))
+            .Callback<string, string, bool, BasicProperties, ReadOnlyMemory<byte>, CancellationToken>(
+                (e, r, _, _, _, _) =>
+                {
+                    exchange = e;
+                    routingKey = r;
+                })
+            .Returns(ValueTask.CompletedTask);
 
-        var processor = new Mock<IEventProcessor>();
-        var handlerRegistry = new Mock<IEventHandlerRegistry>();
-        var rabbitOptions = Options.Create(new RabbitMqEventBusOptions());
-        var coreOptions = Options.Create(new EksenEventBusOptions());
+        await rescheduler.RescheduleAsync(CreateRedelivery(), TimeSpan.Zero, cancellationToken: TestContext.Current.CancellationToken);
 
-        var transport = new RabbitMqEventBusTransport(
-            connectionManager.Object,
-            processor.Object,
-            handlerRegistry.Object,
-            rabbitOptions,
-            coreOptions,
-            NullLogger<RabbitMqEventBusTransport>.Instance);
+        // The default exchange routes by queue name, so only the handler's own queue receives the message.
+        exchange.ShouldBe(string.Empty);
+        routingKey.ShouldBe("orders.Orders.Handler");
+    }
 
-        // Mock the channel for publish
-        var channel = new Mock<IChannel>();
-        var connection = new Mock<IConnection>();
-        connection.Setup(c => c.CreateChannelAsync(It.IsAny<CreateChannelOptions?>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(channel.Object);
-        connectionManager.Setup(cm => cm.GetConnectionAsync(It.IsAny<CancellationToken>()))
-            .ReturnsAsync(connection.Object);
+    [Fact]
+    public async Task RescheduleAsync_With_Delay_Parks_The_Message_In_The_Covering_Tier()
+    {
+        var (rescheduler, channel) = Create();
+        string? exchange = null;
+        string? routingKey = null;
+        BasicProperties? published = null;
+        channel.Setup(c => c.BasicPublishAsync(
+                It.IsAny<string>(), It.IsAny<string>(), It.IsAny<bool>(), It.IsAny<BasicProperties>(),
+                It.IsAny<ReadOnlyMemory<byte>>(), It.IsAny<CancellationToken>()))
+            .Callback<string, string, bool, BasicProperties, ReadOnlyMemory<byte>, CancellationToken>(
+                (e, r, _, properties, _, _) =>
+                {
+                    exchange = e;
+                    routingKey = r;
+                    published = properties;
+                })
+            .Returns(ValueTask.CompletedTask);
 
-        var rescheduler = new RabbitMqEventRescheduler(
-            connectionManager.Object,
-            transport,
-            rabbitOptions,
-            NullLogger<RabbitMqEventRescheduler>.Instance);
+        // Default tiers: 10s, 40s, 160s, ... (+20% jitter); 30s falls in tier 2.
+        await rescheduler.RescheduleAsync(CreateRedelivery(), TimeSpan.FromSeconds(30), cancellationToken: TestContext.Current.CancellationToken);
 
-        // Act
-        await rescheduler.RescheduleAsync(
-            "TestEvent",
-            "{}",
-            "corr-1",
-            "src",
-            Guid.NewGuid(),
-            TimeSpan.Zero);
-
-        // Assert - should publish via transport (which uses the channel)
+        exchange.ShouldBe("eksen.events.delay");
+        routingKey.ShouldBe("orders.Orders.Handler");
+        published.ShouldNotBeNull();
+        published.Expiration.ShouldBe("30000");
+        published.Headers![RabbitMqHeaders.DelayTier].ShouldBe("2");
         channel.Verify(
-            c => c.BasicPublishAsync(
-                It.IsAny<string>(),
-                It.IsAny<string>(),
+            c => c.QueueDeclareAsync(
+                "eksen.events.delay.2",
+                true,
+                false,
+                false,
+                It.Is<IDictionary<string, object?>?>(arguments => (string)arguments!["x-dead-letter-exchange"]! == string.Empty),
                 It.IsAny<bool>(),
-                It.IsAny<BasicProperties>(),
-                It.IsAny<ReadOnlyMemory<byte>>(),
+                It.IsAny<bool>(),
                 It.IsAny<CancellationToken>()),
             Times.Once);
     }
 
-    [Fact]
-    public async Task RescheduleAsync_Should_Create_Delay_Queue_When_Delay_Is_Positive()
+    private static EventRedelivery CreateRedelivery()
     {
-        // Arrange
-        var connectionManager = new Mock<IRabbitMqConnectionManager>();
-        var channel = new Mock<IChannel>();
-        var connection = new Mock<IConnection>();
+        return new EventRedelivery
+        {
+            EventTypeName = "Orders.Created",
+            Payload = "{}",
+            EventId = Guid.NewGuid(),
+            HandlerTypeName = "Orders.Handler",
+            CorrelationId = "corr-1",
+            SourceApp = "src"
+        };
+    }
 
+    private static (RabbitMqEventRescheduler Rescheduler, Mock<IChannel> Channel) Create()
+    {
+        var channel = new Mock<IChannel>();
+        channel.SetupGet(c => c.IsOpen).Returns(true);
+        var connection = new Mock<IConnection>();
         connection.Setup(c => c.CreateChannelAsync(It.IsAny<CreateChannelOptions?>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(channel.Object);
+        var connectionManager = new Mock<IRabbitMqConnectionManager>();
         connectionManager.Setup(cm => cm.GetConnectionAsync(It.IsAny<CancellationToken>()))
             .ReturnsAsync(connection.Object);
 
-        var processor = new Mock<IEventProcessor>();
-        var handlerRegistry = new Mock<IEventHandlerRegistry>();
-        var rabbitOptions = Options.Create(new RabbitMqEventBusOptions());
-        var coreOptions = Options.Create(new EksenEventBusOptions());
-
         var transport = new RabbitMqEventBusTransport(
             connectionManager.Object,
-            processor.Object,
-            handlerRegistry.Object,
-            rabbitOptions,
-            coreOptions,
+            new Mock<IEventProcessor>().Object,
+            new Mock<IEventHandlerRegistry>().Object,
+            Options.Create(new RabbitMqEventBusOptions()),
+            Options.Create(new EksenEventBusOptions { AppName = "orders" }),
             NullLogger<RabbitMqEventBusTransport>.Instance);
-
-        var rescheduler = new RabbitMqEventRescheduler(
-            connectionManager.Object,
-            transport,
-            rabbitOptions,
-            NullLogger<RabbitMqEventRescheduler>.Instance);
-
-        // Act
-        await rescheduler.RescheduleAsync(
-            "TestEvent",
-            "{}",
-            "corr-1",
-            "src",
-            Guid.NewGuid(),
-            TimeSpan.FromSeconds(30));
-
-        // Assert - should declare a delay queue
-        channel.Verify(
-            c => c.QueueDeclareAsync(
-                It.Is<string>(q => q.Contains("delay") && q.Contains("30000ms")),
-                true,
-                false,
-                false,
-                It.IsAny<IDictionary<string, object?>?>(),
-                It.IsAny<bool>(),
-                It.IsAny<bool>(),
-                It.IsAny<CancellationToken>()),
-            Times.Once);
-
-        // Should publish to delay queue
-        channel.Verify(
-            c => c.BasicPublishAsync(
-                It.IsAny<string>(),
-                It.IsAny<string>(),
-                It.IsAny<bool>(),
-                It.IsAny<BasicProperties>(),
-                It.IsAny<ReadOnlyMemory<byte>>(),
-                It.IsAny<CancellationToken>()),
-            Times.Once);
+        return (new RabbitMqEventRescheduler(transport), channel);
     }
 }

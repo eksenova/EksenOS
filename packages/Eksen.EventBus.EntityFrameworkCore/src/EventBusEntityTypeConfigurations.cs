@@ -29,9 +29,14 @@ public static class EventBusEntityTypeConfigurations
         builder.Property(x => x.TargetApp).HasMaxLength(256);
         builder.Property(x => x.LastError).HasMaxLength(2048);
 
+        builder.Property(x => x.EventId).IsRequired();
+
         builder.HasIndex(x => x.Status);
         builder.HasIndex(x => x.CreationTime);
         builder.HasIndex(x => new { x.Status, x.CreationTime });
+        builder.HasIndex(x => x.EventId);
+        builder.HasIndex(x => new { x.Status, x.NextAttemptTime });
+        builder.HasIndex(x => new { x.Status, x.ProcessedTime });
     }
 
     private static void ConfigureInboxMessage(EntityTypeBuilder<InboxMessageEntity> builder)
@@ -54,6 +59,7 @@ public static class EventBusEntityTypeConfigurations
         builder.HasIndex(x => new { x.EventId, x.HandlerType }).IsUnique();
         builder.HasIndex(x => x.Status);
         builder.HasIndex(x => x.CreationTime);
+        builder.HasIndex(x => new { x.Status, x.ProcessedTime });
     }
 
     private static void ConfigureDeadLetterMessage(EntityTypeBuilder<DeadLetterMessageEntity> builder)
